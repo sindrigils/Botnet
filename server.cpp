@@ -1,4 +1,3 @@
-//
 // Simple chat server for TSAM-409
 //
 // Command line: ./chat_server 4000
@@ -27,7 +26,7 @@
 #include <sstream>
 #include <thread>
 #include <map>
-
+#include <fstream>
 #include <unistd.h>
 
 // fix SOCK_NONBLOCK for OSX
@@ -38,10 +37,13 @@
 
 #define BACKLOG 5         // Allowed length of queue of waiting connections
 #define MAX_CONNECTIONS 8 // i think
-#define GROUP_ID "5"
+// #define GROUP_ID "5"
 #define SOH 0x01
 #define EOT 0x04
 #define ESC 0x10 // Escape character for byte-stuffing
+
+char *GROUP_ID;
+std::string filePath = "messages.json";
 
 // Create an array of pollfd structs to track the file descriptors and their events
 struct pollfd pollfds[MAX_CONNECTIONS];
@@ -139,6 +141,51 @@ int open_socket(int portno)
     }
 }
 
+std::string stripQuotes(const std::string &str)
+{
+    if (str.front() == '"' && str.back() == '"')
+    {
+        return str.substr(1, str.size() - 2); // Remove the first and last quotes
+    }
+    return str;
+}
+
+// Function to get message by ID from a JSON-like file
+std::string getMessageById(const std::string &id)
+{
+    std::ifstream inputFile(filePath);
+    if (!inputFile.is_open())
+    {
+        throw std::runtime_error("Could not open file: " + filePath);
+    }
+
+    std::string line;
+    std::string targetId = "\"" + id + "\""; // Format the ID as it appears in the file
+
+    while (std::getline(inputFile, line))
+    {
+
+        std::size_t idPos = line.find(targetId); // Search for the ID
+        if (idPos != std::string::npos)
+        {
+            // The ID was found, now extract the corresponding message
+            std::size_t colonPos = line.find(':', idPos);
+            if (colonPos != std::string::npos)
+            {
+                std::string messagePart = line.substr(colonPos + 1); // Get everything after the colon
+                std::string message = stripQuotes(messagePart);      // Remove any quotes
+                // Remove trailing comma or newline characters
+                if (message.back() == ',')
+                {
+                    message.pop_back();
+                }
+                return message;
+            }
+        }
+    }
+    return "Message not found for ID: " + id;
+}
+
 std::string constructServerMessage(const std::string &content)
 {
     std::string stuffedContent;
@@ -164,6 +211,8 @@ std::string constructServerMessage(const std::string &content)
 
 bool connectToServer(const std::string &ip, int port, const std::string &groupId)
 {
+    std::string strPort = std::to_string(port);
+
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
@@ -173,13 +222,8 @@ bool connectToServer(const std::string &ip, int port, const std::string &groupId
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
         servers[serverSocket] = new Server(serverSocket);
-
-        std::cout << "here is the ip address: " << ip << std::endl;
-        std::cout << "here is the port: " << port << std::endl;
-        std::cout << "here is the groupId: " << groupId << std::endl;
-
         servers[serverSocket]->ipAddress = ip;
-        servers[serverSocket]->port = port;
+        servers[serverSocket]->port = strPort;
         servers[serverSocket]->name = groupId;
 
         // abstract this shit
@@ -187,21 +231,25 @@ bool connectToServer(const std::string &ip, int port, const std::string &groupId
         pollfds[nfds].events = POLLIN;
         nfds++;
 
-        std::cout << "Connected to server: " << ip << ":" << port << std::endl;
-        std::string message = std::string("HELO,") + GROUP_ID;
+        std::cout << "Connected to server: " << ip << ":" << strPort << std::endl;
+        std::string message = std::string("HELO,") + GROUP_ID + "," + "4002";
         std::string heloMessage = constructServerMessage(message);
         send(serverSocket, heloMessage.c_str(), heloMessage.length(), 0);
         return true;
     }
     else
     {
-        std::cout << "Failed to connect to server: " << ip << ":" << port << std::endl;
+        std::cout << "Failed to connect to server: " << ip << ":" << strPort << std::endl;
         return false;
     }
 }
 
-// Close a client's connection, remove it from the client list, and
-// tidy up select sockets afterwards.
+std::string trim(const std::string &str)
+{
+    size_t first = str.find_first_not_of(" \t\n\r");
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
+}
 
 void closeClient(int clientSocket)
 {
@@ -215,6 +263,8 @@ void clientCommand(std::vector<std::string> tokens, char *buffer)
 {
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
+        std::string message = getMessageById(trim(tokens[1]));
+        send(clientSock, message.c_str(), message.length(), 0);
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
     {
@@ -273,7 +323,7 @@ void clientCommand(std::vector<std::string> tokens, char *buffer)
         std::string ip = tokens[1];
         int port = std::stoi(tokens[2]);
         std::string groupId = tokens[3];
-        bool isSuccess = connectToServer(tokens[1], port, groupId);
+        bool isSuccess = connectToServer(trim(tokens[1]), port, trim(groupId));
         message = isSuccess ? "Successfully connected to A5_" + groupId + " server." : "Unable to connect to A5_" + groupId + " server.";
         send(clientSock, message.c_str(), message.length(), 0);
     }
@@ -327,10 +377,11 @@ void handleCommand(int clientSocket, char *buffer)
             tokens.push_back(token);
         }
 
-        if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
+        if (tokens[0].compare("HELO") == 0 && tokens.size() == 3)
         {
             // reply with SERVERS, which is all the servers that we are connected to
             servers[clientSocket]->name = tokens[1];
+            servers[clientSocket]->port = tokens[2];
 
             std::string groupId = std::string(GROUP_ID);
             std::string message = "SERVERS,A5_" + groupId + "," + serverIpAddress + "," + serverPort + ";";
@@ -338,7 +389,6 @@ void handleCommand(int clientSocket, char *buffer)
             {
                 if (pair.first == clientSocket)
                 {
-                    std::cout << "found the server" << std::endl;
                     continue;
                 }
 
@@ -353,9 +403,9 @@ void handleCommand(int clientSocket, char *buffer)
         {
             // now we just got all the servers that the server we just connect to, is connect to, proceed to
             // connect to the ones that we are not connected to
-
-            std::stringstream serversStream(message);
-            tokens.clear(); // Clear the token vector for the new message
+            // TODO do better??
+            std::stringstream serversStream(message.substr(8));
+            tokens.clear();
 
             while (std::getline(serversStream, token, ';'))
             {
@@ -364,17 +414,23 @@ void handleCommand(int clientSocket, char *buffer)
 
             for (auto token : tokens)
             {
+
+                // TODO better, since the first token is just the server info of the server that just send the message
+                if (token == tokens[0])
+                    continue;
                 std::vector<std::string> serverInfo;
                 std::stringstream serverInfoStream(token);
                 std::string info;
 
                 while (std::getline(serverInfoStream, info, ','))
                 {
-                    tokens.push_back(info);
+                    serverInfo.push_back(info);
                 }
 
-                std::string ipAddress = tokens[1];
-                std::string port = tokens[2];
+                std::string groupId = trim(serverInfo[0]);
+                std::string ipAddress = trim(serverInfo[1]);
+                std::string port = trim(serverInfo[2]);
+
                 // abstracta þetta
                 bool skip = false;
                 for (auto &pair : servers)
@@ -388,7 +444,8 @@ void handleCommand(int clientSocket, char *buffer)
                 if (skip)
                     continue;
 
-                connectToServer(ipAddress, std::stoi(port), tokens[3]);
+                // hægt er að crasha serverinn ef port er ekki tölur
+                connectToServer(ipAddress, std::stoi(port), groupId);
             }
 
             std::cout << "here is buffer: " << buffer << std::endl;
@@ -398,6 +455,8 @@ void handleCommand(int clientSocket, char *buffer)
         }
         else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
         {
+            // std::string groupMessage = getMessageById(trim(tokens[1]));
+            // std::string message = "" send(clientSock, message.c_str(), message.length(), 0);
         }
         else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 4)
         {
@@ -437,6 +496,7 @@ int main(int argc, char *argv[])
     // Convert the IP address to a human-readable form
     serverIpAddress = inet_ntoa(*(struct in_addr *)host_entry->h_addr_list[0]);
     serverPort = argv[1];
+    GROUP_ID = argv[2];
 
     bool finished = false;
     int listenSock, clientSock;
@@ -444,7 +504,7 @@ int main(int argc, char *argv[])
     socklen_t clientLen = sizeof(client);
     char buffer[1025]; // Buffer for reading from clients
 
-    if (argc != 2)
+    if (argc != 3)
     {
         printf("Usage: chat_server <port>\n");
         exit(0);
@@ -488,6 +548,9 @@ int main(int argc, char *argv[])
                 char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
                 inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
                 servers[clientSock]->ipAddress = clientIpAddress;
+
+                struct sockaddr_in peerAddr;
+                socklen_t peerAddrLen = sizeof(peerAddr);
 
                 pollfds[nfds].fd = clientSock;
                 pollfds[nfds].events = POLLIN; // Monitor for incoming data
