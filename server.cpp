@@ -76,6 +76,7 @@ public:
     Server(int socket) : sock(socket)
     {
         name = "N/A";
+        port = -1;
     }
 };
 
@@ -238,6 +239,7 @@ bool connectToServer(const std::string &ip, int port)
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
+        std::lock_guard<std::mutex> guard(serverMutex);
         servers[serverSocket] = new Server(serverSocket);
         servers[serverSocket]->ipAddress = ip;
         servers[serverSocket]->port = strPort;
@@ -400,10 +402,9 @@ void processServerMessage(int clientSocket, std::string buffer)
         {
             tokens.push_back(token);
         }
-
+        std::lock_guard<std::mutex> guard(serverMutex);
         for (auto token : tokens)
         {
-
             std::vector<std::string> serverInfo;
             std::stringstream serverInfoStream(token);
             std::string info;
@@ -475,6 +476,7 @@ void processServerMessage(int clientSocket, std::string buffer)
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
+    std::cout << "RECEIVED COMMAND: " << buffer << std::endl;
     int bufferLength = strlen(buffer);
     int i = 0;
     std::vector<std::string> messageVector;
@@ -515,11 +517,12 @@ void handleCommand(int clientSocket, const char *buffer)
     // need to abstract
     for (auto message : messageVector)
     {
+
+        std::cout << "Executing this message " << message << std::endl;
+
         std::vector<std::string> tokens;
         std::stringstream ss(message);
         std::string token;
-
-        std::cout << "MESSAGE IN HEX: " << stringToHex(message) << std::endl;
 
         while (std::getline(ss, token, ','))
         {
@@ -528,7 +531,6 @@ void handleCommand(int clientSocket, const char *buffer)
 
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
-            std::cout << "kaladin" << std::endl;
             // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
             servers.erase(clientSocket);
             ourClientSock = clientSocket;
@@ -538,12 +540,10 @@ void handleCommand(int clientSocket, const char *buffer)
         }
         else if (clientSocket == ourClientSock)
         {
-            std::cout << "In client command" << std::endl;
             return clientCommand(tokens, buffer);
         }
 
-        std::cout << "Above process server command" << std::endl;
-        processServerMessage(clientSocket, message); // Process the message
+        processServerMessage(clientSocket, message);
     }
 }
 
@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
 
                 char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
                 inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
-
+                std::lock_guard<std::mutex> guard(serverMutex);
                 servers[clientSock] = new Server(clientSock);
                 servers[clientSock]->port = "-1";
                 servers[clientSock]->ipAddress = clientIpAddress;
@@ -645,8 +645,7 @@ int main(int argc, char *argv[])
                     int clientSocket = pollfds[i].fd;
 
                     memset(buffer, 0, sizeof(buffer));
-
-                    while (buffer[bytesRead] != EOT)
+                    while (true)
                     {
                         bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
                         if (bytesRead <= 0)
@@ -657,14 +656,15 @@ int main(int argc, char *argv[])
                             break;
                         }
 
-                        if (buffer[bytesRead - 1] == EOT)
+                        if (buffer[offset + bytesRead - 1] == EOT)
                         {
                             // Process command from client
-                            buffer[bytesRead] = '\0';
+                            buffer[offset + bytesRead] = '\0';
                             handleCommand(clientSocket, buffer);
                             break;
                         }
 
+                        std::cout << "waiting for more messages: " << buffer << std::endl;
                         offset += bytesRead;
                     }
                 }
