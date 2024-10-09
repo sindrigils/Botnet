@@ -232,7 +232,7 @@ bool connectToServer(const std::string &ip, int port, const std::string &groupId
         nfds++;
 
         std::cout << "Connected to server: " << ip << ":" << strPort << std::endl;
-        std::string message = std::string("HELO,") + GROUP_ID + "," + "4002";
+        std::string message = "HELO," + std::string(GROUP_ID);
         std::string heloMessage = constructServerMessage(message);
         send(serverSocket, heloMessage.c_str(), heloMessage.length(), 0);
         return true;
@@ -246,7 +246,19 @@ bool connectToServer(const std::string &ip, int port, const std::string &groupId
 
 std::string trim(const std::string &str)
 {
+    if (str.empty())
+    {
+        return str;
+    }
+
     size_t first = str.find_first_not_of(" \t\n\r");
+
+    // If no non-whitespace characters are found, return an empty string
+    if (first == std::string::npos)
+    {
+        return "";
+    }
+
     size_t last = str.find_last_not_of(" \t\n\r");
     return str.substr(first, (last - first + 1));
 }
@@ -333,6 +345,112 @@ void clientCommand(std::vector<std::string> tokens, char *buffer)
     }
 }
 
+void processServerMessage(int clientSocket, std::string buffer)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(buffer);
+    while (std::getline(ss, token, ','))
+    {
+        tokens.push_back(token);
+    }
+
+    if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
+    {
+        std::cout << "just got the HELO message" << std::endl;
+
+        // reply with SERVERS, which is all the servers that we are connected to
+        servers[clientSocket]->name = tokens[1];
+        servers[clientSocket]->port = "50000";
+
+        std::string groupId = std::string(GROUP_ID);
+        std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
+        for (auto &pair : servers)
+        {
+            message += pair.second->name + ",";
+            message += pair.second->ipAddress + ",";
+            message += pair.second->port + ";";
+        }
+        std::string sendMessage = constructServerMessage(message);
+        std::cout << "SERVERS MESSAGE: " << sendMessage << std::endl;
+        // send(clientSocket, sendMessage.c_str(), sendMessage.length(), 0);
+    }
+    else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
+    {
+        // now we just got all the servers that the server we just connect to, is connect to, proceed to
+        // connect to the ones that we are not connected to
+        // TODO do better??
+        std::cout << "just got the SERVERS message" << std::endl;
+        std::stringstream serversStream(buffer.substr(8));
+        tokens.clear();
+
+        while (std::getline(serversStream, token, ';'))
+        {
+            tokens.push_back(token);
+        }
+
+        for (auto token : tokens)
+        {
+
+            // TODO better, since the first token is just the server info of the server that just send the message
+            if (token == tokens[0])
+                continue;
+            std::vector<std::string> serverInfo;
+            std::stringstream serverInfoStream(token);
+            std::string info;
+
+            while (std::getline(serverInfoStream, info, ','))
+            {
+                serverInfo.push_back(info);
+            }
+
+            std::string groupId = trim(serverInfo[0]);
+            std::string ipAddress = trim(serverInfo[1]);
+            std::string port = trim(serverInfo[2]);
+
+            // abstracta þetta
+            bool skip = false;
+            for (auto &pair : servers)
+            {
+                if (pair.second->ipAddress == ipAddress && pair.second->port == port)
+                {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip)
+                continue;
+
+            // hægt er að crasha serverinn ef port er ekki tölur
+            std::cout << "Attempting to connect to server: " << ipAddress << "," << port << "," << groupId;
+            // connectToServer(ipAddress, std::stoi(port), groupId);
+        }
+
+        std::cout << "here is SERVERS buffer: " << buffer << std::endl;
+    }
+    else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
+    {
+    }
+    else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
+    {
+        // std::string groupMessage = getMessageById(trim(tokens[1]));
+        // std::string message = "" send(clientSock, message.c_str(), message.length(), 0);
+    }
+    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 4)
+    {
+    }
+    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
+    {
+    }
+    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() >= 2)
+    {
+    }
+    else
+    {
+        std::cout << "Unknown command from server:" << buffer << std::endl;
+    }
+}
+
 // Process command from client on the server
 void handleCommand(int clientSocket, char *buffer)
 {
@@ -342,10 +460,9 @@ void handleCommand(int clientSocket, char *buffer)
     std::stringstream ss(buffer);
     std::string token;
 
-    // hugsa þetta betur
     while (std::getline(ss, token, ','))
     {
-        tokens.push_back(token);
+        tokens.push_back(trim(token));
     }
 
     if (tokens[0].compare("kaladin") == 0 && clientSock == -1)
@@ -363,118 +480,46 @@ void handleCommand(int clientSocket, char *buffer)
     }
 
     int bufferLength = strlen(buffer);
-    // TODO do this a lot better
-    if (buffer[0] == SOH && buffer[bufferLength - 1] == EOT)
+    int i = 0;
+
+    std::cout << "Here is the whole message: " << buffer << std::endl;
+
+    while (i < bufferLength)
     {
-        std::string message(buffer + 1, bufferLength - 2); // Skip SOH and EOT
-
-        // Now process the message as normal
-        std::stringstream sohStream(message);
-        tokens.clear(); // Clear the token vector for the new message
-
-        while (std::getline(sohStream, token, ','))
+        // Find the start of a message (SOH)
+        if (buffer[i] == SOH)
         {
-            tokens.push_back(token);
-        }
-
-        if (tokens[0].compare("HELO") == 0 && tokens.size() == 3)
-        {
-            // reply with SERVERS, which is all the servers that we are connected to
-            servers[clientSocket]->name = tokens[1];
-            servers[clientSocket]->port = tokens[2];
-
-            std::string groupId = std::string(GROUP_ID);
-            std::string message = "SERVERS,A5_" + groupId + "," + serverIpAddress + "," + serverPort + ";";
-            for (auto &pair : servers)
+            std::cout << "Found one SOH" << std::endl;
+            // Find the end of the message (EOT)
+            int startIdx = i + 1;
+            int endIdx = startIdx;
+            while (endIdx < bufferLength && buffer[endIdx] != EOT)
             {
-                if (pair.first == clientSocket)
-                {
-                    continue;
-                }
-
-                message += "A5_" + pair.second->name + ",";
-                message += pair.second->ipAddress + ",";
-                message += pair.second->port + ";";
-            }
-            std::string sendMessage = constructServerMessage(message);
-            send(clientSocket, sendMessage.c_str(), sendMessage.length(), 0);
-        }
-        else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
-        {
-            // now we just got all the servers that the server we just connect to, is connect to, proceed to
-            // connect to the ones that we are not connected to
-            // TODO do better??
-            std::stringstream serversStream(message.substr(8));
-            tokens.clear();
-
-            while (std::getline(serversStream, token, ';'))
-            {
-                tokens.push_back(token);
+                ++endIdx;
             }
 
-            for (auto token : tokens)
+            // If EOT found, process the message
+            if (endIdx < bufferLength && buffer[endIdx] == EOT)
             {
+                std::cout << "Starting to parse one message" << std::endl;
 
-                // TODO better, since the first token is just the server info of the server that just send the message
-                if (token == tokens[0])
-                    continue;
-                std::vector<std::string> serverInfo;
-                std::stringstream serverInfoStream(token);
-                std::string info;
+                std::string message(buffer + startIdx, endIdx - startIdx); // Extract message content
+                processServerMessage(clientSocket, message);               // Process the message
 
-                while (std::getline(serverInfoStream, info, ','))
-                {
-                    serverInfo.push_back(info);
-                }
-
-                std::string groupId = trim(serverInfo[0]);
-                std::string ipAddress = trim(serverInfo[1]);
-                std::string port = trim(serverInfo[2]);
-
-                // abstracta þetta
-                bool skip = false;
-                for (auto &pair : servers)
-                {
-                    if (pair.second->ipAddress == ipAddress && pair.second->port == port)
-                    {
-                        skip = true;
-                        break;
-                    }
-                }
-                if (skip)
-                    continue;
-
-                // hægt er að crasha serverinn ef port er ekki tölur
-                connectToServer(ipAddress, std::stoi(port), groupId);
+                // Move the index past this message (endIdx + 1 for EOT)
+                i = endIdx + 1;
             }
-
-            std::cout << "here is buffer: " << buffer << std::endl;
-        }
-        else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
-        {
-        }
-        else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
-        {
-            // std::string groupMessage = getMessageById(trim(tokens[1]));
-            // std::string message = "" send(clientSock, message.c_str(), message.length(), 0);
-        }
-        else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 4)
-        {
-        }
-        else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
-        {
-        }
-        else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() >= 2)
-        {
+            else
+            {
+                // No EOT found, stop processing
+                break;
+            }
         }
         else
         {
-            std::cout << "Unknown command from server:" << buffer << std::endl;
+            // Move to the next character if SOH not found
+            ++i;
         }
-    }
-    else
-    {
-        std::cout << "Unknown command from server:" << buffer << std::endl;
     }
 }
 
@@ -545,16 +590,31 @@ int main(int argc, char *argv[])
                 // Add the new client to the clients map and pollfds array
                 servers[clientSock] = new Server(clientSock);
 
+                struct sockaddr_in peerAddr;
+                socklen_t peerAddrLen = sizeof(peerAddr);
+
+                if (getpeername(clientSock, (struct sockaddr *)&peerAddr, &peerAddrLen) == 0)
+                {
+                    // Retrieve and print the port the peer is using (ephemeral port)
+                    int peerPort = ntohs(peerAddr.sin_port);
+                    std::cout << "Connected peer's port: " << peerPort << std::endl;
+                }
+                else
+                {
+                    perror("getpeername failed");
+                }
+
                 char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
                 inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
                 servers[clientSock]->ipAddress = clientIpAddress;
 
-                struct sockaddr_in peerAddr;
-                socklen_t peerAddrLen = sizeof(peerAddr);
-
                 pollfds[nfds].fd = clientSock;
                 pollfds[nfds].events = POLLIN; // Monitor for incoming data
                 nfds++;
+
+                std::string message = "HELO," + std::string(GROUP_ID);
+                std::string heloMessage = constructServerMessage(message);
+                send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
             }
 
             // Check for events on existing connections (clients)
