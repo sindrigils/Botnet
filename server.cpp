@@ -28,7 +28,7 @@
 #include <map>
 #include <fstream>
 #include <unistd.h>
-
+#include <mutex>
 
 #include <iomanip> //TEMPORARY FOR PRINTING HEX STRINGS
 
@@ -45,6 +45,8 @@
 #define EOT 0x04
 #define ESC 0x10 // Escape character for byte-stuffing
 
+std::mutex serverMutex;
+
 char *GROUP_ID;
 std::string filePath = "messages.json";
 
@@ -60,7 +62,7 @@ void setupPollFd(int listenSock)
     nfds = 1;                   // Only 1 fd initially (the listening socket)
 }
 
-int clientSock = -1;
+int ourClientSock = -1;
 char *serverIpAddress;
 char *serverPort;
 class Server
@@ -90,17 +92,17 @@ std::map<int, Server *> servers; // Lookup table for per Client information
 //
 // Returns -1 if unable to create the socket for any reason.
 
-
 // DEBUGGING FUNCTION
 // Function to convert a string to its hexadecimal representation
-std::string stringToHex(const std::string& input) {
+std::string stringToHex(const std::string &input)
+{
     std::stringstream ss;
-    for (char c : input) {
+    for (char c : input)
+    {
         ss << std::hex << std::setw(2) << std::setfill('0') << (int)(unsigned char)c;
     }
     return ss.str();
 }
-
 
 int open_socket(int portno)
 {
@@ -224,7 +226,7 @@ std::string constructServerMessage(const std::string &content)
     return finalMessage;
 }
 
-bool connectToServer(const std::string &ip, int port, const std::string &groupId)
+bool connectToServer(const std::string &ip, int port)
 {
     std::string strPort = std::to_string(port);
 
@@ -239,7 +241,6 @@ bool connectToServer(const std::string &ip, int port, const std::string &groupId
         servers[serverSocket] = new Server(serverSocket);
         servers[serverSocket]->ipAddress = ip;
         servers[serverSocket]->port = strPort;
-        servers[serverSocket]->name = groupId;
 
         // abstract this shit
         pollfds[nfds].fd = serverSocket;
@@ -292,7 +293,7 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
         std::string message = getMessageById(trim(tokens[1]));
-        send(clientSock, message.c_str(), message.length(), 0);
+        send(ourClientSock, message.c_str(), message.length(), 0);
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
     {
@@ -338,22 +339,21 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
             message = message.substr(0, message.length() - 2);
         }
 
-        send(clientSock, message.c_str(), message.length(), 0);
+        send(ourClientSock, message.c_str(), message.length(), 0);
     }
     else if (tokens[0].compare("LEAVE") == 0)
     {
-        close(clientSock);
-        clientSock = -1;
+        close(ourClientSock);
+        ourClientSock = -1;
     }
-    else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 4)
+    else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 3)
     {
         std::string message = "";
         std::string ip = tokens[1];
         int port = std::stoi(tokens[2]);
-        std::string groupId = tokens[3];
-        bool isSuccess = connectToServer(trim(tokens[1]), port, trim(groupId));
-        message = isSuccess ? "Successfully connected to A5_" + groupId + " server." : "Unable to connect to A5_" + groupId + " server.";
-        send(clientSock, message.c_str(), message.length(), 0);
+        bool isSuccess = connectToServer(trim(tokens[1]), port);
+        message = isSuccess ? "Successfully connected to the server." : "Unable to connect to the server.";
+        send(ourClientSock, message.c_str(), message.length(), 0);
     }
     else
     {
@@ -373,11 +373,9 @@ void processServerMessage(int clientSocket, std::string buffer)
 
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
-        std::cout << "just got the HELO message" << std::endl;
-
         // reply with SERVERS, which is all the servers that we are connected to
+        std::lock_guard<std::mutex> guard(serverMutex);
         servers[clientSocket]->name = tokens[1];
-        servers[clientSocket]->port = "50000";
 
         std::string groupId = std::string(GROUP_ID);
         std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
@@ -388,15 +386,13 @@ void processServerMessage(int clientSocket, std::string buffer)
             message += pair.second->port + ";";
         }
         std::string sendMessage = constructServerMessage(message);
-        std::cout << "SERVERS MESSAGE: " << sendMessage << std::endl;
-        // send(clientSocket, sendMessage.c_str(), sendMessage.length(), 0);
+        send(clientSocket, sendMessage.c_str(), sendMessage.length(), 0);
     }
     else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
     {
         // now we just got all the servers that the server we just connect to, is connect to, proceed to
         // connect to the ones that we are not connected to
         // TODO do better??
-        std::cout << "just got the SERVERS message" << std::endl;
         std::stringstream serversStream(buffer.substr(8));
         tokens.clear();
 
@@ -408,9 +404,6 @@ void processServerMessage(int clientSocket, std::string buffer)
         for (auto token : tokens)
         {
 
-            // TODO better, since the first token is just the server info of the server that just send the message
-            if (token == tokens[0])
-                continue;
             std::vector<std::string> serverInfo;
             std::stringstream serverInfoStream(token);
             std::string info;
@@ -424,14 +417,28 @@ void processServerMessage(int clientSocket, std::string buffer)
             std::string ipAddress = trim(serverInfo[1]);
             std::string port = trim(serverInfo[2]);
 
+            // TODO better, since the first token is just the server info of the server that just send the message
+            if (token == tokens[0])
+            {
+                servers[clientSocket]->port = port;
+                continue;
+            }
+
             // abstracta þetta
             bool skip = false;
-            for (auto &pair : servers)
+            if (groupId == GROUP_ID || port == "-1")
             {
-                if (pair.second->ipAddress == ipAddress && pair.second->port == port)
+                skip = true;
+            }
+            else
+            {
+                for (auto &pair : servers)
                 {
-                    skip = true;
-                    break;
+                    if (pair.second->ipAddress == ipAddress && pair.second->name == groupId)
+                    {
+                        skip = true;
+                        break;
+                    }
                 }
             }
             if (skip)
@@ -439,10 +446,8 @@ void processServerMessage(int clientSocket, std::string buffer)
 
             // hægt er að crasha serverinn ef port er ekki tölur
             std::cout << "Attempting to connect to server: " << ipAddress << "," << port << "," << groupId;
-            // connectToServer(ipAddress, std::stoi(port), groupId);
+            connectToServer(ipAddress, std::stoi(port));
         }
-
-        std::cout << "here is SERVERS buffer: " << buffer << std::endl;
     }
     else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
     {
@@ -470,19 +475,15 @@ void processServerMessage(int clientSocket, std::string buffer)
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
-
     int bufferLength = strlen(buffer);
     int i = 0;
     std::vector<std::string> messageVector;
-
-    std::cout << "Here is the whole message: " << buffer << std::endl;
 
     while (i < bufferLength)
     {
         // Find the start of a message (SOH)
         if (buffer[i] == SOH)
         {
-            std::cout << "Found one SOH" << std::endl;
             // Find the end of the message (EOT)
             int startIdx = i + 1;
             int endIdx = startIdx;
@@ -490,12 +491,9 @@ void handleCommand(int clientSocket, const char *buffer)
             {
                 ++endIdx;
             }
-
             // If EOT found, process the message
             if (endIdx < bufferLength && buffer[endIdx] == EOT)
             {
-                std::cout << "Starting to parse one message" << std::endl;
-
                 std::string message(buffer + startIdx, endIdx - startIdx); // Extract message content
                 messageVector.push_back(message);
                 // Move the index past this message (endIdx + 1 for EOT)
@@ -514,7 +512,6 @@ void handleCommand(int clientSocket, const char *buffer)
         }
     }
 
-
     // need to abstract
     for (auto message : messageVector)
     {
@@ -524,34 +521,30 @@ void handleCommand(int clientSocket, const char *buffer)
 
         std::cout << "MESSAGE IN HEX: " << stringToHex(message) << std::endl;
 
-
         while (std::getline(ss, token, ','))
         {
             tokens.push_back(trim(token));
         }
 
-
-        if (tokens[0].compare("kaladin") == 0 && clientSock == -1)
+        if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
             std::cout << "kaladin" << std::endl;
             // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
             servers.erase(clientSocket);
-            clientSock = clientSocket;
+            ourClientSock = clientSocket;
             std::string message = "Well hello there!";
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
-        else if (clientSocket == clientSock)
+        else if (clientSocket == ourClientSock)
         {
             std::cout << "In client command" << std::endl;
             return clientCommand(tokens, buffer);
         }
 
         std::cout << "Above process server command" << std::endl;
-        processServerMessage(clientSocket, message);               // Process the message
-        
+        processServerMessage(clientSocket, message); // Process the message
     }
-
 }
 
 int main(int argc, char *argv[])
@@ -618,38 +611,29 @@ int main(int argc, char *argv[])
                 clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
                 printf("New client connected: %d\n", clientSock);
 
-                // Add the new client to the clients map and pollfds array
-                servers[clientSock] = new Server(clientSock);
-
                 struct sockaddr_in peerAddr;
                 socklen_t peerAddrLen = sizeof(peerAddr);
 
-                if (getpeername(clientSock, (struct sockaddr *)&peerAddr, &peerAddrLen) == 0)
-                {
-                    // Retrieve and print the port the peer is using (ephemeral port)
-                    int peerPort = ntohs(peerAddr.sin_port);
-                    std::cout << "Connected peer's port: " << peerPort << std::endl;
-                }
-                else
-                {
-                    perror("getpeername failed");
-                }
-
                 char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
                 inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
+
+                servers[clientSock] = new Server(clientSock);
+                servers[clientSock]->port = "-1";
                 servers[clientSock]->ipAddress = clientIpAddress;
 
+                // abstract
                 pollfds[nfds].fd = clientSock;
                 pollfds[nfds].events = POLLIN; // Monitor for incoming data
                 nfds++;
 
+                // abstract
                 std::string message = "HELO," + std::string(GROUP_ID);
                 std::string heloMessage = constructServerMessage(message);
                 send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
             }
 
             // Check for events on existing connections (clients)
-    
+
             for (int i = 1; i < nfds; i++)
             {
                 int offset = 0;
@@ -662,8 +646,9 @@ int main(int argc, char *argv[])
 
                     memset(buffer, 0, sizeof(buffer));
 
-                    while(buffer[bytesRead] != EOT){
-                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer)-offset, 0);
+                    while (buffer[bytesRead] != EOT)
+                    {
+                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
                         if (bytesRead <= 0)
                         {
                             // Client disconnected
@@ -672,14 +657,14 @@ int main(int argc, char *argv[])
                             break;
                         }
 
-                        if(buffer[bytesRead - 1] == EOT)
+                        if (buffer[bytesRead - 1] == EOT)
                         {
                             // Process command from client
                             buffer[bytesRead] = '\0';
                             handleCommand(clientSocket, buffer);
                             break;
                         }
-                        
+
                         offset += bytesRead;
                     }
                 }
