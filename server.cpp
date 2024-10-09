@@ -299,16 +299,19 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
     {
+        std::string groupId = tokens[1];
         for (auto const &pair : servers)
         {
-            if (pair.second->name.compare(tokens[1]) == 0)
+            if (pair.second->name.compare(groupId) == 0)
             {
-                std::string msg;
+                std::string content;
                 for (auto i = tokens.begin() + 2; i != tokens.end(); i++)
                 {
-                    msg += *i + " ";
+                    content += *i + " ";
                 }
-                send(pair.second->sock, msg.c_str(), msg.length(), 0);
+                std::string message = "SENDMSG," + groupId + "," + GROUP_ID + "," + content;
+                std::string serverMessage = constructServerMessage(message);
+                send(pair.second->sock, serverMessage.c_str(), serverMessage.length(), 0);
             }
         }
     }
@@ -402,7 +405,6 @@ void processServerMessage(int clientSocket, std::string buffer)
         {
             tokens.push_back(token);
         }
-        std::lock_guard<std::mutex> guard(serverMutex);
         for (auto token : tokens)
         {
             std::vector<std::string> serverInfo;
@@ -433,9 +435,10 @@ void processServerMessage(int clientSocket, std::string buffer)
             }
             else
             {
+                std::lock_guard<std::mutex> guard(serverMutex);
                 for (auto &pair : servers)
                 {
-                    if (pair.second->ipAddress == ipAddress && pair.second->name == groupId)
+                    if (pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port))
                     {
                         skip = true;
                         break;
@@ -458,8 +461,22 @@ void processServerMessage(int clientSocket, std::string buffer)
         // std::string groupMessage = getMessageById(trim(tokens[1]));
         // std::string message = "" send(clientSock, message.c_str(), message.length(), 0);
     }
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 4)
+    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
     {
+        std::string toGroupId = tokens[1];
+        std::string fromGroupId = tokens[2];
+        if (toGroupId != GROUP_ID)
+        {
+            return;
+        }
+
+        std::string content;
+        for (auto i = tokens.begin() + 3; i != tokens.end(); i++)
+        {
+            content += *i + " ";
+        }
+        std::string message = "Message from " + fromGroupId + ": " + content;
+        send(ourClientSock, message.c_str(), message.length(), 0);
     }
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
@@ -476,7 +493,6 @@ void processServerMessage(int clientSocket, std::string buffer)
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
-    std::cout << "RECEIVED COMMAND: " << buffer << std::endl;
     int bufferLength = strlen(buffer);
     int i = 0;
     std::vector<std::string> messageVector;
@@ -517,9 +533,6 @@ void handleCommand(int clientSocket, const char *buffer)
     // need to abstract
     for (auto message : messageVector)
     {
-
-        std::cout << "Executing this message " << message << std::endl;
-
         std::vector<std::string> tokens;
         std::stringstream ss(message);
         std::string token;
@@ -663,8 +676,6 @@ int main(int argc, char *argv[])
                             handleCommand(clientSocket, buffer);
                             break;
                         }
-
-                        std::cout << "waiting for more messages: " << buffer << std::endl;
                         offset += bytesRead;
                     }
                 }
