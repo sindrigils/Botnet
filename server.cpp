@@ -29,6 +29,9 @@
 #include <fstream>
 #include <unistd.h>
 
+
+#include <iomanip> //TEMPORARY FOR PRINTING HEX STRINGS
+
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
 #include <fcntl.h>
@@ -86,6 +89,18 @@ std::map<int, Server *> servers; // Lookup table for per Client information
 // Open socket for specified port.
 //
 // Returns -1 if unable to create the socket for any reason.
+
+
+// DEBUGGING FUNCTION
+// Function to convert a string to its hexadecimal representation
+std::string stringToHex(const std::string& input) {
+    std::stringstream ss;
+    for (char c : input) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)(unsigned char)c;
+    }
+    return ss.str();
+}
+
 
 int open_socket(int portno)
 {
@@ -271,8 +286,9 @@ void closeClient(int clientSocket)
     nfds--;
 }
 
-void clientCommand(std::vector<std::string> tokens, char *buffer)
+void clientCommand(std::vector<std::string> tokens, const char *buffer)
 {
+
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
         std::string message = getMessageById(trim(tokens[1]));
@@ -452,35 +468,12 @@ void processServerMessage(int clientSocket, std::string buffer)
 }
 
 // Process command from client on the server
-void handleCommand(int clientSocket, char *buffer)
+void handleCommand(int clientSocket, const char *buffer)
 {
-
-    // need to abstract
-    std::vector<std::string> tokens;
-    std::stringstream ss(buffer);
-    std::string token;
-
-    while (std::getline(ss, token, ','))
-    {
-        tokens.push_back(trim(token));
-    }
-
-    if (tokens[0].compare("kaladin") == 0 && clientSock == -1)
-    {
-        // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
-        servers.erase(clientSocket);
-        clientSock = clientSocket;
-        std::string message = "Well hello there!";
-        send(clientSocket, message.c_str(), message.length(), 0);
-        return;
-    }
-    else if (clientSocket == clientSock)
-    {
-        return clientCommand(tokens, buffer);
-    }
 
     int bufferLength = strlen(buffer);
     int i = 0;
+    std::vector<std::string> messageVector;
 
     std::cout << "Here is the whole message: " << buffer << std::endl;
 
@@ -504,8 +497,7 @@ void handleCommand(int clientSocket, char *buffer)
                 std::cout << "Starting to parse one message" << std::endl;
 
                 std::string message(buffer + startIdx, endIdx - startIdx); // Extract message content
-                processServerMessage(clientSocket, message);               // Process the message
-
+                messageVector.push_back(message);
                 // Move the index past this message (endIdx + 1 for EOT)
                 i = endIdx + 1;
             }
@@ -521,6 +513,45 @@ void handleCommand(int clientSocket, char *buffer)
             ++i;
         }
     }
+
+
+    // need to abstract
+    for (auto message : messageVector)
+    {
+        std::vector<std::string> tokens;
+        std::stringstream ss(message);
+        std::string token;
+
+        std::cout << "MESSAGE IN HEX: " << stringToHex(message) << std::endl;
+
+
+        while (std::getline(ss, token, ','))
+        {
+            tokens.push_back(trim(token));
+        }
+
+
+        if (tokens[0].compare("kaladin") == 0 && clientSock == -1)
+        {
+            std::cout << "kaladin" << std::endl;
+            // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
+            servers.erase(clientSocket);
+            clientSock = clientSocket;
+            std::string message = "Well hello there!";
+            send(clientSocket, message.c_str(), message.length(), 0);
+            return;
+        }
+        else if (clientSocket == clientSock)
+        {
+            std::cout << "In client command" << std::endl;
+            return clientCommand(tokens, buffer);
+        }
+
+        std::cout << "Above process server command" << std::endl;
+        processServerMessage(clientSocket, message);               // Process the message
+        
+    }
+
 }
 
 int main(int argc, char *argv[])
@@ -618,24 +649,38 @@ int main(int argc, char *argv[])
             }
 
             // Check for events on existing connections (clients)
+    
             for (int i = 1; i < nfds; i++)
             {
+                int offset = 0;
+                int bytesRead = 0;
+
                 if (pollfds[i].revents & POLLIN)
                 {
                     // Incoming data on client socket
                     int clientSocket = pollfds[i].fd;
-                    int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-                    if (bytesRead <= 0)
-                    {
-                        // Client disconnected
-                        printf("Client disconnected: %d\n", clientSocket);
-                        closeClient(clientSocket);
-                    }
-                    else
-                    {
-                        // Process command from client
-                        buffer[bytesRead] = '\0';
-                        handleCommand(clientSocket, buffer);
+
+                    memset(buffer, 0, sizeof(buffer));
+
+                    while(buffer[bytesRead] != EOT){
+                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer)-offset, 0);
+                        if (bytesRead <= 0)
+                        {
+                            // Client disconnected
+                            printf("Client disconnected: %d\n", clientSocket);
+                            closeClient(clientSocket);
+                            break;
+                        }
+
+                        if(buffer[bytesRead - 1] == EOT)
+                        {
+                            // Process command from client
+                            buffer[bytesRead] = '\0';
+                            handleCommand(clientSocket, buffer);
+                            break;
+                        }
+                        
+                        offset += bytesRead;
                     }
                 }
             }
