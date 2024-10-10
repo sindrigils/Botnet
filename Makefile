@@ -35,7 +35,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/server.o: $(ROOT_SRC1)
-	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -c $< -g -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/client.o: $(ROOT_SRC2)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)

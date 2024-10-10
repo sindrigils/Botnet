@@ -33,5 +33,12 @@ bool ServerManager::update(int sock, std::string port, std::string name)
 std::string ServerManager::getName(int sock)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
-    return servers[sock]->name;
+    // TODO!!! Make sure this absolutely works, maybe figure out another way to handle the server sockets
+    // This tries to find the server in the map, if it is not found it will return "N/A"
+    auto it = servers.find(sock);
+    if (it != servers.end() && it->second != nullptr) {
+        return it->second->name;
+    } else {
+        return "N/A"; 
+    }
 }
