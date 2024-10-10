@@ -13,3 +13,13 @@ std::string stringToHex(const std::string &input)
     }
     return ss.str();
 }
+
+// Function to strip quotes from a string
+std::string stripQuotes(const std::string &str)
+{
+    if (str.front() == '"' && str.back() == '"')
+    {
+        return str.substr(1, str.size() - 2); // Remove the first and last quotes
+    }
+    return str;
+}

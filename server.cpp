@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <mutex>
 
-#include <iomanip> //TEMPORARY FOR PRINTING HEX STRINGS
+#include "utils.hpp"
 
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
@@ -146,15 +146,6 @@ int open_socket(int portno)
     {
         return (sock);
     }
-}
-
-std::string stripQuotes(const std::string &str)
-{
-    if (str.front() == '"' && str.back() == '"')
-    {
-        return str.substr(1, str.size() - 2); // Remove the first and last quotes
-    }
-    return str;
 }
 
 // Function to get message by ID from a JSON-like file
