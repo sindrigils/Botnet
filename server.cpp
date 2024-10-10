@@ -346,8 +346,11 @@ void processServerMessage(int clientSocket, std::string buffer)
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
     }
-    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() >= 2)
+    else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 2)
     {
+        for(auto i = tokens.begin() + 1; i != tokens.end(); i++) {
+            std::cout << *i << std::endl;
+        }
     }
     else
     {
