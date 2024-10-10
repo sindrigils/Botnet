@@ -94,17 +94,6 @@ std::map<int, Server *> servers; // Lookup table for per Client information
 // Returns -1 if unable to create the socket for any reason.
 
 // DEBUGGING FUNCTION
-// Function to convert a string to its hexadecimal representation
-std::string stringToHex(const std::string &input)
-{
-    std::stringstream ss;
-    for (char c : input)
-    {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)(unsigned char)c;
-    }
-    return ss.str();
-}
-
 int open_socket(int portno)
 {
     struct sockaddr_in sk_addr; // address settings for bind()
