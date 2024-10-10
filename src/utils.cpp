@@ -49,3 +49,34 @@ int findByteIndexInBuffer(const char* buffer, int bufferLength, int start, char 
 std::string extractMessage(const char* buffer, int start, int end) {
     return std::string(buffer + start, end - start);
 }
+
+std::string trim(const std::string &str)
+{
+    if (str.empty())
+    {
+        return str;
+    }
+
+    size_t first = str.find_first_not_of(" \t\n\r");
+
+    // If no non-whitespace characters are found, return an empty string
+    if (first == std::string::npos)
+    {
+        return "";
+    }
+
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
+}
+
+std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(buffer);
+    while (std::getline(ss, token, delimiter))
+    {
+        tokens.push_back(trim(token));
+    }
+    return tokens;
+}

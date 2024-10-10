@@ -201,25 +201,6 @@ bool connectToServer(const std::string &ip, int port)
     }
 }
 
-std::string trim(const std::string &str)
-{
-    if (str.empty())
-    {
-        return str;
-    }
-
-    size_t first = str.find_first_not_of(" \t\n\r");
-
-    // If no non-whitespace characters are found, return an empty string
-    if (first == std::string::npos)
-    {
-        return "";
-    }
-
-    size_t last = str.find_last_not_of(" \t\n\r");
-    return str.substr(first, (last - first + 1));
-}
-
 void closeClient(int clientSocket)
 {
     printf("Client closed connection: %d\n", clientSocket);
@@ -307,13 +288,7 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
 
 void processServerMessage(int clientSocket, std::string buffer)
 {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::stringstream ss(buffer);
-    while (std::getline(ss, token, ','))
-    {
-        tokens.push_back(token);
-    }
+    std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.c_str());
 
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
@@ -336,25 +311,11 @@ void processServerMessage(int clientSocket, std::string buffer)
     {
         // now we just got all the servers that the server we just connect to, is connect to, proceed to
         // connect to the ones that we are not connected to
-        // TODO do better??
-        std::stringstream serversStream(buffer.substr(8));
         tokens.clear();
-
-        while (std::getline(serversStream, token, ';'))
-        {
-            tokens.push_back(token);
-        }
+        tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
         for (auto token : tokens)
         {
-            std::vector<std::string> serverInfo;
-            std::stringstream serverInfoStream(token);
-            std::string info;
-
-            while (std::getline(serverInfoStream, info, ','))
-            {
-                serverInfo.push_back(info);
-            }
-
+            std::vector<std::string> serverInfo = splitMessageOnDelimiter(token.c_str());
             std::string groupId = trim(serverInfo[0]);
             std::string ipAddress = trim(serverInfo[1]);
             std::string port = trim(serverInfo[2]);
@@ -458,14 +419,7 @@ void handleCommand(int clientSocket, const char *buffer)
     // need to abstract
     for (auto message : messageVector)
     {
-        std::vector<std::string> tokens;
-        std::stringstream ss(message);
-        std::string token;
-
-        while (std::getline(ss, token, ','))
-        {
-            tokens.push_back(trim(token));
-        }
+        std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
