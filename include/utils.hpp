@@ -12,3 +12,6 @@ std::string stripQuotes(const std::string &str);
 
 // Adds SOH and EOT to the message and performs byte-stuffing
 std::string constructServerMessage(const std::string &content);
+
+std::string trim(const std::string &str);
+std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
