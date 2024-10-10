@@ -26,8 +26,8 @@
 #include "servers.hpp"
 #include "server-manager.hpp"
 #include "logger.hpp"
+#include "poll-manager.hpp"
 
-#define POLL_TIMEOUT 50 // 50ms
 #define MAX_EOT_TRIES 5
 
 // fix SOCK_NONBLOCK for OSX
@@ -36,13 +36,14 @@
 #define SOCK_NONBLOCK O_NONBLOCK
 #endif
 
-#define BACKlogger 5      // Allowed length of queue of waiting connections
-#define MAX_CONNECTIONS 8 // i think
+#define BACKlogger 5 // Allowed length of queue of waiting connections
 // #define GROUP_ID "5"
 
 ServerManager serverManager;
 Logger logger;
 char *GROUP_ID;
+// PollManager pollManager;
+std::string serverIpAddress;
 
 // Create an array of pollfd structs to track the file descriptors and their events
 struct pollfd pollfds[MAX_CONNECTIONS];
@@ -138,13 +139,12 @@ bool connectToServer(const std::string &ip, int port)
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
-        // servers[serverSocket] = new Server(serverSocket, ip, strPort);
         serverManager.add(serverSocket, ip.c_str(), strPort);
 
-        // abstract this shit
         pollfds[nfds].fd = serverSocket;
         pollfds[nfds].events = POLLIN;
         nfds++;
+        // pollManager.add(serverSocket);
 
         std::cout << "Connected to server: " << ip << ":" << strPort << std::endl;
         std::string message = "HELO," + std::string(GROUP_ID);
@@ -163,9 +163,8 @@ void closeClient(int clientSocket)
 {
     printf("Client closed connection: %d\n", clientSocket);
     close(clientSocket);
-
-    // servers.erase(clientSocket); // Remove from the clients map
     serverManager.close(clientSocket);
+    // pollManager.close(clientSocket);
     nfds--;
 }
 
@@ -190,20 +189,6 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
             {
                 std::cout << "SENDING GETMSGS" << std::endl;
                 send(pair.second->sock, message.c_str(), message.length(), 0);
-            }
-        }
-    }
-    // ONLY FOR TESTINGS ON INSTR_1
-    else if (tokens[0].compare("HELO") == 0)
-    {
-        std::string message = "HELO," + std::string(GROUP_ID);
-        std::string heloMessage = constructServerMessage(message);
-        for (auto &pair : serverManager.servers)
-        {
-            if (pair.second->name == "Instr_1")
-            {
-                std::cout << "MANUALLY SENDING HELO" << std::endl;
-                send(pair.first, heloMessage.c_str(), heloMessage.length(), 0);
             }
         }
     }
@@ -301,7 +286,6 @@ void processServerMessage(int clientSocket, std::string buffer)
 
         // reply with SERVERS, which is all the servers that we are connected to
         serverManager.update(clientSocket, "", tokens[1]);
-        std::cout << "HERE IS NAME AFTER UPDATE: " << serverManager.servers[clientSocket]->name << std::endl;
         std::string groupId = std::string(GROUP_ID);
         std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
         for (auto &pair : serverManager.servers)
@@ -332,7 +316,6 @@ void processServerMessage(int clientSocket, std::string buffer)
             if (token == tokens[0])
             {
                 serverManager.update(clientSocket, port);
-                // servers[clientSocket]->port = port;
                 continue;
             }
 
@@ -423,14 +406,12 @@ void handleCommand(int clientSocket, const char *buffer)
     std::string groupId = serverManager.getName(clientSocket);
     for (auto message : messageVector)
     {
-        logger.write("RECEIVED from " + groupId, message.c_str());
+        logger.write("RECEIVED from " + groupId, message.c_str(), message.length());
         std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
-            // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
-            // SERVER CHANGE
-            // servers.erase(clientSocket);
+            serverIpAddress = getOwnIPFromSocket(clientSocket);
             serverManager.close(clientSocket);
 
             ourClientSock = clientSocket;
@@ -477,12 +458,15 @@ int main(int argc, char *argv[])
 
     // Initialize pollfds with the listening socket
     setupPollFd(listenSock);
+    // pollManager.add(listenSock);
 
     // Main server loop
     while (true)
     {
         // Call poll() to wait for events on sockets
         int pollCount = poll(pollfds, nfds, POLL_TIMEOUT);
+        // logger.write("getPollCount", "", 0);
+        // int pollCount = pollManager.getPollCount();
 
         if (pollCount == -1)
         {
@@ -493,20 +477,24 @@ int main(int argc, char *argv[])
 
         // Check for events on the listening socket
         if (pollfds[0].revents & POLLIN)
+        // logger.write("HASDATA 0", "", 0);
+        // if (pollManager.hasData(0)) // listen sock should always be 0
         {
             // New connection on the listening socket
             clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
-            printf("New client connected: %d\n", clientSock);
-            logger.write("New client connected", "5");
+            std::string clientSockStr = std::to_string(clientSock);
+
+            std::cout << "New client connected: " << clientSockStr << std::endl;
+            logger.write("New client connected", clientSockStr.c_str(), clientSockStr.length());
 
             char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
             serverManager.add(clientSock, clientIpAddress);
 
-            // abstract
             pollfds[nfds].fd = clientSock;
             pollfds[nfds].events = POLLIN; // Monitor for incoming data
             nfds++;
+            // pollManager.add(clientSock);
 
             // abstract
             std::string message = "HELO," + std::string(GROUP_ID);
@@ -518,13 +506,17 @@ int main(int argc, char *argv[])
         for (int i = 1; i < nfds; i++)
         {
             if (!(pollfds[i].revents & POLLIN))
+            // if (!pollManager.hasData(i))
             {
                 continue;
             }
 
             // Incoming data on client socket
             int clientSocket = pollfds[i].fd;
+            // logger.write("getFd: " + std::to_string(i), "", 0);
+            // int clientSocket = pollManager.getFd(i);
 
+            // std::string clientSockStr = std::to_string(clientSock);
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client doesn not wrap the message in SOH and EOT
@@ -535,7 +527,7 @@ int main(int argc, char *argv[])
                 if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    // printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
                     closeClient(clientSocket);
                     break;
                 }
@@ -543,8 +535,8 @@ int main(int argc, char *argv[])
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
-                    printf("Client disconnected: %d\n", clientSocket);
-                    logger.write("Client disconnected", "5");
+                    // printf("Client disconnected: %d\n", clientSocket);
+                    // logger.write("Client disconnected", clientSockStr.c_str(), clientSockStr.length());
                     closeClient(clientSocket);
                     break;
                 }
@@ -560,7 +552,8 @@ int main(int argc, char *argv[])
                 if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    // logger.write("Invalid message format from " + clientSockStr, buffer, bytesRead + offset);
+                    // std::cout << "Client did not wrap the message in SOH and EOT: " << clientSockStr << std::endl;
                     closeClient(clientSocket);
                     break;
                 }

@@ -12,7 +12,7 @@ class Logger
 {
 public:
     std::string filePath;
-    void write(const std::string message, const char *buffer);
+    void write(const std::string message, const char *buffer, size_t bufferLen);
 
 private:
 };
