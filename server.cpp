@@ -26,11 +26,11 @@
 #include <map>
 #include <fstream>
 #include <unistd.h>
-#include <mutex>
 
 #include "utils.hpp"
 
-#include "server-connection.hpp"
+#include "servers.hpp"
+#include "server-manager.hpp"
 
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
@@ -42,7 +42,7 @@
 #define MAX_CONNECTIONS 8 // i think
 // #define GROUP_ID "5"
 
-std::mutex serverMutex;
+ServerManager serverManager;
 
 char *GROUP_ID;
 
@@ -69,7 +69,7 @@ char *serverPort;
 // Quite often a simple array can be used as a lookup table,
 // (indexed on socket no.) sacrificing memory for speed.
 
-std::map<int, Server *> servers; // Lookup table for per Client information
+// std::map<int, Server *> servers; // Lookup table for per Client information
 
 // Open socket for specified port.
 //
@@ -141,8 +141,8 @@ bool connectToServer(const std::string &ip, int port)
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
-        std::lock_guard<std::mutex> guard(serverMutex);
-        servers[serverSocket] = new Server(serverSocket, ip, strPort);
+        // servers[serverSocket] = new Server(serverSocket, ip, strPort);
+        serverManager.add(serverSocket, ip.c_str(), strPort);
 
         // abstract this shit
         pollfds[nfds].fd = serverSocket;
@@ -166,7 +166,9 @@ void closeClient(int clientSocket)
 {
     printf("Client closed connection: %d\n", clientSocket);
     close(clientSocket);
-    servers.erase(clientSocket); // Remove from the clients map
+
+    // servers.erase(clientSocket); // Remove from the clients map
+    serverManager.close(clientSocket);
     nfds--;
 }
 
@@ -181,7 +183,7 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
     {
         std::string groupId = tokens[1];
-        for (auto const &pair : servers)
+        for (auto const &pair : serverManager.servers)
         {
             if (pair.second->name.compare(groupId) == 0)
             {
@@ -204,7 +206,7 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
             msg += *i + " ";
         }
 
-        for (auto const &pair : servers)
+        for (auto const &pair : serverManager.servers)
         {
             send(pair.second->sock, msg.c_str(), msg.length(), 0);
         }
@@ -212,13 +214,13 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
     else if (tokens[0].compare("LISTSERVERS") == 0)
     {
         std::string message = "";
-        if (servers.size() == 0)
+        if (serverManager.servers.size() == 0)
         {
             message = "Not connected to any servers.";
         }
         else
         {
-            for (const auto &pair : servers)
+            for (const auto &pair : serverManager.servers)
             {
                 message += pair.second->name + ", ";
             }
@@ -254,12 +256,13 @@ void processServerMessage(int clientSocket, std::string buffer)
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         // reply with SERVERS, which is all the servers that we are connected to
-        std::lock_guard<std::mutex> guard(serverMutex);
-        servers[clientSocket]->name = tokens[1];
+
+        serverManager.update(clientSocket, "", tokens[1]);
+        // servers[clientSocket]->name = tokens[1];
 
         std::string groupId = std::string(GROUP_ID);
         std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
-        for (auto &pair : servers)
+        for (auto &pair : serverManager.servers)
         {
             message += pair.second->name + ",";
             message += pair.second->ipAddress + ",";
@@ -284,7 +287,8 @@ void processServerMessage(int clientSocket, std::string buffer)
             // TODO better, since the first token is just the server info of the server that just send the message
             if (token == tokens[0])
             {
-                servers[clientSocket]->port = port;
+                serverManager.update(clientSocket, port);
+                // servers[clientSocket]->port = port;
                 continue;
             }
 
@@ -296,8 +300,8 @@ void processServerMessage(int clientSocket, std::string buffer)
             }
             else
             {
-                std::lock_guard<std::mutex> guard(serverMutex);
-                for (auto &pair : servers)
+                // TODO FIX
+                for (auto &pair : serverManager.servers)
                 {
                     if (pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port))
                     {
@@ -358,12 +362,14 @@ void handleCommand(int clientSocket, const char *buffer)
     std::vector<std::string> messageVector;
 
     // Add messages to the message vector that are between <SOH> and <EOT>
-    for(int i = 0, start, end; i < bufferLength; i = end + 1)
+    for (int i = 0, start, end; i < bufferLength; i = end + 1)
     {
-        if((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0) {
+        if ((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0)
+        {
             break;
         }
-        if((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0) {
+        if ((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0)
+        {
             break;
         }
         messageVector.push_back(extractMessage(buffer, start + 1, end));
@@ -377,7 +383,10 @@ void handleCommand(int clientSocket, const char *buffer)
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
             // þurfum aðeins að hugsa þetta, bara hægt að hafa einn client right now, en þurfum svo sem ekki fleiri
-            servers.erase(clientSocket);
+            // SERVER CHANGE
+            // servers.erase(clientSocket);
+            serverManager.close(clientSocket);
+
             ourClientSock = clientSocket;
             std::string message = "Well hello there!";
             send(clientSocket, message.c_str(), message.length(), 0);
@@ -458,8 +467,7 @@ int main(int argc, char *argv[])
 
             char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
-            std::lock_guard<std::mutex> guard(serverMutex);
-            servers[clientSock] = new Server(clientSock, clientIpAddress);
+            serverManager.add(clientSock, clientIpAddress);
 
             // abstract
             pollfds[nfds].fd = clientSock;
@@ -483,26 +491,55 @@ int main(int argc, char *argv[])
                 // Incoming data on client socket
                 int clientSocket = pollfds[i].fd;
 
-                memset(buffer, 0, sizeof(buffer));
-                while (true)
-                {
-                    bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
-                    if (bytesRead <= 0)
-                    {
-                        // Client disconnected
-                        printf("Client disconnected: %d\n", clientSocket);
-                        closeClient(clientSocket);
-                        break;
-                    }
+                char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
+                inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
-                    if (buffer[offset + bytesRead - 1] == EOT)
+                // SERVER-CHANGE
+                // servers[clientSock] = new Server(clientSock, clientIpAddress);
+                serverManager.add(clientSock, clientIpAddress);
+
+                // abstract
+                pollfds[nfds].fd = clientSock;
+                pollfds[nfds].events = POLLIN; // Monitor for incoming data
+                nfds++;
+
+                // abstract
+                std::string message = "HELO," + std::string(GROUP_ID);
+                std::string heloMessage = constructServerMessage(message);
+                send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
+            }
+
+            // Check for events on existing connections (clients)
+            for (int i = 1; i < nfds; i++)
+            {
+                int offset = 0;
+                int bytesRead = 0;
+
+                if (pollfds[i].revents & POLLIN)
+                {
+                    int clientSocket = pollfds[i].fd;
+
+                    memset(buffer, 0, sizeof(buffer));
+                    while (true)
                     {
-                        // Process command from client
-                        buffer[offset + bytesRead] = '\0';
-                        handleCommand(clientSocket, buffer);
-                        break;
+                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+                        if (bytesRead <= 0)
+                        {
+                            // Client disconnected
+                            printf("Client disconnected: %d\n", clientSocket);
+                            closeClient(clientSocket);
+                            break;
+                        }
+
+                        if (buffer[offset + bytesRead - 1] == EOT)
+                        {
+                            // Process command from client
+                            buffer[offset + bytesRead] = '\0';
+                            handleCommand(clientSocket, buffer);
+                            break;
+                        }
+                        offset += bytesRead;
                     }
-                    offset += bytesRead;
                 }
             }
         }

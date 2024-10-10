@@ -1,6 +1,8 @@
+#ifndef UTILS_HPP
+#define UTILS_HPP
 #include <string>
-#include <iomanip> // For std::setw and std::setfill
-#include <sstream> // For std::stringstream 
+#include <iomanip>   // For std::setw and std::setfill
+#include <sstream>   // For std::stringstream
 #include <algorithm> // For std::find
 #include <vector>
 
@@ -18,9 +20,11 @@ std::string stripQuotes(const std::string &str);
 std::string constructServerMessage(const std::string &content);
 
 // Finds the index of a byte in a buffer
-int findByteIndexInBuffer(const char* buffer, int bufferLength, int start, char sByte);
+int findByteIndexInBuffer(const char *buffer, int bufferLength, int start, char sByte);
 
 // Extracts a message from the buffer between start and end
-std::string extractMessage(const char* buffer, int start, int end);
+std::string extractMessage(const char *buffer, int start, int end);
 std::string trim(const std::string &str);
 std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
+
+#endif

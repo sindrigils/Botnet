@@ -1,3 +1,5 @@
+#ifndef SERVERS_HPP
+#define SERVERS_HPP
 #include <iostream>
 
 class Server
@@ -10,3 +12,4 @@ public:
 
     Server(int socket, const std::string &ipAddress, const std::string &port = "-1", const std::string &name = "N/A");
 };
+#endif
