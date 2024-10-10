@@ -3,7 +3,6 @@
 #include <iomanip> // For std::setw and std::setfill
 #include <sstream> // For std::stringstream 
 
-// Function to convert a string to its hexadecimal representation
 std::string stringToHex(const std::string &input)
 {
     std::stringstream ss;
@@ -14,7 +13,6 @@ std::string stringToHex(const std::string &input)
     return ss.str();
 }
 
-// Function to strip quotes from a string
 std::string stripQuotes(const std::string &str)
 {
     if (str.front() == '"' && str.back() == '"')
@@ -22,4 +20,26 @@ std::string stripQuotes(const std::string &str)
         return str.substr(1, str.size() - 2); // Remove the first and last quotes
     }
     return str;
+}
+
+std::string constructServerMessage(const std::string &content)
+{
+    std::string stuffedContent;
+
+    // Byte-stuffing: Escape SOH (0x01) and EOT (0x04) in the content
+    for (char c : content)
+    {
+        if (c == SOH || c == EOT)
+        {
+            stuffedContent += ESC;
+        }
+        stuffedContent += c;
+    }
+
+    std::string finalMessage;
+    finalMessage += SOH;
+    finalMessage += stuffedContent;
+    finalMessage += EOT;
+
+    return finalMessage;
 }

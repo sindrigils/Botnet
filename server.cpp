@@ -43,9 +43,6 @@
 #define BACKLOG 5         // Allowed length of queue of waiting connections
 #define MAX_CONNECTIONS 8 // i think
 // #define GROUP_ID "5"
-#define SOH 0x01
-#define EOT 0x04
-#define ESC 0x10 // Escape character for byte-stuffing
 
 std::mutex serverMutex;
 
@@ -169,29 +166,6 @@ std::string getMessageById(const std::string &id)
         }
     }
     return "Message not found for ID: " + id;
-}
-
-std::string constructServerMessage(const std::string &content)
-{
-    std::string stuffedContent;
-
-    // Byte-stuffing: Escape SOH (0x01) and EOT (0x04) in the content
-    // ekki buinn að testa þetta, tekið beint af chat
-    for (char c : content)
-    {
-        if (c == SOH || c == EOT)
-        {
-            stuffedContent += ESC;
-        }
-        stuffedContent += c;
-    }
-
-    std::string finalMessage;
-    finalMessage += SOH;
-    finalMessage += stuffedContent;
-    finalMessage += EOT;
-
-    return finalMessage;
 }
 
 bool connectToServer(const std::string &ip, int port)
