@@ -1,6 +1,14 @@
 CXX = g++
 CXXFLAGS = -Iinclude -Wall -std=c++11
-LDFLAGS = -lpthread
+
+# Platform-specific settings
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)  # This checks if you're on macOS
+    LDFLAGS = 
+else
+    LDFLAGS = -lpthread
+endif
+
 
 SRC_DIR = src
 INCLUDE_DIR = include
