@@ -6,7 +6,7 @@
 
 #include "servers.hpp"
 
-std::mutex serverMutex1;
+extern std::mutex serverMutex;
 
 class ServerManager
 {

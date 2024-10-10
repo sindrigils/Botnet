@@ -491,55 +491,26 @@ int main(int argc, char *argv[])
                 // Incoming data on client socket
                 int clientSocket = pollfds[i].fd;
 
-                char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
-                inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
-
-                // SERVER-CHANGE
-                // servers[clientSock] = new Server(clientSock, clientIpAddress);
-                serverManager.add(clientSock, clientIpAddress);
-
-                // abstract
-                pollfds[nfds].fd = clientSock;
-                pollfds[nfds].events = POLLIN; // Monitor for incoming data
-                nfds++;
-
-                // abstract
-                std::string message = "HELO," + std::string(GROUP_ID);
-                std::string heloMessage = constructServerMessage(message);
-                send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
-            }
-
-            // Check for events on existing connections (clients)
-            for (int i = 1; i < nfds; i++)
-            {
-                int offset = 0;
-                int bytesRead = 0;
-
-                if (pollfds[i].revents & POLLIN)
+                memset(buffer, 0, sizeof(buffer));
+                while (true)
                 {
-                    int clientSocket = pollfds[i].fd;
-
-                    memset(buffer, 0, sizeof(buffer));
-                    while (true)
+                    bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+                    if (bytesRead <= 0)
                     {
-                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
-                        if (bytesRead <= 0)
-                        {
-                            // Client disconnected
-                            printf("Client disconnected: %d\n", clientSocket);
-                            closeClient(clientSocket);
-                            break;
-                        }
-
-                        if (buffer[offset + bytesRead - 1] == EOT)
-                        {
-                            // Process command from client
-                            buffer[offset + bytesRead] = '\0';
-                            handleCommand(clientSocket, buffer);
-                            break;
-                        }
-                        offset += bytesRead;
+                        // Client disconnected
+                        printf("Client disconnected: %d\n", clientSocket);
+                        closeClient(clientSocket);
+                        break;
                     }
+
+                    if (buffer[offset + bytesRead - 1] == EOT)
+                    {
+                        // Process command from client
+                        buffer[offset + bytesRead] = '\0';
+                        handleCommand(clientSocket, buffer);
+                        break;
+                    }
+                    offset += bytesRead;
                 }
             }
         }
