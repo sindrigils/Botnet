@@ -1,8 +1,5 @@
 #include "utils.hpp"
 
-#include <iomanip> // For std::setw and std::setfill
-#include <sstream> // For std::stringstream 
-
 std::string stringToHex(const std::string &input)
 {
     std::stringstream ss;
@@ -42,4 +39,13 @@ std::string constructServerMessage(const std::string &content)
     finalMessage += EOT;
 
     return finalMessage;
+}
+
+int findByteIndexInBuffer(const char* buffer, int bufferLength, int start, char sByte) {
+    int index = std::find(buffer + start, buffer + bufferLength, sByte) - buffer;
+    return (index < bufferLength) ? index : -1; // Return -1 if byte is not found
+}
+
+std::string extractMessage(const char* buffer, int start, int end) {
+    return std::string(buffer + start, end - start);
 }

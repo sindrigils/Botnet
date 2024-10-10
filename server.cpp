@@ -438,35 +438,21 @@ void handleCommand(int clientSocket, const char *buffer)
 
     while (i < bufferLength)
     {
-        // Find the start of a message (SOH)
-        if (buffer[i] == SOH)
+        int start = findByteIndexInBuffer(buffer, bufferLength, i, SOH);
+        if (start == -1)
         {
-            // Find the end of the message (EOT)
-            int startIdx = i + 1;
-            int endIdx = startIdx;
-            while (endIdx < bufferLength && buffer[endIdx] != EOT)
-            {
-                ++endIdx;
-            }
-            // If EOT found, process the message
-            if (endIdx < bufferLength && buffer[endIdx] == EOT)
-            {
-                std::string message(buffer + startIdx, endIdx - startIdx); // Extract message content
-                messageVector.push_back(message);
-                // Move the index past this message (endIdx + 1 for EOT)
-                i = endIdx + 1;
-            }
-            else
-            {
-                // No EOT found, stop processing
-                break;
-            }
+            break;
         }
-        else
+
+        int end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT);
+        if (end == -1)
         {
-            // Move to the next character if SOH not found
-            ++i;
+            break;
         }
+        
+        messageVector.push_back(extractMessage(buffer, start + 1, end));
+
+        i = end + 1;
     }
 
     // need to abstract
