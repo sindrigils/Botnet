@@ -1,3 +1,5 @@
+/build/*
+!.gitkeep
 client
 server
 .vscode
