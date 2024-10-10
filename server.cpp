@@ -32,6 +32,9 @@
 #include "servers.hpp"
 #include "server-manager.hpp"
 
+#define POLL_TIMEOUT 50 // 50ms
+#define MAX_EOT_TRIES 5
+
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
 #include <fcntl.h>
@@ -483,7 +486,7 @@ int main(int argc, char *argv[])
     while (true)
     {
         // Call poll() to wait for events on sockets
-        int pollCount = poll(pollfds, nfds, -1); // Wait indefinitely
+        int pollCount = poll(pollfds, nfds, POLL_TIMEOUT);
 
         if (pollCount == -1)
         {
@@ -517,9 +520,6 @@ int main(int argc, char *argv[])
         // Check for events on existing connections (clients)
         for (int i = 1; i < nfds; i++)
         {
-            int offset = 0;
-            int bytesRead = 0;
-
             if(!(pollfds[i].revents & POLLIN)){
                 continue;
             }
@@ -527,9 +527,21 @@ int main(int argc, char *argv[])
             // Incoming data on client socket
             int clientSocket = pollfds[i].fd;
 
-            while (true)
+            // Read the data into a buffer, it's expected to start with SOH and and with EOT
+            // however, it may be split into multiple packets, so we need to handle that.
+            // We also need to handle the cases where the client doesn not wrap the message in SOH and EOT
+            for(int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+
+                if(buffer[0] != SOH && offset == 0)
+                {
+                    // Client did not wrap the message in SOH and EOT
+                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    closeClient(clientSocket);
+                    break;
+                }
+                
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
@@ -545,9 +557,15 @@ int main(int argc, char *argv[])
                     handleCommand(clientSocket, buffer);
                     break;
                 }
-                offset += bytesRead;
+
+                if (i == MAX_EOT_TRIES)
+                {
+                    // Client did not wrap the message in SOH and EOT
+                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    closeClient(clientSocket);
+                    break;
+                }
             }
-        
         }
     }
 
