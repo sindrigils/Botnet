@@ -59,7 +59,6 @@ void setupPollFd(int listenSock)
 }
 
 int ourClientSock = -1;
-char *serverIpAddress;
 char *serverPort;
 
 // Note: map is not necessarily the most efficient method to use here,
@@ -300,6 +299,8 @@ void processServerMessage(int clientSocket, std::string buffer)
 
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
+        std::string serverIpAddress = getOwnIPFromSocket(clientSocket);
+
         // reply with SERVERS, which is all the servers that we are connected to
         serverManager.update(clientSocket, "", tokens[1]);
         std::cout << "HERE IS NAME AFTER UPDATE: " << serverManager.servers[clientSocket]->name << std::endl;
@@ -437,20 +438,6 @@ void handleCommand(int clientSocket, const char *buffer)
             std::string message = "Well hello there!";
             send(clientSocket, message.c_str(), message.length(), 0);
 
-            struct sockaddr_in own_addr;
-            socklen_t own_addr_len = sizeof(own_addr);
-            if (getsockname(clientSocket, (struct sockaddr *)&own_addr, &own_addr_len) < 0)
-            {
-                perror("can't get own IP address from socket");
-                exit(1);
-            }
-            else
-            {
-                char own_ip[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &own_addr.sin_addr, own_ip, INET_ADDRSTRLEN);
-                std::cout << "Here is the server's IP address: " << own_ip << std::endl;
-            }
-
             return;
         }
         else if (clientSocket == ourClientSock)
@@ -464,22 +451,6 @@ void handleCommand(int clientSocket, const char *buffer)
 
 int main(int argc, char *argv[])
 {
-    char hostname[1024];
-    hostname[1023] = '\0'; // Ensure null-termination
-    gethostname(hostname, 1023);
-
-    // Get the local IP address
-    struct hostent *host_entry;
-    host_entry = gethostbyname(hostname);
-    if (host_entry == NULL)
-    {
-        perror("gethostbyname");
-        exit(1);
-    }
-
-    // Convert the IP address to a human-readable form
-    serverIpAddress = inet_ntoa(*(struct in_addr *)host_entry->h_addr_list[0]);
-
     serverPort = argv[1];
     GROUP_ID = argv[2];
 

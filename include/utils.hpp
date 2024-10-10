@@ -1,10 +1,12 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <string>
-#include <iomanip>   // For std::setw and std::setfill
-#include <sstream>   // For std::stringstream
-#include <algorithm> // For std::find
+#include <iomanip>      // For std::setw and std::setfill
+#include <sstream>      // For std::stringstream
+#include <algorithm>    // For std::find
 #include <vector>
+#include <sys/socket.h> // For getsockname
+#include <arpa/inet.h>  // For inet_ntop
 
 #define SOH 0x01
 #define EOT 0x04
@@ -30,5 +32,8 @@ std::string trim(const std::string &str);
 
 // Split a message on a delimiter
 std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
+
+// Get the IP address of the socket
+std::string getOwnIPFromSocket(int sock);
 
 #endif
