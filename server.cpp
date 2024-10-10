@@ -180,6 +180,36 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
         std::string message = "NOT IMPLEMENTED";
         send(ourClientSock, message.c_str(), message.length(), 0);
     }
+    else if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 3)
+    {
+        std::string forGroupId = tokens[1];
+        std::string fromGroupId = tokens[2];
+        std::string msg = "GETMSGS," + forGroupId;
+        std::string message = constructServerMessage(msg);
+
+        for (auto &pair : serverManager.servers)
+        {
+            if (pair.second->name == fromGroupId)
+            {
+                std::cout << "SENDING GETMSGS" << std::endl;
+                send(pair.second->sock, message.c_str(), message.length(), 0);
+            }
+        }
+    }
+    // ONLY FOR TESTINGS ON INSTR_1
+    else if (tokens[0].compare("HELO") == 0)
+    {
+        std::string message = "HELO," + std::string(GROUP_ID);
+        std::string heloMessage = constructServerMessage(message);
+        for (auto &pair : serverManager.servers)
+        {
+            if (pair.second->name == "Instr_1")
+            {
+                std::cout << "MANUALLY SENDING HELO" << std::endl;
+                send(pair.first, heloMessage.c_str(), heloMessage.length(), 0);
+            }
+        }
+    }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
     {
         std::string groupId = tokens[1];
@@ -271,14 +301,14 @@ void processServerMessage(int clientSocket, std::string buffer)
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         // reply with SERVERS, which is all the servers that we are connected to
-
         serverManager.update(clientSocket, "", tokens[1]);
-        // servers[clientSocket]->name = tokens[1];
-
+        std::cout << "HERE IS NAME AFTER UPDATE: " << serverManager.servers[clientSocket]->name << std::endl;
         std::string groupId = std::string(GROUP_ID);
         std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
         for (auto &pair : serverManager.servers)
         {
+            if (pair.second->name == "N/A")
+                continue;
             message += pair.second->name + ",";
             message += pair.second->ipAddress + ",";
             message += pair.second->port + ";";
@@ -357,11 +387,13 @@ void processServerMessage(int clientSocket, std::string buffer)
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
     }
-    else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 2)
+    else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
     {
-        for(auto i = tokens.begin() + 1; i != tokens.end(); i++) {
-            std::cout << *i << std::endl;
-        }
+        std::cout << "STATUSRESP: " << buffer << std::endl;
+        // for (auto i = tokens.begin(); i != tokens.end(); i++)
+        // {
+        //     std::cout << *i << std::endl;
+        // }
     }
     else
     {
