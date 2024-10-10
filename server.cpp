@@ -81,7 +81,6 @@ std::map<int, Server *> servers; // Lookup table for per Client information
 //
 // Returns -1 if unable to create the socket for any reason.
 
-// DEBUGGING FUNCTION
 int open_socket(int portno)
 {
     struct sockaddr_in sk_addr; // address settings for bind()
