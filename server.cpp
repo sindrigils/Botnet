@@ -32,6 +32,8 @@
 
 #include <iomanip> //TEMPORARY FOR PRINTING HEX STRINGS
 
+#include "server-connection.hpp"
+
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
 #include <fcntl.h>
@@ -65,20 +67,6 @@ void setupPollFd(int listenSock)
 int ourClientSock = -1;
 char *serverIpAddress;
 char *serverPort;
-class Server
-{
-public:
-    int sock;
-    std::string name;
-    std::string ipAddress;
-    std::string port;
-
-    Server(int socket) : sock(socket)
-    {
-        name = "N/A";
-        port = -1;
-    }
-};
 
 // Note: map is not necessarily the most efficient method to use here,
 // especially for a server with large numbers of simulataneous connections,
@@ -240,9 +228,7 @@ bool connectToServer(const std::string &ip, int port)
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
         std::lock_guard<std::mutex> guard(serverMutex);
-        servers[serverSocket] = new Server(serverSocket);
-        servers[serverSocket]->ipAddress = ip;
-        servers[serverSocket]->port = strPort;
+        servers[serverSocket] = new Server(serverSocket, ip, strPort);
 
         // abstract this shit
         pollfds[nfds].fd = serverSocket;
@@ -624,15 +610,10 @@ int main(int argc, char *argv[])
                 clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
                 printf("New client connected: %d\n", clientSock);
 
-                struct sockaddr_in peerAddr;
-                socklen_t peerAddrLen = sizeof(peerAddr);
-
                 char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
                 inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
                 std::lock_guard<std::mutex> guard(serverMutex);
-                servers[clientSock] = new Server(clientSock);
-                servers[clientSock]->port = "-1";
-                servers[clientSock]->ipAddress = clientIpAddress;
+                servers[clientSock] = new Server(clientSock, clientIpAddress);
 
                 // abstract
                 pollfds[nfds].fd = clientSock;
