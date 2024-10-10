@@ -1,5 +1,7 @@
 /build/*
 !.gitkeep
+/logs/*
+!.gitkeep
 client
 server
 .vscode

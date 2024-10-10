@@ -29,3 +29,9 @@ bool ServerManager::update(int sock, std::string port, std::string name)
     }
     return true;
 }
+
+std::string ServerManager::getName(int sock)
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    return servers[sock]->name;
+}
