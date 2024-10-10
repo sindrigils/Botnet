@@ -467,6 +467,7 @@ int main(int argc, char *argv[])
 
     // Setup socket for server to listen to
     listenSock = open_socket(atoi(argv[1]));
+
     printf("Listening on port: %d\n", atoi(argv[1]));
 
     if (listen(listenSock, BACKLOG) < 0)
@@ -519,33 +520,34 @@ int main(int argc, char *argv[])
             int offset = 0;
             int bytesRead = 0;
 
-            if (pollfds[i].revents & POLLIN)
-            {
-                // Incoming data on client socket
-                int clientSocket = pollfds[i].fd;
-
-                memset(buffer, 0, sizeof(buffer));
-                while (true)
-                {
-                    bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
-                    if (bytesRead <= 0)
-                    {
-                        // Client disconnected
-                        printf("Client disconnected: %d\n", clientSocket);
-                        closeClient(clientSocket);
-                        break;
-                    }
-
-                    if (buffer[offset + bytesRead - 1] == EOT)
-                    {
-                        // Process command from client
-                        buffer[offset + bytesRead] = '\0';
-                        handleCommand(clientSocket, buffer);
-                        break;
-                    }
-                    offset += bytesRead;
-                }
+            if(!(pollfds[i].revents & POLLIN)){
+                continue;
             }
+
+            // Incoming data on client socket
+            int clientSocket = pollfds[i].fd;
+
+            while (true)
+            {
+                bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+                if (bytesRead <= 0)
+                {
+                    // Client disconnected
+                    printf("Client disconnected: %d\n", clientSocket);
+                    closeClient(clientSocket);
+                    break;
+                }
+
+                if (buffer[offset + bytesRead - 1] == EOT)
+                {
+                    // Process command from client
+                    buffer[offset + bytesRead] = '\0';
+                    handleCommand(clientSocket, buffer);
+                    break;
+                }
+                offset += bytesRead;
+            }
+        
         }
     }
 
