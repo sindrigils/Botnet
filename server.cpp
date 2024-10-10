@@ -19,10 +19,8 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <list>
 
-#include <iostream>
 #include <sstream>
 #include <thread>
 #include <map>
@@ -47,7 +45,6 @@
 std::mutex serverMutex;
 
 char *GROUP_ID;
-std::string filePath = "messages.json";
 
 // Create an array of pollfd structs to track the file descriptors and their events
 struct pollfd pollfds[MAX_CONNECTIONS];
@@ -132,42 +129,6 @@ int open_socket(int portno)
     }
 }
 
-// Function to get message by ID from a JSON-like file
-std::string getMessageById(const std::string &id)
-{
-    std::ifstream inputFile(filePath);
-    if (!inputFile.is_open())
-    {
-        throw std::runtime_error("Could not open file: " + filePath);
-    }
-
-    std::string line;
-    std::string targetId = "\"" + id + "\""; // Format the ID as it appears in the file
-
-    while (std::getline(inputFile, line))
-    {
-
-        std::size_t idPos = line.find(targetId); // Search for the ID
-        if (idPos != std::string::npos)
-        {
-            // The ID was found, now extract the corresponding message
-            std::size_t colonPos = line.find(':', idPos);
-            if (colonPos != std::string::npos)
-            {
-                std::string messagePart = line.substr(colonPos + 1); // Get everything after the colon
-                std::string message = stripQuotes(messagePart);      // Remove any quotes
-                // Remove trailing comma or newline characters
-                if (message.back() == ',')
-                {
-                    message.pop_back();
-                }
-                return message;
-            }
-        }
-    }
-    return "Message not found for ID: " + id;
-}
-
 bool connectToServer(const std::string &ip, int port)
 {
     std::string strPort = std::to_string(port);
@@ -214,7 +175,7 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
 
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
-        std::string message = getMessageById(trim(tokens[1]));
+        std::string message = "NOT IMPLEMENTED";
         send(ourClientSock, message.c_str(), message.length(), 0);
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
@@ -410,7 +371,7 @@ void handleCommand(int clientSocket, const char *buffer)
         {
             break;
         }
-        
+
         messageVector.push_back(extractMessage(buffer, start + 1, end));
 
         i = end + 1;
