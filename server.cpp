@@ -1,9 +1,3 @@
-// Simple chat server for TSAM-409
-//
-// Command line: ./chat_server 4000
-//
-// Author: Jacky Mallett (jacky@ru.is)
-//
 #include <poll.h>
 #include <stdio.h>
 #include <errno.h>
@@ -31,6 +25,7 @@
 
 #include "servers.hpp"
 #include "server-manager.hpp"
+#include "logger.hpp"
 
 #define POLL_TIMEOUT 50 // 50ms
 #define MAX_EOT_TRIES 5
@@ -41,12 +36,12 @@
 #define SOCK_NONBLOCK O_NONBLOCK
 #endif
 
-#define BACKLOG 5         // Allowed length of queue of waiting connections
+#define BACKlogger 5      // Allowed length of queue of waiting connections
 #define MAX_CONNECTIONS 8 // i think
 // #define GROUP_ID "5"
 
 ServerManager serverManager;
-
+Logger logger;
 char *GROUP_ID;
 
 // Create an array of pollfd structs to track the file descriptors and their events
@@ -425,9 +420,10 @@ void handleCommand(int clientSocket, const char *buffer)
         messageVector.push_back(extractMessage(buffer, start + 1, end));
     }
 
-    // need to abstract
+    std::string groupId = serverManager.getName(clientSocket);
     for (auto message : messageVector)
     {
+        logger.write("RECEIVED from " + groupId, message.c_str());
         std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
@@ -473,7 +469,7 @@ int main(int argc, char *argv[])
 
     printf("Listening on port: %d\n", atoi(argv[1]));
 
-    if (listen(listenSock, BACKLOG) < 0)
+    if (listen(listenSock, BACKlogger) < 0)
     {
         printf("Listen failed on port %s\n", argv[1]);
         exit(0);
@@ -501,6 +497,7 @@ int main(int argc, char *argv[])
             // New connection on the listening socket
             clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
             printf("New client connected: %d\n", clientSock);
+            logger.write("New client connected", "5");
 
             char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
@@ -520,7 +517,8 @@ int main(int argc, char *argv[])
         // Check for events on existing connections (clients)
         for (int i = 1; i < nfds; i++)
         {
-            if(!(pollfds[i].revents & POLLIN)){
+            if (!(pollfds[i].revents & POLLIN))
+            {
                 continue;
             }
 
@@ -530,22 +528,23 @@ int main(int argc, char *argv[])
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client doesn not wrap the message in SOH and EOT
-            for(int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
+            for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
 
-                if(buffer[0] != SOH && offset == 0)
+                if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
                     printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
                     closeClient(clientSocket);
                     break;
                 }
-                
+
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
                     printf("Client disconnected: %d\n", clientSocket);
+                    logger.write("Client disconnected", "5");
                     closeClient(clientSocket);
                     break;
                 }
@@ -569,6 +568,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    close(listenSock); // Close the listening socket when done
+    close(listenSock);
     return 0;
 }

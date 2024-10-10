@@ -15,6 +15,7 @@ public:
     bool add(int sock, const char *ipAddress, std::string port = "-1");
     bool close(int sock);
     bool update(int sock, std::string port = "", std::string name = "");
+    std::string getName(int sock);
 
 private:
 };
