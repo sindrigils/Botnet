@@ -412,7 +412,6 @@ int main(int argc, char *argv[])
     serverPort = argv[1];
     GROUP_ID = argv[2];
 
-    bool finished = false;
     int listenSock, clientSock;
     struct sockaddr_in client;
     socklen_t clientLen = sizeof(client);
@@ -437,7 +436,8 @@ int main(int argc, char *argv[])
     // Initialize pollfds with the listening socket
     setupPollFd(listenSock);
 
-    while (!finished)
+    // Main server loop
+    while (true)
     {
         // Call poll() to wait for events on sockets
         int pollCount = poll(pollfds, nfds, -1); // Wait indefinitely
@@ -445,66 +445,64 @@ int main(int argc, char *argv[])
         if (pollCount == -1)
         {
             perror("poll failed");
-            finished = true;
+            close(listenSock);
+            break; // EXIT POINT
         }
-        else
+
+        // Check for events on the listening socket
+        if (pollfds[0].revents & POLLIN)
         {
-            // Check for events on the listening socket
-            if (pollfds[0].revents & POLLIN)
+            // New connection on the listening socket
+            clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
+            printf("New client connected: %d\n", clientSock);
+
+            char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
+            inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
+            std::lock_guard<std::mutex> guard(serverMutex);
+            servers[clientSock] = new Server(clientSock, clientIpAddress);
+
+            // abstract
+            pollfds[nfds].fd = clientSock;
+            pollfds[nfds].events = POLLIN; // Monitor for incoming data
+            nfds++;
+
+            // abstract
+            std::string message = "HELO," + std::string(GROUP_ID);
+            std::string heloMessage = constructServerMessage(message);
+            send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
+        }
+
+        // Check for events on existing connections (clients)
+        for (int i = 1; i < nfds; i++)
+        {
+            int offset = 0;
+            int bytesRead = 0;
+
+            if (pollfds[i].revents & POLLIN)
             {
-                // New connection on the listening socket
-                clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
-                printf("New client connected: %d\n", clientSock);
+                // Incoming data on client socket
+                int clientSocket = pollfds[i].fd;
 
-                char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
-                inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
-                std::lock_guard<std::mutex> guard(serverMutex);
-                servers[clientSock] = new Server(clientSock, clientIpAddress);
-
-                // abstract
-                pollfds[nfds].fd = clientSock;
-                pollfds[nfds].events = POLLIN; // Monitor for incoming data
-                nfds++;
-
-                // abstract
-                std::string message = "HELO," + std::string(GROUP_ID);
-                std::string heloMessage = constructServerMessage(message);
-                send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
-            }
-
-            // Check for events on existing connections (clients)
-
-            for (int i = 1; i < nfds; i++)
-            {
-                int offset = 0;
-                int bytesRead = 0;
-
-                if (pollfds[i].revents & POLLIN)
+                memset(buffer, 0, sizeof(buffer));
+                while (true)
                 {
-                    // Incoming data on client socket
-                    int clientSocket = pollfds[i].fd;
-
-                    memset(buffer, 0, sizeof(buffer));
-                    while (true)
+                    bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+                    if (bytesRead <= 0)
                     {
-                        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
-                        if (bytesRead <= 0)
-                        {
-                            // Client disconnected
-                            printf("Client disconnected: %d\n", clientSocket);
-                            closeClient(clientSocket);
-                            break;
-                        }
-
-                        if (buffer[offset + bytesRead - 1] == EOT)
-                        {
-                            // Process command from client
-                            buffer[offset + bytesRead] = '\0';
-                            handleCommand(clientSocket, buffer);
-                            break;
-                        }
-                        offset += bytesRead;
+                        // Client disconnected
+                        printf("Client disconnected: %d\n", clientSocket);
+                        closeClient(clientSocket);
+                        break;
                     }
+
+                    if (buffer[offset + bytesRead - 1] == EOT)
+                    {
+                        // Process command from client
+                        buffer[offset + bytesRead] = '\0';
+                        handleCommand(clientSocket, buffer);
+                        break;
+                    }
+                    offset += bytesRead;
                 }
             }
         }
