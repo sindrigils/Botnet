@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                if (i == MAX_EOT_TRIES)
+                if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
                     printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
