@@ -1,7 +1,7 @@
 #include "utils.hpp"
 
 #include <iomanip> // For std::setw and std::setfill
-#include <sstream> // For std::stringstream 
+#include <sstream> // For std::stringstream
 
 std::string stringToHex(const std::string &input)
 {
@@ -42,4 +42,35 @@ std::string constructServerMessage(const std::string &content)
     finalMessage += EOT;
 
     return finalMessage;
+}
+
+std::string trim(const std::string &str)
+{
+    if (str.empty())
+    {
+        return str;
+    }
+
+    size_t first = str.find_first_not_of(" \t\n\r");
+
+    // If no non-whitespace characters are found, return an empty string
+    if (first == std::string::npos)
+    {
+        return "";
+    }
+
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
+}
+
+std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(buffer);
+    while (std::getline(ss, token, delimiter))
+    {
+        tokens.push_back(trim(token));
+    }
+    return tokens;
 }
