@@ -243,6 +243,21 @@ void clientCommand(std::vector<std::string> tokens, const char *buffer)
         message = isSuccess ? "Successfully connected to the server." : "Unable to connect to the server.";
         send(ourClientSock, message.c_str(), message.length(), 0);
     }
+    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 2)
+    {
+        std::string groupId = tokens[1];
+        std::string message = constructServerMessage("STATUSREQ");
+
+        for (const auto &pair : serverManager.servers)
+        {
+            if (pair.second->name == groupId)
+            {
+                std::cout << "found server sending STATUSREQ" << std::endl;
+                send(pair.second->sock, message.c_str(), message.length(), 0);
+                break;
+            }
+        }
+    }
     else
     {
         std::cout << "Unknown command from client:" << buffer << std::endl;
@@ -330,10 +345,6 @@ void processServerMessage(int clientSocket, std::string buffer)
     {
         std::string toGroupId = tokens[1];
         std::string fromGroupId = tokens[2];
-        if (toGroupId != GROUP_ID)
-        {
-            return;
-        }
 
         std::string content;
         for (auto i = tokens.begin() + 3; i != tokens.end(); i++)
