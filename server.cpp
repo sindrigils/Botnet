@@ -355,26 +355,18 @@ void processServerMessage(int clientSocket, std::string buffer)
 void handleCommand(int clientSocket, const char *buffer)
 {
     int bufferLength = strlen(buffer);
-    int i = 0;
     std::vector<std::string> messageVector;
 
-    while (i < bufferLength)
+    // Add messages to the message vector that are between <SOH> and <EOT>
+    for(int i = 0, start, end; i < bufferLength; i = end + 1)
     {
-        int start = findByteIndexInBuffer(buffer, bufferLength, i, SOH);
-        if (start == -1)
-        {
+        if((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0) {
             break;
         }
-
-        int end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT);
-        if (end == -1)
-        {
+        if((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0) {
             break;
         }
-
         messageVector.push_back(extractMessage(buffer, start + 1, end));
-
-        i = end + 1;
     }
 
     // need to abstract
