@@ -25,6 +25,8 @@
 
 #include "servers.hpp"
 #include "server-manager.hpp"
+#include "server-commands.hpp"
+#include "client-commands.hpp"
 #include "logger.hpp"
 #include "poll-manager.hpp"
 
@@ -42,36 +44,13 @@
 ServerManager serverManager;
 Logger logger;
 char *GROUP_ID;
-// PollManager pollManager;
+PollManager pollManager;
+ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger);
+ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger);
 std::string serverIpAddress;
-
-// Create an array of pollfd structs to track the file descriptors and their events
-struct pollfd pollfds[MAX_CONNECTIONS];
-int nfds = 0; // Number of active file descriptors
-
-// Function to initialize the listening socket and add it to pollfds
-void setupPollFd(int listenSock)
-{
-    pollfds[0].fd = listenSock; // Listening socket is the first entry
-    pollfds[0].events = POLLIN; // We want to monitor for incoming connections
-    nfds = 1;                   // Only 1 fd initially (the listening socket)
-}
 
 int ourClientSock = -1;
 char *serverPort;
-
-// Note: map is not necessarily the most efficient method to use here,
-// especially for a server with large numbers of simulataneous connections,
-// where performance is also expected to be an issue.
-//
-// Quite often a simple array can be used as a lookup table,
-// (indexed on socket no.) sacrificing memory for speed.
-
-// std::map<int, Server *> servers; // Lookup table for per Client information
-
-// Open socket for specified port.
-//
-// Returns -1 if unable to create the socket for any reason.
 
 int open_socket(int portno)
 {
@@ -127,260 +106,12 @@ int open_socket(int portno)
     }
 }
 
-bool connectToServer(const std::string &ip, int port)
-{
-    std::string strPort = std::to_string(port);
-
-    struct sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
-
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
-    {
-        serverManager.add(serverSocket, ip.c_str(), strPort);
-
-        pollfds[nfds].fd = serverSocket;
-        pollfds[nfds].events = POLLIN;
-        nfds++;
-        // pollManager.add(serverSocket);
-
-        std::cout << "Connected to server: " << ip << ":" << strPort << std::endl;
-        std::string message = "HELO," + std::string(GROUP_ID);
-        std::string heloMessage = constructServerMessage(message);
-        send(serverSocket, heloMessage.c_str(), heloMessage.length(), 0);
-        return true;
-    }
-    else
-    {
-        std::cout << "Failed to connect to server: " << ip << ":" << strPort << std::endl;
-        return false;
-    }
-}
-
 void closeClient(int clientSocket)
 {
     printf("Client closed connection: %d\n", clientSocket);
     close(clientSocket);
     serverManager.close(clientSocket);
-    // pollManager.close(clientSocket);
-    nfds--;
-}
-
-void clientCommand(std::vector<std::string> tokens, const char *buffer)
-{
-
-    if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
-    {
-        std::string message = "NOT IMPLEMENTED";
-        send(ourClientSock, message.c_str(), message.length(), 0);
-    }
-    else if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 3)
-    {
-        std::string forGroupId = tokens[1];
-        std::string fromGroupId = tokens[2];
-        std::string msg = "GETMSGS," + forGroupId;
-        std::string message = constructServerMessage(msg);
-
-        for (auto &pair : serverManager.servers)
-        {
-            if (pair.second->name == fromGroupId)
-            {
-                std::cout << "SENDING GETMSGS" << std::endl;
-                send(pair.second->sock, message.c_str(), message.length(), 0);
-            }
-        }
-    }
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
-    {
-        std::string groupId = tokens[1];
-        for (auto const &pair : serverManager.servers)
-        {
-            if (pair.second->name.compare(groupId) == 0)
-            {
-                std::string content;
-                for (auto i = tokens.begin() + 2; i != tokens.end(); i++)
-                {
-                    content += *i + " ";
-                }
-                std::string message = "SENDMSG," + groupId + "," + GROUP_ID + "," + content;
-                std::string serverMessage = constructServerMessage(message);
-                send(pair.second->sock, serverMessage.c_str(), serverMessage.length(), 0);
-            }
-        }
-    }
-    else if (tokens[0].compare("MSG") == 0 && tokens[1].compare("ALL") == 0)
-    {
-        std::string msg;
-        for (auto i = tokens.begin() + 2; i != tokens.end(); i++)
-        {
-            msg += *i + " ";
-        }
-
-        for (auto const &pair : serverManager.servers)
-        {
-            send(pair.second->sock, msg.c_str(), msg.length(), 0);
-        }
-    }
-    else if (tokens[0].compare("LISTSERVERS") == 0)
-    {
-        std::string message = "";
-        if (serverManager.servers.size() == 0)
-        {
-            message = "Not connected to any servers.";
-        }
-        else
-        {
-            for (const auto &pair : serverManager.servers)
-            {
-                message += pair.second->name + ", ";
-            }
-            message = message.substr(0, message.length() - 2);
-        }
-
-        send(ourClientSock, message.c_str(), message.length(), 0);
-    }
-    else if (tokens[0].compare("LEAVE") == 0)
-    {
-        close(ourClientSock);
-        ourClientSock = -1;
-    }
-    else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 3)
-    {
-        std::string message = "";
-        std::string ip = tokens[1];
-        int port = std::stoi(tokens[2]);
-        bool isSuccess = connectToServer(trim(tokens[1]), port);
-        message = isSuccess ? "Successfully connected to the server." : "Unable to connect to the server.";
-        send(ourClientSock, message.c_str(), message.length(), 0);
-    }
-    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 2)
-    {
-        std::string groupId = tokens[1];
-        std::string message = constructServerMessage("STATUSREQ");
-
-        for (const auto &pair : serverManager.servers)
-        {
-            if (pair.second->name == groupId)
-            {
-                std::cout << "found server sending STATUSREQ" << std::endl;
-                send(pair.second->sock, message.c_str(), message.length(), 0);
-                break;
-            }
-        }
-    }
-    else
-    {
-        std::cout << "Unknown command from client:" << buffer << std::endl;
-    }
-}
-
-void processServerMessage(int clientSocket, std::string buffer)
-{
-    std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.c_str());
-
-    if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
-    {
-        std::string serverIpAddress = getOwnIPFromSocket(clientSocket);
-
-        // reply with SERVERS, which is all the servers that we are connected to
-        serverManager.update(clientSocket, "", tokens[1]);
-        std::string groupId = std::string(GROUP_ID);
-        std::string message = "SERVERS," + groupId + "," + serverIpAddress + "," + serverPort + ";";
-        for (auto &pair : serverManager.servers)
-        {
-            if (pair.second->name == "N/A")
-                continue;
-            message += pair.second->name + ",";
-            message += pair.second->ipAddress + ",";
-            message += pair.second->port + ";";
-        }
-        std::string sendMessage = constructServerMessage(message);
-        send(clientSocket, sendMessage.c_str(), sendMessage.length(), 0);
-    }
-    else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
-    {
-        // now we just got all the servers that the server we just connect to, is connect to, proceed to
-        // connect to the ones that we are not connected to
-        tokens.clear();
-        tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
-        for (auto token : tokens)
-        {
-            std::vector<std::string> serverInfo = splitMessageOnDelimiter(token.c_str());
-            std::string groupId = trim(serverInfo[0]);
-            std::string ipAddress = trim(serverInfo[1]);
-            std::string port = trim(serverInfo[2]);
-
-            // TODO better, since the first token is just the server info of the server that just send the message
-            if (token == tokens[0])
-            {
-                serverManager.update(clientSocket, port);
-                continue;
-            }
-
-            // abstracta þetta
-            bool skip = false;
-            if (groupId == GROUP_ID || port == "-1")
-            {
-                skip = true;
-            }
-            else
-            {
-                // TODO FIX
-                for (auto &pair : serverManager.servers)
-                {
-                    if (pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port))
-                    {
-                        skip = true;
-                        break;
-                    }
-                }
-            }
-            if (skip)
-                continue;
-
-            // hægt er að crasha serverinn ef port er ekki tölur
-            std::cout << "Attempting to connect to server: " << ipAddress << "," << port << "," << groupId;
-            connectToServer(ipAddress, std::stoi(port));
-        }
-    }
-    else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
-    {
-    }
-    else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
-    {
-        // std::string groupMessage = getMessageById(trim(tokens[1]));
-        // std::string message = "" send(clientSock, message.c_str(), message.length(), 0);
-    }
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
-    {
-        std::string toGroupId = tokens[1];
-        std::string fromGroupId = tokens[2];
-
-        std::string content;
-        for (auto i = tokens.begin() + 3; i != tokens.end(); i++)
-        {
-            content += *i + " ";
-        }
-        std::string message = "Message from " + fromGroupId + ": " + content;
-        send(ourClientSock, message.c_str(), message.length(), 0);
-    }
-    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
-    {
-    }
-    else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
-    {
-        std::cout << "STATUSRESP: " << buffer << std::endl;
-        // for (auto i = tokens.begin(); i != tokens.end(); i++)
-        // {
-        //     std::cout << *i << std::endl;
-        // }
-    }
-    else
-    {
-        std::cout << "Unknown command from server:" << buffer << std::endl;
-    }
+    pollManager.close(clientSocket);
 }
 
 // Process command from client on the server
@@ -412,20 +143,22 @@ void handleCommand(int clientSocket, const char *buffer)
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
         {
             serverIpAddress = getOwnIPFromSocket(clientSocket);
+            serverCommands.setIpAddress(serverIpAddress.c_str());
             serverManager.close(clientSocket);
 
             ourClientSock = clientSocket;
+            clientCommands.setSock(clientSocket);
             std::string message = "Well hello there!";
             send(clientSocket, message.c_str(), message.length(), 0);
-
             return;
         }
         else if (clientSocket == ourClientSock)
         {
-            return clientCommand(tokens, buffer);
+            return clientCommands.findCommand(tokens, buffer);
+            // return clientCommand(tokens, buffer);
         }
 
-        processServerMessage(clientSocket, message);
+        serverCommands.findCommand(clientSocket, message);
     }
 }
 
@@ -433,6 +166,10 @@ int main(int argc, char *argv[])
 {
     serverPort = argv[1];
     GROUP_ID = argv[2];
+    // remove both lines
+    serverCommands.setGroupId(GROUP_ID);
+    clientCommands.setGroupId(GROUP_ID);
+    serverCommands.setPort(serverPort);
 
     int listenSock, clientSock;
     struct sockaddr_in client;
@@ -456,17 +193,13 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    // Initialize pollfds with the listening socket
-    setupPollFd(listenSock);
-    // pollManager.add(listenSock);
+    pollManager.add(listenSock);
 
     // Main server loop
     while (true)
     {
-        // Call poll() to wait for events on sockets
-        int pollCount = poll(pollfds, nfds, POLL_TIMEOUT);
-        // logger.write("getPollCount", "", 0);
-        // int pollCount = pollManager.getPollCount();
+
+        int pollCount = pollManager.getPollCount();
 
         if (pollCount == -1)
         {
@@ -476,9 +209,7 @@ int main(int argc, char *argv[])
         }
 
         // Check for events on the listening socket
-        if (pollfds[0].revents & POLLIN)
-        // logger.write("HASDATA 0", "", 0);
-        // if (pollManager.hasData(0)) // listen sock should always be 0
+        if (pollManager.hasData(0)) // listen sock should always be 0
         {
             // New connection on the listening socket
             clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
@@ -491,10 +222,7 @@ int main(int argc, char *argv[])
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
             serverManager.add(clientSock, clientIpAddress);
 
-            pollfds[nfds].fd = clientSock;
-            pollfds[nfds].events = POLLIN; // Monitor for incoming data
-            nfds++;
-            // pollManager.add(clientSock);
+            pollManager.add(clientSock);
 
             // abstract
             std::string message = "HELO," + std::string(GROUP_ID);
@@ -503,20 +231,16 @@ int main(int argc, char *argv[])
         }
 
         // Check for events on existing connections (clients)
-        for (int i = 1; i < nfds; i++)
+        for (int i = 1; i < pollManager.nfds; i++)
         {
-            if (!(pollfds[i].revents & POLLIN))
-            // if (!pollManager.hasData(i))
+            if (!pollManager.hasData(i))
             {
                 continue;
             }
 
-            // Incoming data on client socket
-            int clientSocket = pollfds[i].fd;
-            // logger.write("getFd: " + std::to_string(i), "", 0);
-            // int clientSocket = pollManager.getFd(i);
+            int clientSocket = pollManager.getFd(i);
+            std::string clientSockStr = std::to_string(clientSock);
 
-            // std::string clientSockStr = std::to_string(clientSock);
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client doesn not wrap the message in SOH and EOT
@@ -527,7 +251,7 @@ int main(int argc, char *argv[])
                 if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    // printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
                     closeClient(clientSocket);
                     break;
                 }
@@ -535,8 +259,8 @@ int main(int argc, char *argv[])
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
-                    // printf("Client disconnected: %d\n", clientSocket);
-                    // logger.write("Client disconnected", clientSockStr.c_str(), clientSockStr.length());
+                    printf("Client disconnected: %d\n", clientSocket);
+                    logger.write("Client disconnected", clientSockStr.c_str(), clientSockStr.length());
                     closeClient(clientSocket);
                     break;
                 }
@@ -552,8 +276,8 @@ int main(int argc, char *argv[])
                 if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    // logger.write("Invalid message format from " + clientSockStr, buffer, bytesRead + offset);
-                    // std::cout << "Client did not wrap the message in SOH and EOT: " << clientSockStr << std::endl;
+                    logger.write("Invalid message format from " + clientSockStr, buffer, bytesRead + offset);
+                    std::cout << "Client did not wrap the message in SOH and EOT: " << clientSockStr << std::endl;
                     closeClient(clientSocket);
                     break;
                 }

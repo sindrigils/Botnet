@@ -1,11 +1,33 @@
 #include "server-commands.hpp"
 
-ServerCommands::ServerCommands(ServerManager serverManager) : serverManager(serverManager) {};
+ServerCommands::ServerCommands(
+    ServerManager &serverManager,
+    PollManager &pollManager,
+    Logger &logger) : serverManager(serverManager),
+                      pollManager(pollManager),
+                      logger(logger), myIpAddress("-1"), myGroupId("-1"), myPort("-1") {};
+
+void ServerCommands::setIpAddress(const char *ip)
+{
+    myIpAddress = ip; // Set the IP address
+}
+
+// Setter for Group ID
+void ServerCommands::setGroupId(const std::string &groupId)
+{
+    myGroupId = groupId; // Set the group ID
+}
+
+// Setter for Port
+void ServerCommands::setPort(const std::string &port)
+{
+    myPort = port; // Set the port
+}
 
 void ServerCommands::findCommand(int socket, std::string buffer)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.c_str());
-
+    std::cout << "looking for command in compare" << std::endl;
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         handleHelo(socket, tokens);
@@ -44,11 +66,15 @@ void ServerCommands::findCommand(int socket, std::string buffer)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     serverManager.update(socket, "", tokens[1]);
+
     std::string message = "SERVERS," + myGroupId + "," + myIpAddress + "," + myPort + ";";
     for (auto &pair : serverManager.servers)
     {
         if (pair.second->name == "N/A")
+        {
             continue;
+        }
+
         message += pair.second->name + ",";
         message += pair.second->ipAddress + ",";
         message += pair.second->port + ";";
@@ -96,8 +122,13 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             continue;
 
         // hægt er að crasha serverinn ef port er ekki tölur
-        std::cout << "Attempting to connect to server: " << ipAddress << "," << port << "," << groupId;
-        // connectToServer(ipAddress, std::stoi(port));
+        int serverSock = connectToServer(ipAddress, std::stoi(port), myGroupId);
+        if (serverSock != -1)
+        {
+            logger.write("New client connected " + std::to_string(serverSock), "", 0);
+            serverManager.add(serverSock, ipAddress.c_str(), port);
+            pollManager.add(serverSock);
+        }
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)

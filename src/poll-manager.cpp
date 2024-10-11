@@ -13,6 +13,8 @@ PollManager::PollManager() : nfds(0)
 
 void PollManager::add(int sock)
 {
+    std::lock_guard<std::mutex> lock(fdMutex);
+
     if (nfds >= 8)
     {
         return;
@@ -25,6 +27,7 @@ void PollManager::add(int sock)
 
 void PollManager::close(int sock)
 {
+    std::lock_guard<std::mutex> lock(fdMutex);
     for (int i = 0; i < nfds; ++i)
     {
         if (pollfds[i].fd == sock)
@@ -45,6 +48,7 @@ void PollManager::close(int sock)
 
 int PollManager::getFd(int i)
 {
+    std::lock_guard<std::mutex> lock(fdMutex);
     if (i > 8)
     {
         return -1;
@@ -54,10 +58,12 @@ int PollManager::getFd(int i)
 
 int PollManager::getPollCount()
 {
+    // Call poll() to wait for events on sockets
     return poll(pollfds, nfds, POLL_TIMEOUT);
 }
 
 int PollManager::hasData(int i)
 {
+    std::lock_guard<std::mutex> lock(fdMutex);
     return pollfds[i].revents & POLLIN;
 }

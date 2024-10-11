@@ -21,6 +21,7 @@ public:
     PollManager(); // Constructor to initialize the poll manager
 
 private:
+    std::mutex fdMutex;
 };
 
 #endif

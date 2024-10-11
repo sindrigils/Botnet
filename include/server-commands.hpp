@@ -6,14 +6,23 @@
 
 #include "utils.hpp"
 #include "server-manager.hpp"
+#include "poll-manager.hpp"
+#include "logger.hpp"
+
 class ServerCommands
 {
 public:
+    void setIpAddress(const char *ip);
+    void setGroupId(const std::string &groupId);
+    void setPort(const std::string &port);
     void findCommand(int socket, std::string buffer);
-    ServerCommands(ServerManager serverManager);
+    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
-    ServerManager serverManager;
+    ServerManager &serverManager;
+    PollManager &pollManager;
+    Logger &logger;
+
     const char *myIpAddress;
     std::string myGroupId;
     std::string myPort;

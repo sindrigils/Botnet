@@ -41,12 +41,14 @@ std::string constructServerMessage(const std::string &content)
     return finalMessage;
 }
 
-int findByteIndexInBuffer(const char* buffer, int bufferLength, int start, char sByte) {
+int findByteIndexInBuffer(const char *buffer, int bufferLength, int start, char sByte)
+{
     int index = std::find(buffer + start, buffer + bufferLength, sByte) - buffer;
     return (index < bufferLength) ? index : -1; // Return -1 if byte is not found
 }
 
-std::string extractMessage(const char* buffer, int start, int end) {
+std::string extractMessage(const char *buffer, int start, int end)
+{
     return std::string(buffer + start, end - start);
 }
 
@@ -95,6 +97,26 @@ std::string getOwnIPFromSocket(int sock)
 
     char own_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &own_addr.sin_addr, own_ip, INET_ADDRSTRLEN);
-    
+
     return std::string(own_ip);
+}
+
+int connectToServer(const std::string &ip, int port, std::string myGroupId)
+{
+    std::string strPort = std::to_string(port);
+
+    struct sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+    inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
+
+    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
+    {
+        std::string message = "HELO," + myGroupId;
+        std::string heloMessage = constructServerMessage(message);
+        send(serverSocket, heloMessage.c_str(), heloMessage.length(), 0);
+        return serverSocket;
+    }
+    return -1;
 }
