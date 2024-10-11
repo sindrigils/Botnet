@@ -93,11 +93,11 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
 
-        logger.write("Attempting to connect to server " + groupId + " " + ipAddress + ":" + port, "", 0);
+        logger.write("Attempting to connect to server " + groupId + " " + ipAddress + ":" + port);
         // abstracta þetta
         if (groupId == myGroupId || port == "-1")
         {
-            logger.write("Skipping self-connection!", "", 0);
+           logger.write("Skipping self-connection!");
             continue;
         }
                 
@@ -108,7 +108,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             });
 
         if (alreadyConnected) {
-            logger.write(groupId + " " + ipAddress + ":" + port + " already connected!", "", 0);
+            logger.write(groupId + " " + ipAddress + ":" + port + " already connected!");
             continue;
         }
 
@@ -116,13 +116,13 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         int serverSock = connectToServer(ipAddress, std::stoi(port), myGroupId);
         if (serverSock != -1)
         {
-            logger.write("Server connected: " + groupId + " " + ipAddress + ":" + port, "", 0);
+            logger.write("Server connected: " + groupId + " " + ipAddress + ":" + port);
             serverManager.add(serverSock, ipAddress.c_str(), port);
             pollManager.add(serverSock);
         }
         else
         {
-            logger.write("Unable to connect to server: " + groupId + " " + ipAddress + ":" + port, "", 0);
+            logger.write("Unable to connect to server: " + groupId + " " + ipAddress + ":" + port);
         }
     }
 }

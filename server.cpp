@@ -196,8 +196,7 @@ int main(int argc, char *argv[])
             serverManager.update(clientSock, serverPort, "CLIENT");
             pollManager.add(clientSock);
 
-            std::cout << "New client connected: " << clientIpAddress << std::endl;
-            logger.write("New client connected", clientIpAddress, sizeof(clientIpAddress));
+            logger.write("New client connected: " + std::string(clientIpAddress), true);
 
             std::string message = "Successfully connected!";
             send(clientSock, message.c_str(), message.length(), 0);
@@ -225,8 +224,7 @@ int main(int argc, char *argv[])
                 if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    std::cout << "Invalid message format from (First packet did not start with SOH): " << serverName << std::endl;
-                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverName, buffer, bytesRead);
+                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverName, buffer, bytesRead, true);
                     closeClient(clientSocket);
                     break;
                 }
@@ -234,8 +232,7 @@ int main(int argc, char *argv[])
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
-                    std::cout << "Remote server disconnected: " << serverName << std::endl;
-                    logger.write("Remote server disconnected", serverName.c_str(), serverName.length());
+                    logger.write("Remote server disconnected: " + serverName, true);
                     closeClient(clientSocket);
                     break;
                 }
@@ -251,8 +248,7 @@ int main(int argc, char *argv[])
                 if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    logger.write("Invalid message format from " + serverName, buffer, bytesRead + offset);
-                    std::cout << "Remote server did not wrap the message in SOH and EOT: " << serverName << std::endl;
+                    logger.write("Invalid message format (No SOH, EOT) from " + serverName, buffer, bytesRead + offset, true);
                     closeClient(clientSocket);
                     break;
                 }
