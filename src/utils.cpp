@@ -52,6 +52,24 @@ std::string extractMessage(const char *buffer, int start, int end)
     return std::string(buffer + start, end - start);
 }
 
+std::vector<std::string> extractMessages(const char *buffer, int bufferLength)
+{
+    std::vector<std::string> messageVector;
+    for (int i = 0, start, end; i < bufferLength; i = end + 1)
+    {
+        if ((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0)
+        {
+            break;
+        }
+        if ((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0)
+        {
+            break;
+        }
+        messageVector.push_back(extractMessage(buffer, start + 1, end));
+    }
+    return messageVector;
+}
+
 std::string trim(const std::string &str)
 {
     if (str.empty())

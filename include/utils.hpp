@@ -27,6 +27,9 @@ int findByteIndexInBuffer(const char *buffer, int bufferLength, int start, char 
 // Extracts a message from the buffer between start and end
 std::string extractMessage(const char *buffer, int start, int end);
 
+// Extracts messages from a buffer and adds them to a vector
+std::vector<std::string> extractMessages(const char *buffer, int bufferLength);
+
 // Trim leading and trailing whitespace from a string
 std::string trim(const std::string &str);
 

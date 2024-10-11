@@ -11,18 +11,9 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include <algorithm>
 #include <map>
-#include <list>
-
-#include <sstream>
-#include <thread>
-#include <map>
-#include <fstream>
-#include <unistd.h>
 
 #include "utils.hpp"
-
 #include "servers.hpp"
 #include "server-manager.hpp"
 #include "server-commands.hpp"
@@ -114,27 +105,13 @@ void closeClient(int clientSocket)
     pollManager.close(clientSocket);
 }
 
+
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
     int bufferLength = strlen(buffer);
-    std::vector<std::string> messageVector;
+    std::vector<std::string> messageVector = extractMessages(buffer, bufferLength);
 
-    // Add messages to the message vector that are between <SOH> and <EOT>
-    for (int i = 0, start, end; i < bufferLength; i = end + 1)
-    {
-        if ((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0)
-        {
-            break;
-        }
-        if ((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0)
-        {
-            break;
-        }
-        messageVector.push_back(extractMessage(buffer, start + 1, end));
-    }
-
-    std::string groupId = serverManager.getName(clientSocket);
     for (auto message : messageVector)
     {
         std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
@@ -151,7 +128,8 @@ void handleCommand(int clientSocket, const char *buffer)
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
-        else if (clientSocket == ourClientSock)
+
+        if (clientSocket == ourClientSock)
         {
             return clientCommands.findCommand(tokens, buffer);
             // return clientCommand(tokens, buffer);

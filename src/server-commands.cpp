@@ -129,6 +129,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
 {
 }
+
 void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens)
 {
     std::string toGroupId = tokens[1];
