@@ -10,7 +10,7 @@
 
 #define SOH 0x01
 #define EOT 0x04
-#define ESC 0x10 // Escape character for byte-stuffing
+#define ESC 0x10
 
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);

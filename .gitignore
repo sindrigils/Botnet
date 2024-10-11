@@ -6,3 +6,4 @@ client
 server
 .vscode
 build
+.DS_Store

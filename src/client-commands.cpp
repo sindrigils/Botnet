@@ -145,12 +145,10 @@ void ClientCommands::handleListServers(std::vector<std::string> tokens)
 
 void ClientCommands::handleConnect(std::vector<std::string> tokens)
 {
-
-    logger.write("Attempting to connect to server ", tokens[1].c_str(), tokens[1].length());
-
+    logger.write("Attempting to connect to server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
     std::string message = "";
     std::string ip = tokens[1];
-    int port = std::stoi(tokens[2]);
+    int port = stringToInt(tokens[2]);
     int serverSock = connectToServer(trim(tokens[1]), port, myGroupId);
     if (serverSock == -1)
     {

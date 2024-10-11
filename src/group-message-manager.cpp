@@ -43,3 +43,19 @@ int GroupMessageManager::getMessageCount(const std::string &groupId) const
 
     return 0;
 }
+
+std::unordered_map<std::string, int> GroupMessageManager::getAllMessagesCount() const
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    std::unordered_map<std::string, int> groupTotalMessages;
+
+    for (auto &pair : groupMessages)
+    {
+        int counter = getMessageCount(pair.first);
+        if (counter > 0)
+        {
+            groupTotalMessages[pair.first] = counter;
+        }
+    };
+    return groupTotalMessages;
+}

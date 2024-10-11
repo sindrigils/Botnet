@@ -14,19 +14,17 @@ ServerCommands::ServerCommands(
 
 void ServerCommands::setIpAddress(const char *ip)
 {
-    myIpAddress = ip; // Set the IP address
+    myIpAddress = ip;
 }
 
-// Setter for Group ID
 void ServerCommands::setGroupId(const std::string &groupId)
 {
-    myGroupId = groupId; // Set the group ID
+    myGroupId = groupId;
 }
 
-// Setter for Port
 void ServerCommands::setPort(const std::string &port)
 {
-    myPort = port; // Set the port
+    myPort = port;
 }
 
 void ServerCommands::setOurClient(int sock)
@@ -60,11 +58,11 @@ void ServerCommands::findCommand(int socket, std::string buffer)
     }
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
-        handleStatusREQ(socket, tokens);
+        handleStatusReq(socket, tokens);
     }
     else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
     {
-        handleStatusRESP(socket, tokens);
+        handleStatusResp(socket, tokens);
     }
     else
     {
@@ -101,44 +99,34 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
 
-        logger.write("Attempting to connect to server " + groupId + " " + ipAddress + ":" + port);
-        // abstracta þetta
-        if (groupId == myGroupId || port == "-1" || ipAddress == "-1")
-        {
-            logger.write("Skipping self-connection!");
-            continue;
-        }
-
-        // Abstract þetta?
         bool isAlreadyConnected = std::any_of(serverManager.servers.begin(), serverManager.servers.end(),
                                               [&](const std::pair<const int, Server *> &pair)
                                               {
                                                   return pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port);
                                               });
 
-        if (isAlreadyConnected)
+        if (isAlreadyConnected || groupId == myGroupId || port == "-1" || ipAddress == "-1")
         {
-            logger.write(groupId + " " + ipAddress + ":" + port + " already connected!");
             continue;
         }
-
+        logger.write("Attempting to connecto to ip: " + ipAddress + ", port: " + port + ", groupId: " + groupId);
         int serverSock = connectToServer(ipAddress, stringToInt(port), myGroupId);
         if (serverSock != -1)
         {
-            logger.write("Server connected: " + groupId + " " + ipAddress + ":" + port);
+            logger.write("Server connected - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
             serverManager.add(serverSock, ipAddress.c_str(), port);
             pollManager.add(serverSock);
         }
         else
         {
-            logger.write("Unable to connect to server: " + groupId + " " + ipAddress + ":" + port);
+            logger.write("Unable to connect to server- groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
         }
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
 {
     int numberOfMessages = stringToInt(tokens[1]);
-    if (numberOfMessages == -1 || numberOfMessages <= 0)
+    if (numberOfMessages <= 0)
     {
         return;
     }
@@ -185,10 +173,21 @@ void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
         send(socket, msg.c_str(), msg.length(), 0);
     };
 }
-void ServerCommands::handleStatusREQ(int socket, std::vector<std::string> tokens)
+void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens)
 {
+    std::unordered_map<std::string, int> totalStoredMessages = groupMessageManager.getAllMessagesCount();
+    std::string message = "STATUSRESP,";
+    for (auto &pair : totalStoredMessages)
+    {
+        message += pair.first + "," + std::to_string(pair.second) + ",";
+    };
+    // remove the trailing ",", even if there is no stored messages, then we remove the "," from the command
+    message.pop_back();
+
+    std::string serverMessage = constructServerMessage(message);
+    send(socket, serverMessage.c_str(), serverMessage.length(), 0);
 }
-void ServerCommands::handleStatusRESP(int socket, std::vector<std::string> tokens)
+void ServerCommands::handleStatusResp(int socket, std::vector<std::string> tokens)
 {
 }
 

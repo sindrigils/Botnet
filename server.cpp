@@ -33,7 +33,9 @@
 #define SOCK_NONBLOCK O_NONBLOCK
 #endif
 
-#define BACKlogger 5 // Allowed length of queue of waiting connections
+#define Backlog 5
+#define MAX_MESSAGE_LENGTH 5001
+
 // #define GROUP_ID "5"
 
 ServerManager serverManager;
@@ -102,7 +104,6 @@ int open_socket(int portno)
 
 void closeClient(int clientSocket)
 {
-    printf("Client closed connection: %d\n", clientSocket);
     close(clientSocket);
     serverManager.close(clientSocket);
     pollManager.close(clientSocket);
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
     int listenSock, clientSock;
     struct sockaddr_in client;
     socklen_t clientLen = sizeof(client);
-    char buffer[1025]; // Buffer for reading from clients
+    char buffer[MAX_MESSAGE_LENGTH]; // Buffer for reading from clients
 
     if (argc != 3)
     {
@@ -183,7 +184,7 @@ int main(int argc, char *argv[])
 
     printf("Listening on port: %d\n", atoi(argv[1]));
 
-    if (listen(listenSock, BACKlogger) < 0)
+    if (listen(listenSock, Backlog) < 0)
     {
         printf("Listen failed on port %s\n", argv[1]);
         exit(0);
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
         {
             perror("poll failed");
             close(listenSock);
-            break; // EXIT POINT
+            break;
         }
 
         // Check for events on the listening socket
@@ -236,11 +237,18 @@ int main(int argc, char *argv[])
 
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
-            // We also need to handle the cases where the client doesn not wrap the message in SOH and EOT
+            // We also need to handle the cases where the client does not wrap the message in SOH and EOT
             for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
                 logger.write("Received from " + serverName, buffer + offset, bytesRead);
+
+                if (offset + bytesRead > MAX_MESSAGE_LENGTH)
+                {
+                    logger.write("Dropped message from " + serverName + ": message exceeds " + std::to_string(MAX_MESSAGE_LENGTH) + " bytes.", true);
+                    closeClient(clientSocket);
+                    break;
+                }
 
                 if (buffer[0] != SOH && offset == 0)
                 {
@@ -260,7 +268,6 @@ int main(int argc, char *argv[])
 
                 if (buffer[offset + bytesRead - 1] == EOT)
                 {
-                    // Process command from client
                     buffer[offset + bytesRead] = '\0';
                     handleCommand(clientSocket, buffer);
                     break;

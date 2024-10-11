@@ -16,13 +16,13 @@ public:
 
     void add(int sock);
     void close(int sock);
-    int getFd(int i);
     int getPollCount();
-    int hasData(int i);
+    int getFd(int i) const;
+    int hasData(int i) const;
     PollManager(); // Constructor to initialize the poll manager
 
 private:
-    std::mutex fdMutex;
+    mutable std::mutex fdMutex;
 };
 
 #endif

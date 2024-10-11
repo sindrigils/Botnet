@@ -22,10 +22,10 @@ public:
     ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager);
 
 private:
-    GroupMessageManager &groupMessageManager;
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
+    GroupMessageManager &groupMessageManager;
 
     const char *myIpAddress;
     std::string myGroupId;
@@ -37,8 +37,8 @@ private:
     void handleKeepAlive(int socket, std::vector<std::string> tokens);
     void handleSendMsg(int socket, std::vector<std::string> tokens);
     void handleGetMsgs(int socket, std::vector<std::string> tokens);
-    void handleStatusREQ(int socket, std::vector<std::string> tokens);
-    void handleStatusRESP(int socket, std::vector<std::string> tokens);
+    void handleStatusReq(int socket, std::vector<std::string> tokens);
+    void handleStatusResp(int socket, std::vector<std::string> tokens);
 };
 
 #endif
