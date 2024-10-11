@@ -16,11 +16,13 @@ public:
     void setIpAddress(const char *ip);
     void setGroupId(const std::string &groupId);
     void setPort(const std::string &port);
+    void setOurClient(int sock);
     void findCommand(int socket, std::string buffer);
-    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
+    std::unordered_map<int, std::string> constructKeepAliveMessages();
+    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager);
 
 private:
-    GroupMessageManager groupMessageManager;
+    GroupMessageManager &groupMessageManager;
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
@@ -28,6 +30,7 @@ private:
     const char *myIpAddress;
     std::string myGroupId;
     std::string myPort;
+    int ourClient;
 
     void handleServers(int socket, std::string buffer);
     void handleHelo(int socket, std::vector<std::string> tokens);

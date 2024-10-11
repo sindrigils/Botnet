@@ -13,6 +13,9 @@
 #include <string.h>
 #include <map>
 
+#include <thread>
+#include <chrono>
+
 #include "utils.hpp"
 #include "servers.hpp"
 #include "server-manager.hpp"
@@ -20,6 +23,7 @@
 #include "client-commands.hpp"
 #include "logger.hpp"
 #include "poll-manager.hpp"
+#include "group-message-manager.hpp"
 
 #define MAX_EOT_TRIES 5
 
@@ -35,8 +39,9 @@
 ServerManager serverManager;
 Logger logger;
 PollManager pollManager;
-ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger);
-ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger);
+GroupMessageManager groupMessageManager;
+ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger, groupMessageManager);
+ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger, groupMessageManager);
 std::string serverIpAddress;
 
 int ourClientSock = -1;
@@ -103,7 +108,6 @@ void closeClient(int clientSocket)
     pollManager.close(clientSocket);
 }
 
-
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
@@ -118,6 +122,7 @@ void handleCommand(int clientSocket, const char *buffer)
         {
             serverIpAddress = getOwnIPFromSocket(clientSocket);
             serverCommands.setIpAddress(serverIpAddress.c_str());
+            serverCommands.setOurClient(clientSocket);
             serverManager.close(clientSocket);
 
             ourClientSock = clientSocket;
@@ -130,10 +135,25 @@ void handleCommand(int clientSocket, const char *buffer)
         if (clientSocket == ourClientSock)
         {
             return clientCommands.findCommand(tokens, buffer);
-            // return clientCommand(tokens, buffer);
         }
-
         serverCommands.findCommand(clientSocket, message);
+    }
+}
+
+// Function to send KEEPALIVE messages
+void sendKeepAliveMessages(ServerManager &serverManager)
+{
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::minutes(1)); // Wait for 2 minutes
+
+        // Get the connected sockets
+        std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
+        for (auto &pair : keepAliveMessages)
+        {
+            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": here is msg " + pair.second);
+            send(pair.first, pair.second.c_str(), pair.second.length(), 0);
+        }
     }
 }
 
@@ -141,6 +161,7 @@ int main(int argc, char *argv[])
 {
     char *serverPort = argv[1];
     char *GROUP_ID = argv[2];
+
     // remove both lines
     serverCommands.setGroupId(GROUP_ID);
     clientCommands.setGroupId(GROUP_ID);
@@ -169,6 +190,7 @@ int main(int argc, char *argv[])
     }
 
     pollManager.add(listenSock);
+    std::thread keepAliveThread(sendKeepAliveMessages, std::ref(serverManager));
 
     // Main server loop
     while (true)
@@ -197,9 +219,8 @@ int main(int argc, char *argv[])
             pollManager.add(clientSock);
 
             logger.write("New client connected: " + std::string(clientIpAddress), true);
-
-            std::string message = "Successfully connected!";
-            send(clientSock, message.c_str(), message.length(), 0);
+            std::string serverMessage = constructServerMessage("HELO," + std::string(GROUP_ID));
+            send(clientSock, serverMessage.c_str(), serverMessage.length(), 0);
         }
 
         // Check for events on existing connections (clients)

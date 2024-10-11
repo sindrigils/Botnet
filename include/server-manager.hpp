@@ -13,10 +13,11 @@ public:
     void add(int sock, const char *ipAddress, std::string port = "-1");
     void close(int sock);
     void update(int sock, std::string port = "", std::string name = "");
-    std::string getName(int sock);
+    std::unordered_map<int, std::string> getConnectedSockets() const;
+    std::string getName(int sock) const;
 
 private:
-    std::mutex serverMutex;
+    mutable std::mutex serverMutex;
 };
 
 #endif

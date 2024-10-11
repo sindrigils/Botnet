@@ -25,7 +25,7 @@ void ServerManager::update(int sock, std::string port, std::string name)
     }
 }
 
-std::string ServerManager::getName(int sock)
+std::string ServerManager::getName(int sock) const
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     // TODO!!! Make sure this absolutely works, maybe figure out another way to handle the server sockets
@@ -39,4 +39,22 @@ std::string ServerManager::getName(int sock)
     {
         return "N/A";
     }
+}
+
+std::unordered_map<int, std::string> ServerManager::getConnectedSockets() const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    std::unordered_map<int, std::string> sockAndGroupId;
+
+    for (const auto &pair : servers)
+    {
+        int sock = pair.first;
+
+        if (sock != 0)
+        {
+            sockAndGroupId[sock] = pair.second->name;
+        }
+    }
+
+    return sockAndGroupId;
 }

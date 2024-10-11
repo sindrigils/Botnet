@@ -3,9 +3,11 @@
 ClientCommands::ClientCommands(
     ServerManager &serverManager,
     PollManager &pollManager,
-    Logger &logger) : serverManager(serverManager),
-                      pollManager(pollManager),
-                      logger(logger) {};
+    Logger &logger,
+    GroupMessageManager &groupMessageManager) : serverManager(serverManager),
+                                                pollManager(pollManager),
+                                                logger(logger),
+                                                groupMessageManager(groupMessageManager) {};
 
 void ClientCommands::setGroupId(const std::string &groupId)
 {
@@ -28,7 +30,7 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleGetMsgFrom(tokens);
     }
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() == 3)
+    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 3)
     {
         handleSendMsg(tokens);
     }
@@ -71,7 +73,6 @@ void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
     {
         if (pair.second->name == fromGroupId)
         {
-            std::cout << "SENDING GETMSGS" << std::endl;
             send(pair.second->sock, message.c_str(), message.length(), 0);
         }
     }
@@ -80,20 +81,33 @@ void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
 void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
+
+    std::ostringstream contentStream;
+    for (auto it = tokens.begin() + 2; it != tokens.end(); it++)
+    {
+
+        contentStream << *it;
+        // since if it got split then that means that there was a comma there
+        if (it + 1 != tokens.end())
+        {
+            // but we dont know if he had a space in front of the comma or not
+            contentStream << ", ";
+        }
+    }
+
+    std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + contentStream.str();
+    std::string serverMessage = constructServerMessage(message);
+
     for (auto const &pair : serverManager.servers)
     {
         if (pair.second->name.compare(groupId) == 0)
         {
-            std::string content;
-            for (auto i = tokens.begin() + 2; i != tokens.end(); i++)
-            {
-                content += *i + " ";
-            }
-            std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + content;
-            std::string serverMessage = constructServerMessage(message);
             send(pair.second->sock, serverMessage.c_str(), serverMessage.length(), 0);
+            return;
         }
     }
+    logger.write("Storing message for " + groupId, true);
+    groupMessageManager.addMessage(trim(groupId), serverMessage);
 }
 
 void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
@@ -140,7 +154,6 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
     int serverSock = connectToServer(trim(tokens[1]), port, myGroupId);
     if (serverSock == -1)
     {
-        std::cout << "ERRROOOOOORRRR" << std::endl;
         return;
     }
     serverManager.add(serverSock, ip.c_str(), std::to_string(port));
@@ -158,7 +171,6 @@ void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
     {
         if (pair.second->name == groupId)
         {
-            std::cout << "found server sending STATUSREQ" << std::endl;
             send(pair.second->sock, message.c_str(), message.length(), 0);
             break;
         }

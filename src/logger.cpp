@@ -27,25 +27,30 @@ int Logger::_openLogFile(std::ofstream &logFile)
 void Logger::write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole)
 {
     std::ofstream logFile;
-    if(_openLogFile(logFile) != -1){
+    if (_openLogFile(logFile) != -1)
+    {
         logFile << "[" << _getTime() << "] " << message << ": " << std::string(buffer, bufferLen) << std::endl;
         logFile.close();
     }
 
-    if(printToConsole){
+    if (printToConsole)
+    {
         std::cout << "[" << _getTime() << "] " << message << std::endl;
     }
 }
 
-void Logger::write(const std::string message, bool printToConsole){
+void Logger::write(const std::string message, bool printToConsole)
+{
     std::ofstream logFile;
     std::string logMessage = "[" + _getTime() + "] " + message;
-    if(_openLogFile(logFile) != -1){
+    if (_openLogFile(logFile) != -1)
+    {
         logFile << logMessage << std::endl;
         logFile.close();
     }
 
-    if(printToConsole){
+    if (printToConsole)
+    {
         std::cout << logMessage << std::endl;
     }
 }

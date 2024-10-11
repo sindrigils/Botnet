@@ -3,9 +3,14 @@
 ServerCommands::ServerCommands(
     ServerManager &serverManager,
     PollManager &pollManager,
-    Logger &logger) : serverManager(serverManager),
-                      pollManager(pollManager),
-                      logger(logger), myIpAddress("-1"), myGroupId("-1"), myPort("-1") {};
+    Logger &logger,
+    GroupMessageManager &groupMessageManager) : serverManager(serverManager),
+                                                pollManager(pollManager),
+                                                logger(logger),
+                                                groupMessageManager(groupMessageManager),
+                                                myIpAddress("-1"),
+                                                myGroupId("-1"),
+                                                myPort("-1") {};
 
 void ServerCommands::setIpAddress(const char *ip)
 {
@@ -22,6 +27,11 @@ void ServerCommands::setGroupId(const std::string &groupId)
 void ServerCommands::setPort(const std::string &port)
 {
     myPort = port; // Set the port
+}
+
+void ServerCommands::setOurClient(int sock)
+{
+    ourClient = sock;
 }
 
 void ServerCommands::findCommand(int socket, std::string buffer)
@@ -83,8 +93,6 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 }
 void ServerCommands::handleServers(int socket, std::string buffer)
 {
-    logger.write("Received SERVERS command from " + serverManager.getName(socket), buffer.c_str(), buffer.length());
-
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
     for (auto &token : tokens)
     {
@@ -95,7 +103,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
 
         logger.write("Attempting to connect to server " + groupId + " " + ipAddress + ":" + port);
         // abstracta þetta
-        if (groupId == myGroupId || port == "-1")
+        if (groupId == myGroupId || port == "-1" || ipAddress == "-1")
         {
             logger.write("Skipping self-connection!");
             continue;
@@ -114,8 +122,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             continue;
         }
 
-        // hægt er að crasha serverinn ef port er ekki tölur
-        int serverSock = connectToServer(ipAddress, std::stoi(port), myGroupId);
+        int serverSock = connectToServer(ipAddress, stringToInt(port), myGroupId);
         if (serverSock != -1)
         {
             logger.write("Server connected: " + groupId + " " + ipAddress + ":" + port);
@@ -136,7 +143,7 @@ void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens
         return;
     }
 
-    std::string message = "GETMSG," + myGroupId;
+    std::string message = "GETMSGS," + myGroupId;
     std::string serverMessage = constructServerMessage(message);
     send(socket, serverMessage.c_str(), serverMessage.length(), 0);
 }
@@ -146,13 +153,25 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens)
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
-    std::string content;
-    for (auto i = tokens.begin() + 3; i != tokens.end(); i++)
+    if (toGroupId != myGroupId)
     {
-        content += *i + " ";
+        std::cout << "found a message not for us" << std::endl;
+        return;
     }
-    std::string message = "Message from " + fromGroupId + ": " + content;
-    send(socket, message.c_str(), message.length(), 0);
+
+    std::ostringstream contentStream;
+    for (auto it = tokens.begin() + 3; it != tokens.end(); it++)
+    {
+        contentStream << *it;
+        // since if it got split then that means that there was a comma there
+        if (it + 1 != tokens.end())
+        {
+            // but we dont know if he had a space in front of the comma or not
+            contentStream << ", ";
+        }
+    }
+    std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
+    send(ourClient, message.c_str(), message.length(), 0);
 }
 
 void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
@@ -160,11 +179,10 @@ void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
     std::string forGroupId = tokens[1];
     std::vector<std::string> messages = groupMessageManager.getMessages(forGroupId);
 
+    // the message is already stores as "<SOH>SENDMSG....<EOT>", so we can just send it right away
     for (auto msg : messages)
     {
-        std::string message = "SENDMSG," + forGroupId + "," + myGroupId + ",";
-        std::string serverMessage = constructServerMessage(message);
-        send(socket, serverMessage.c_str(), serverMessage.length(), 0);
+        send(socket, msg.c_str(), msg.length(), 0);
     };
 }
 void ServerCommands::handleStatusREQ(int socket, std::vector<std::string> tokens)
@@ -172,4 +190,20 @@ void ServerCommands::handleStatusREQ(int socket, std::vector<std::string> tokens
 }
 void ServerCommands::handleStatusRESP(int socket, std::vector<std::string> tokens)
 {
+}
+
+std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages()
+{
+    std::unordered_map<int, std::string> messages;
+
+    std::unordered_map<int, std::string> connectedSockets = serverManager.getConnectedSockets();
+    for (auto &pair : connectedSockets)
+    {
+        int messageCount = groupMessageManager.getMessageCount(pair.second);
+        std::string message = "KEEPALIVE," + std::to_string(messageCount);
+        std::string serverMessage = constructServerMessage(message);
+        messages[pair.first] = serverMessage;
+    }
+
+    return messages;
 }
