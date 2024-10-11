@@ -137,7 +137,6 @@ void handleCommand(int clientSocket, const char *buffer)
     std::string groupId = serverManager.getName(clientSocket);
     for (auto message : messageVector)
     {
-        logger.write("RECEIVED from " + groupId, message.c_str(), message.length());
         std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
         if (tokens[0].compare("kaladin") == 0 && ourClientSock == -1)
@@ -213,21 +212,18 @@ int main(int argc, char *argv[])
         {
             // New connection on the listening socket
             clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
-            std::string clientSockStr = std::to_string(clientSock);
-
-            std::cout << "New client connected: " << clientSockStr << std::endl;
-            logger.write("New client connected", clientSockStr.c_str(), clientSockStr.length());
 
             char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
-            serverManager.add(clientSock, clientIpAddress);
 
+            serverManager.add(clientSock, clientIpAddress);
             pollManager.add(clientSock);
 
-            // abstract
-            std::string message = "HELO," + std::string(GROUP_ID);
-            std::string heloMessage = constructServerMessage(message);
-            send(clientSock, heloMessage.c_str(), heloMessage.length(), 0);
+            std::cout << "New client connected: " << clientIpAddress << std::endl;
+            logger.write("New client connected", clientIpAddress, sizeof(clientIpAddress));
+
+            std::string message = "Successfully connected!\n";
+            send(clientSock, message.c_str(), message.length(), 0);
         }
 
         // Check for events on existing connections (clients)
@@ -239,7 +235,7 @@ int main(int argc, char *argv[])
             }
 
             int clientSocket = pollManager.getFd(i);
-            std::string clientSockStr = std::to_string(clientSock);
+            std::string clientSockStr = std::to_string(clientSocket);
 
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
@@ -247,10 +243,12 @@ int main(int argc, char *argv[])
             for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+                logger.write("Received from " + serverManager.getName(clientSocket), buffer + offset, bytesRead);
 
                 if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
+                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverManager.getName(clientSocket), buffer, bytesRead);
                     printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
                     closeClient(clientSocket);
                     break;
@@ -260,7 +258,7 @@ int main(int argc, char *argv[])
                 {
                     // Client disconnected
                     printf("Client disconnected: %d\n", clientSocket);
-                    logger.write("Client disconnected", clientSockStr.c_str(), clientSockStr.length());
+                    logger.write("Client disconnected", serverManager.getName(clientSocket).c_str(), serverManager.getName(clientSocket).length());
                     closeClient(clientSocket);
                     break;
                 }
@@ -276,7 +274,7 @@ int main(int argc, char *argv[])
                 if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    logger.write("Invalid message format from " + clientSockStr, buffer, bytesRead + offset);
+                    logger.write("Invalid message format from " + serverManager.getName(clientSocket), buffer, bytesRead + offset);
                     std::cout << "Client did not wrap the message in SOH and EOT: " << clientSockStr << std::endl;
                     closeClient(clientSocket);
                     break;

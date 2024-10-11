@@ -27,7 +27,6 @@ void ServerCommands::setPort(const std::string &port)
 void ServerCommands::findCommand(int socket, std::string buffer)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.c_str());
-    std::cout << "looking for command in compare" << std::endl;
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         handleHelo(socket, tokens);
