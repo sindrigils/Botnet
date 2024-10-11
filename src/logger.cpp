@@ -1,8 +1,6 @@
 #include "logger.hpp"
 
-std::mutex logMutex;
-
-void Logger::write(const std::string message, const char *buffer)
+void Logger::write(const std::string message, const char *buffer, size_t bufferLen)
 {
     std::lock_guard<std::mutex> guard(logMutex);
     std::ofstream logFile("logs/logs.txt", std::ios::app);
@@ -11,7 +9,7 @@ void Logger::write(const std::string message, const char *buffer)
         std::cerr << "Unable to open log file" << std::endl;
     }
 
-    logFile << "[" << __DATE__ << " " << __TIME__ << "]" << " " << message << ": " << buffer << std::endl;
+    logFile << "[" << __DATE__ << " " << __TIME__ << "]" << " " << message << ": " << std::string(buffer, bufferLen) << std::endl;
 
     logFile.close();
 }
