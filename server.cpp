@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
             std::cout << "New client connected: " << clientIpAddress << std::endl;
             logger.write("New client connected", clientIpAddress, sizeof(clientIpAddress));
 
-            std::string message = "Successfully connected!\n";
+            std::string message = "Successfully connected!";
             send(clientSock, message.c_str(), message.length(), 0);
         }
 
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
             }
 
             int clientSocket = pollManager.getFd(i);
-            std::string clientSockStr = std::to_string(clientSocket);
+            std::string serverName = serverManager.getName(clientSocket);
 
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
@@ -243,13 +243,13 @@ int main(int argc, char *argv[])
             for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
-                logger.write("Received from " + serverManager.getName(clientSocket), buffer + offset, bytesRead);
+                logger.write("Received from " + serverName, buffer + offset, bytesRead);
 
                 if (buffer[0] != SOH && offset == 0)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverManager.getName(clientSocket), buffer, bytesRead);
-                    printf("Client did not wrap the message in SOH and EOT: %d\n", clientSocket);
+                    std::cout << "Invalid message format from (First packet did not start with SOH): " << serverName << std::endl;
+                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverName, buffer, bytesRead);
                     closeClient(clientSocket);
                     break;
                 }
@@ -257,8 +257,8 @@ int main(int argc, char *argv[])
                 if (bytesRead <= 0)
                 {
                     // Client disconnected
-                    printf("Client disconnected: %d\n", clientSocket);
-                    logger.write("Client disconnected", serverManager.getName(clientSocket).c_str(), serverManager.getName(clientSocket).length());
+                    std::cout << "Remote server disconnected: " << serverName << std::endl;
+                    logger.write("Remote server disconnected", serverName.c_str(), serverName.length());
                     closeClient(clientSocket);
                     break;
                 }
@@ -274,8 +274,8 @@ int main(int argc, char *argv[])
                 if (i == MAX_EOT_TRIES - 1)
                 {
                     // Client did not wrap the message in SOH and EOT
-                    logger.write("Invalid message format from " + serverManager.getName(clientSocket), buffer, bytesRead + offset);
-                    std::cout << "Client did not wrap the message in SOH and EOT: " << clientSockStr << std::endl;
+                    logger.write("Invalid message format from " + serverName, buffer, bytesRead + offset);
+                    std::cout << "Remote server did not wrap the message in SOH and EOT: " << serverName << std::endl;
                     closeClient(clientSocket);
                     break;
                 }

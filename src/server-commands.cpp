@@ -83,50 +83,46 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 }
 void ServerCommands::handleServers(int socket, std::string buffer)
 {
+    logger.write("Received SERVERS command from " + serverManager.getName(socket), buffer.c_str(), buffer.length());
 
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
-    for (auto token : tokens)
+    for (auto &token : tokens)
     {
         std::vector<std::string> serverInfo = splitMessageOnDelimiter(token.c_str());
         std::string groupId = trim(serverInfo[0]);
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
 
-        // TODO better, since the first token is just the server info of the server that just send the message
-        if (token == tokens[0])
-        {
-            serverManager.update(socket, port);
-            continue;
-        }
-
+        logger.write("Attempting to connect to server " + groupId + " " + ipAddress + ":" + port, "", 0);
         // abstracta þetta
-        bool skip = false;
         if (groupId == myGroupId || port == "-1")
         {
-            skip = true;
-        }
-        else
-        {
-            // TODO FIX
-            for (auto &pair : serverManager.servers)
-            {
-                if (pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port))
-                {
-                    skip = true;
-                    break;
-                }
-            }
-        }
-        if (skip)
+            logger.write("Skipping self-connection!", "", 0);
             continue;
+        }
+                
+        // Abstract þetta?
+        bool alreadyConnected = std::any_of(serverManager.servers.begin(), serverManager.servers.end(),
+            [&](const std::pair<const int, Server*> &pair) {
+                return pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port);
+            });
+
+        if (alreadyConnected) {
+            logger.write(groupId + " " + ipAddress + ":" + port + " already connected!", "", 0);
+            continue;
+        }
 
         // hægt er að crasha serverinn ef port er ekki tölur
         int serverSock = connectToServer(ipAddress, std::stoi(port), myGroupId);
         if (serverSock != -1)
         {
-            logger.write("New client connected " + std::to_string(serverSock), "", 0);
+            logger.write("Server connected: " + groupId + " " + ipAddress + ":" + port, "", 0);
             serverManager.add(serverSock, ipAddress.c_str(), port);
             pollManager.add(serverSock);
+        }
+        else
+        {
+            logger.write("Unable to connect to server: " + groupId + " " + ipAddress + ":" + port, "", 0);
         }
     }
 }
