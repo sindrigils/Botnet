@@ -22,6 +22,14 @@ private:
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
+
+    void handleGetMsg(std::vector<std::string> tokens);
+    void handleGetMsgFrom(std::vector<std::string> tokens);
+    void handleSendMsg(std::vector<std::string> tokens);
+    void handleMsgAll(std::vector<std::string> tokens);
+    void handleListServers(std::vector<std::string> tokens);
+    void handleConnect(std::vector<std::string> tokens);
+    void handleStatusREQ(std::vector<std::string> tokens);
 };
 
 #endif
