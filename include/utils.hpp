@@ -10,7 +10,7 @@
 
 #define SOH 0x01
 #define EOT 0x04
-#define ESC 0x10
+#define ESC 0x1B
 
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);
