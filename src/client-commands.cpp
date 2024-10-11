@@ -50,6 +50,11 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleStatusREQ(tokens);
     }
+    // custom macros
+    else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
+    {
+        handleShortConnect(tokens);
+    }
     else
     {
         std::cout << "Unknown command from client:" << buffer << std::endl;
@@ -173,4 +178,17 @@ void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
             break;
         }
     }
+}
+
+void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
+{
+    std::string ip = "130.208.246.249";
+    int port = 5000 + stringToInt(tokens[1]);
+
+    if(port < 5000 || port > 5003) {
+        logger.write("Invalid port number for INSTR server in short connect (" + std::to_string(port) + ")", true);
+        return;
+    }
+
+    handleConnect({tokens[0], ip, std::to_string(port)});
 }

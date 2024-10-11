@@ -25,14 +25,14 @@ private:
     Logger &logger;
     GroupMessageManager &groupMessageManager;
 
-    void
-    handleGetMsg(std::vector<std::string> tokens);
+    void handleGetMsg(std::vector<std::string> tokens);
     void handleGetMsgFrom(std::vector<std::string> tokens);
     void handleSendMsg(std::vector<std::string> tokens);
     void handleMsgAll(std::vector<std::string> tokens);
     void handleListServers(std::vector<std::string> tokens);
     void handleConnect(std::vector<std::string> tokens);
     void handleStatusREQ(std::vector<std::string> tokens);
+    void handleShortConnect(std::vector<std::string> tokens);
 };
 
 #endif

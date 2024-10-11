@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
             serverManager.add(clientSock, clientIpAddress);
-            serverManager.update(clientSock, serverPort, "CLIENT");
+            serverManager.update(clientSock, serverPort);
             pollManager.add(clientSock);
 
             logger.write("New client connected: " + std::string(clientIpAddress), true);
