@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
             int clientSocket = pollManager.getFd(i);
             std::string serverName = serverManager.getName(clientSocket);
-
+            
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client does not wrap the message in SOH and EOT
@@ -252,21 +252,19 @@ int main(int argc, char *argv[])
 
                 if (buffer[0] != SOH && offset == 0)
                 {
-                    // Client did not wrap the message in SOH and EOT
-                    logger.write("Invalid message format from (First packet did not start with SOH) " + serverName, buffer, bytesRead, true);
+                    logger.write("Invalid message format (First packet did not start with SOH) from " + serverName, buffer, bytesRead, true);
                     closeClient(clientSocket);
                     break;
                 }
 
                 if (bytesRead <= 0)
                 {
-                    // Client disconnected
                     logger.write("Remote server disconnected: " + serverName, true);
                     closeClient(clientSocket);
                     break;
                 }
 
-                if (buffer[offset + bytesRead - 1] == EOT)
+                if (buffer[offset + bytesRead - 1] == EOT && buffer[offset + bytesRead - 2] != ESC)
                 {
                     buffer[offset + bytesRead] = '\0';
                     handleCommand(clientSocket, buffer);
@@ -275,7 +273,7 @@ int main(int argc, char *argv[])
 
                 if (i == MAX_EOT_TRIES - 1)
                 {
-                    // Client did not wrap the message in SOH and EOT
+                    // Tried to read the message MAX_EOT_TRIES times, but still no EOT
                     logger.write("Invalid message format (No SOH, EOT) from " + serverName, buffer, bytesRead + offset, true);
                     closeClient(clientSocket);
                     break;

@@ -126,6 +126,12 @@ int main(int argc, char *argv[])
 
         fgets(buffer, sizeof(buffer), stdin);
 
+        // Remove the newline character from the buffer
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
         std::string message = constructServerMessage(buffer);
 
 

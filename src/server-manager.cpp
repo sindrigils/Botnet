@@ -35,10 +35,8 @@ std::string ServerManager::getName(int sock) const
     {
         return it->second->name;
     }
-    else
-    {
-        return "N/A";
-    }
+
+    return "N/A";
 }
 
 std::unordered_map<int, std::string> ServerManager::getConnectedSockets() const

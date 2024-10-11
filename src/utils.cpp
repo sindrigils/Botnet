@@ -119,6 +119,7 @@ std::string getOwnIPFromSocket(int sock)
     return std::string(own_ip);
 }
 
+
 int connectToServer(const std::string &ip, int port, std::string myGroupId)
 {
     std::string strPort = std::to_string(port);
