@@ -7,9 +7,20 @@ void Logger::write(const std::string message, const char *buffer, size_t bufferL
     if (!logFile.is_open())
     {
         std::cerr << "Unable to open log file" << std::endl;
+        return;
     }
 
-    logFile << "[" << __DATE__ << " " << __TIME__ << "]" << " " << message << ": " << std::string(buffer, bufferLen) << std::endl;
+    // Get the current time
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm = *std::localtime(&now_time);
+
+    // Format the time
+    std::ostringstream timeStream;
+    timeStream << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S");
+
+    // Write to the log file
+    logFile << "[" << timeStream.str() << "] " << message << ": " << std::string(buffer, bufferLen) << std::endl;
 
     logFile.close();
 }
