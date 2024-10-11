@@ -34,14 +34,12 @@
 
 ServerManager serverManager;
 Logger logger;
-char *GROUP_ID;
 PollManager pollManager;
 ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger);
 ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger);
 std::string serverIpAddress;
 
 int ourClientSock = -1;
-char *serverPort;
 
 int open_socket(int portno)
 {
@@ -141,8 +139,8 @@ void handleCommand(int clientSocket, const char *buffer)
 
 int main(int argc, char *argv[])
 {
-    serverPort = argv[1];
-    GROUP_ID = argv[2];
+    char *serverPort = argv[1];
+    char *GROUP_ID = argv[2];
     // remove both lines
     serverCommands.setGroupId(GROUP_ID);
     clientCommands.setGroupId(GROUP_ID);
