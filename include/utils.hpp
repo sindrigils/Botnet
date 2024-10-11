@@ -40,5 +40,6 @@ std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimi
 std::string getOwnIPFromSocket(int sock);
 
 int connectToServer(const std::string &ip, int port, std::string myGroupId);
+int stringToInt(const std::string &str);
 
 #endif

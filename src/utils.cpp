@@ -136,3 +136,23 @@ int connectToServer(const std::string &ip, int port, std::string myGroupId)
     }
     return -1;
 }
+
+int stringToInt(const std::string &str)
+{
+    try
+    {
+        size_t pos;
+        int value = std::stoi(str, &pos);
+
+        if (pos < str.length())
+        {
+            return -1;
+        }
+
+        return value;
+    }
+    catch (...)
+    {
+        return -1;
+    }
+}
