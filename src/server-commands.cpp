@@ -97,17 +97,19 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         // abstracta þetta
         if (groupId == myGroupId || port == "-1")
         {
-           logger.write("Skipping self-connection!");
+            logger.write("Skipping self-connection!");
             continue;
         }
-                
-        // Abstract þetta?
-        bool alreadyConnected = std::any_of(serverManager.servers.begin(), serverManager.servers.end(),
-            [&](const std::pair<const int, Server*> &pair) {
-                return pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port);
-            });
 
-        if (alreadyConnected) {
+        // Abstract þetta?
+        bool isAlreadyConnected = std::any_of(serverManager.servers.begin(), serverManager.servers.end(),
+                                              [&](const std::pair<const int, Server *> &pair)
+                                              {
+                                                  return pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port);
+                                              });
+
+        if (isAlreadyConnected)
+        {
             logger.write(groupId + " " + ipAddress + ":" + port + " already connected!");
             continue;
         }
@@ -128,6 +130,15 @@ void ServerCommands::handleServers(int socket, std::string buffer)
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
 {
+    int numberOfMessages = stringToInt(tokens[1]);
+    if (numberOfMessages == -1 || numberOfMessages <= 0)
+    {
+        return;
+    }
+
+    std::string message = "GETMSG," + myGroupId;
+    std::string serverMessage = constructServerMessage(message);
+    send(socket, serverMessage.c_str(), serverMessage.length(), 0);
 }
 
 void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens)
@@ -143,8 +154,18 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens)
     std::string message = "Message from " + fromGroupId + ": " + content;
     send(socket, message.c_str(), message.length(), 0);
 }
+
 void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
 {
+    std::string forGroupId = tokens[1];
+    std::vector<std::string> messages = groupMessageManager.getMessages(forGroupId);
+
+    for (auto msg : messages)
+    {
+        std::string message = "SENDMSG," + forGroupId + "," + myGroupId + ",";
+        std::string serverMessage = constructServerMessage(message);
+        send(socket, serverMessage.c_str(), serverMessage.length(), 0);
+    };
 }
 void ServerCommands::handleStatusREQ(int socket, std::vector<std::string> tokens)
 {

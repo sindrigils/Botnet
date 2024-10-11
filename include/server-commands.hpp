@@ -8,6 +8,7 @@
 #include "server-manager.hpp"
 #include "poll-manager.hpp"
 #include "logger.hpp"
+#include "group-message-manager.hpp"
 
 class ServerCommands
 {
@@ -19,6 +20,7 @@ public:
     ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
+    GroupMessageManager groupMessageManager;
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
