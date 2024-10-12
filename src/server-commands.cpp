@@ -54,7 +54,7 @@ void ServerCommands::findCommand(int socket, std::string buffer)
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
     {
-        handleSendMsg(socket, tokens);
+        handleSendMsg(socket, tokens, buffer);
     }
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
@@ -94,7 +94,6 @@ void ServerCommands::handleServers(int socket, std::string buffer)
 
         if (token == tokens[0])
         {
-            // the groupId should already be set, but if the other server did not send a HELO, then it wont be set
             serverManager.update(socket, port, groupId);
         }
 
@@ -103,18 +102,22 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         {
             continue;
         }
-        logger.write("Attempting to connecto to ip: " + ipAddress + ", port: " + port + ", groupId: " + groupId);
-        int serverSock = connectToServer(ipAddress, stringToInt(port), myGroupId);
-        if (serverSock != -1)
-        {
-            logger.write("Server connected - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
-            serverManager.add(serverSock, ipAddress.c_str(), port);
-            pollManager.add(serverSock);
-        }
-        else
-        {
-            logger.write("Unable to connect to server- groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
-        }
+
+        std::thread([this, ipAddress, port, groupId]()
+                    {
+            logger.write("Attempting to connect to ip: " + ipAddress + ", port: " + port + ", groupId: " + groupId);
+            int serverSock = connectToServer(ipAddress, stringToInt(port), myGroupId);
+            if (serverSock != -1)
+            {
+                logger.write("Server connected - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
+                serverManager.add(serverSock, ipAddress.c_str(), port);
+                pollManager.add(serverSock);
+            }
+            else
+            {
+                logger.write("Unable to connect to server - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
+            } })
+            .detach();
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
@@ -130,14 +133,16 @@ void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens
     send(socket, serverMessage.c_str(), serverMessage.length(), 0);
 }
 
-void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens)
+void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, std::string buffer)
 {
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
     if (toGroupId != myGroupId)
     {
-        std::cout << "found a message not for us" << std::endl;
+        std::string message = constructServerMessage(buffer);
+        groupMessageManager.addMessage(toGroupId, message);
+        std::cout << "found a message not for us: storing for " << toGroupId << std::endl;
         return;
     }
 
