@@ -170,7 +170,7 @@ void sendKeepAliveMessages()
     }
 }
 
-void handleNewConnection(int &listenSock, char *serverPort, char *GROUP_ID)
+void handleNewConnection(int &listenSock, char *GROUP_ID)
 {
     int clientSock;
     struct sockaddr_in client;
@@ -183,7 +183,6 @@ void handleNewConnection(int &listenSock, char *serverPort, char *GROUP_ID)
     inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
     serverManager.add(clientSock, clientIpAddress);
-    serverManager.update(clientSock, serverPort);
     pollManager.add(clientSock);
 
     logger.write("New client connected: " + std::string(clientIpAddress), true);
@@ -294,7 +293,7 @@ int main(int argc, char *argv[])
         // Check for events on the listening socket
         if (pollManager.hasData(0)) // listen sock should always be 0
         {
-            handleNewConnection(listenSock, serverPort, GROUP_ID);
+            handleNewConnection(listenSock, GROUP_ID);
         }
 
         // Check for events on the remote-server sockets
