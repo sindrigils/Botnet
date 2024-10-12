@@ -181,12 +181,13 @@ void handleNewConnection(int &listenSock, char *serverPort, char *GROUP_ID)
 }
 
 // returns -1 = error, 0 = client disconnected, 1 = message received, 2 = message dropped
-int recvAndParseMsg(char *buffer, int &clientSocket, std::string &serverName){
+// TODO: Logger should not write here, this should only return recv status code.
+int recvAndParseMsg(char *buffer, int bufferLength, int &clientSocket, std::string &serverName){
     // Read the data into a buffer, it's expected to start with SOH and and with EOT
     // however, it may be split into multiple packets, so we need to handle that.
     for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
     {
-        bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+        bytesRead = recv(clientSocket, buffer + offset, bufferLength - offset, 0);
 
         if (bytesRead == -1)
         {
@@ -294,7 +295,7 @@ int main(int argc, char *argv[])
             int clientSocket = pollManager.getFd(i);
             std::string serverName = serverManager.getName(clientSocket);
 
-            int recvResult = recvAndParseMsg(buffer, clientSocket, serverName);
+            int recvResult = recvAndParseMsg(buffer, sizeof(buffer), clientSocket, serverName);
             if(recvResult == -1 || recvResult == 0)
             {
                 closeClient(clientSocket);
