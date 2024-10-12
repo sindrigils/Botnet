@@ -18,6 +18,7 @@ public:
     std::unordered_map<int, std::string> getConnectedSockets() const;
     std::string getName(int sock) const;
     std::string getListOfServers() const;
+    std::string getListOfServersWithSocks() const;
     int getSockByName(std::string name) const;
     bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;
     std::string getAllServersInfo() const;

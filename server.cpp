@@ -25,7 +25,6 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
-
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
 #include <fcntl.h>
@@ -132,6 +131,13 @@ void handleCommand(int clientSocket, const char *buffer)
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
+        // i dont like this
+        else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2 && clientSocket == ourClientSock)
+        {
+            int dropSock = stringToInt(tokens[1]);
+            closeClient(dropSock);
+            return;
+        }
 
         if (clientSocket == ourClientSock)
         {
@@ -151,6 +157,7 @@ void sendStatusReqMessages()
 
         for (auto sock : socks)
         {
+            logger.write("Sending statusreq to: " + serverManager.getName(sock));
             send(sock, message.c_str(), message.length(), 0);
         }
     }
@@ -165,6 +172,7 @@ void sendKeepAliveMessages()
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
         for (const auto &pair : keepAliveMessages)
         {
+            logger.write("Sending keepalive to: " + serverManager.getName(pair.first));
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }
     }
@@ -188,12 +196,12 @@ void handleNewConnection(int &listenSock, char *GROUP_ID)
     logger.write("New client connected: " + std::string(clientIpAddress), true);
     std::string serverMessage = constructServerMessage("HELO," + std::string(GROUP_ID));
     send(clientSock, serverMessage.c_str(), serverMessage.length(), 0);
-    
 }
 
 // returns -1 = error, 0 = client disconnected, 1 = message received, 2 = message dropped
 // TODO: Logger should not write here, this should only return recv status code.
-int recvAndParseMsg(char *buffer, int bufferLength, int &clientSocket, std::string &serverName){
+int recvAndParseMsg(char *buffer, int bufferLength, int &clientSocket, std::string &serverName)
+{
     // Read the data into a buffer, it's expected to start with SOH and and with EOT
     // however, it may be split into multiple packets, so we need to handle that.
     for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
@@ -309,18 +317,17 @@ int main(int argc, char *argv[])
             std::string serverName = serverManager.getName(clientSocket);
 
             int recvResult = recvAndParseMsg(buffer, sizeof(buffer), clientSocket, serverName);
-            if(recvResult == -1 || recvResult == 0)
+            if (recvResult == -1 || recvResult == 0)
             {
                 closeClient(clientSocket);
                 logger.write("Closing connection to " + serverName, true);
                 continue;
-            } 
-        
-            if(recvResult == 1)
+            }
+
+            if (recvResult == 1)
             {
                 handleCommand(clientSocket, buffer);
             }
-
         }
     }
 
