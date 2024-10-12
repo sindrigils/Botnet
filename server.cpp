@@ -182,11 +182,11 @@ int main(int argc, char *argv[])
     // Setup socket for server to listen to
     listenSock = open_socket(atoi(argv[1]));
 
-    printf("Listening on port: %d\n", atoi(argv[1]));
+    logger.write("Listening on port: " + std::string(argv[1]), true);
 
     if (listen(listenSock, Backlog) < 0)
     {
-        printf("Listen failed on port %s\n", argv[1]);
+        logger.write("Listen failed on port " + std::string(argv[1]), true);
         exit(0);
     }
 
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 
         if (pollCount == -1)
         {
-            perror("poll failed");
+            logger.write("Poll failed", true);
             close(listenSock);
             break;
         }
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
             int clientSocket = pollManager.getFd(i);
             std::string serverName = serverManager.getName(clientSocket);
-            
+
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client does not wrap the message in SOH and EOT
