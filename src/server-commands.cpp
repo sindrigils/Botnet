@@ -74,18 +74,10 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     serverManager.update(socket, "", tokens[1]);
 
-    std::string message = "SERVERS," + myGroupId + "," + myIpAddress + "," + myPort + ";";
-    for (auto &pair : serverManager.servers)
-    {
-        if (pair.second->name == "N/A")
-        {
-            continue;
-        }
+    std::string msg = "SERVERS," + myGroupId + "," + myIpAddress + "," + myPort + ";";
+    std::string serversInfo = serverManager.getAllServersInfo();
+    std::string message = msg + serversInfo;
 
-        message += pair.second->name + ",";
-        message += pair.second->ipAddress + ",";
-        message += pair.second->port + ";";
-    }
     std::string sendMessage = constructServerMessage(message);
     send(socket, sendMessage.c_str(), sendMessage.length(), 0);
 }
@@ -99,12 +91,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
 
-        bool isAlreadyConnected = std::any_of(serverManager.servers.begin(), serverManager.servers.end(),
-                                              [&](const std::pair<const int, Server *> &pair)
-                                              {
-                                                  return pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port);
-                                              });
-
+        bool isAlreadyConnected = serverManager.hasConnectedToServer(ipAddress, port, groupId);
         if (isAlreadyConnected || groupId == myGroupId || port == "-1" || ipAddress == "-1")
         {
             continue;

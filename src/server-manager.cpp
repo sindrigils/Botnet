@@ -56,3 +56,65 @@ std::unordered_map<int, std::string> ServerManager::getConnectedSockets() const
 
     return sockAndGroupId;
 }
+
+std::string ServerManager::getListOfServers() const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    std::string message;
+
+    if (servers.size() == 0)
+    {
+        message = "Not connected to any servers";
+        return message;
+    }
+
+    for (const auto &pair : servers)
+    {
+        message += pair.second->name + ", ";
+    }
+    return message.substr(0, message.length() - 2);
+}
+
+int ServerManager::getSockByName(std::string name) const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    for (const auto &pair : servers)
+    {
+        if (pair.second->name == name)
+        {
+            return pair.first;
+        }
+    }
+    return -1;
+}
+
+bool ServerManager::hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId)
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    for (const auto &pair : servers)
+    {
+        if (pair.second->ipAddress == ipAddress && (pair.second->name == groupId || pair.second->port == port))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string ServerManager::getAllServersInfo() const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    std::string message = "";
+    for (auto &pair : servers)
+    {
+        if (pair.second->name == "N/A")
+        {
+            continue;
+        }
+
+        message += pair.second->name + ",";
+        message += pair.second->ipAddress + ",";
+        message += pair.second->port + ";";
+    }
+    return message;
+}
