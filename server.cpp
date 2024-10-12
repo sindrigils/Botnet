@@ -255,7 +255,6 @@ int main(int argc, char *argv[])
                 if (offset + bytesRead >= MAX_MESSAGE_LENGTH)
                 {
                     logger.write("Dropped message from " + serverName + ": message exceeds " + std::to_string(MAX_MESSAGE_LENGTH) + " bytes.", true);
-                    closeClient(clientSocket);
                     break;
                 }
 
