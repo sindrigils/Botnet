@@ -18,8 +18,9 @@ public:
     std::string getName(int sock) const;
     std::string getListOfServers() const;
     int getSockByName(std::string name) const;
-    bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId);
+    bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;
     std::string getAllServersInfo() const;
+    std::vector<int> getAllServerSocks() const;
 
 private:
     std::unordered_map<int, std::shared_ptr<Server>> servers;

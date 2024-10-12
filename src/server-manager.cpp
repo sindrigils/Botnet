@@ -88,7 +88,7 @@ int ServerManager::getSockByName(std::string name) const
     return -1;
 }
 
-bool ServerManager::hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId)
+bool ServerManager::hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     for (const auto &pair : servers)
@@ -115,4 +115,15 @@ std::string ServerManager::getAllServersInfo() const
         ss << pair.second->name << "," << pair.second->ipAddress << "," << pair.second->port << ";";
     }
     return ss.str();
+}
+
+std::vector<int> ServerManager::getAllServerSocks() const
+{
+    std::vector<int> socks;
+    socks.reserve(servers.size());
+    for (const auto &pair : servers)
+    {
+        socks.push_back(pair.first);
+    }
+    return socks;
 }

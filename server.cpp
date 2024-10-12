@@ -34,7 +34,7 @@
 #endif
 
 #define Backlog 5
-#define MAX_MESSAGE_LENGTH 3*5000
+#define MAX_MESSAGE_LENGTH 3 * 5000
 
 // #define GROUP_ID "5"
 
@@ -141,18 +141,30 @@ void handleCommand(int clientSocket, const char *buffer)
     }
 }
 
-// Function to send KEEPALIVE messages
-void sendKeepAliveMessages(ServerManager &serverManager)
+void sendStatusReqMessages()
 {
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::minutes(1)); // Wait for 2 minutes
+        std::this_thread::sleep_for(std::chrono::minutes(5));
+        std::string message = constructServerMessage("STATUSREQ");
+        std::vector<int> socks = serverManager.getAllServerSocks();
 
-        // Get the connected sockets
+        for (auto sock : socks)
+        {
+            send(sock, message.c_str(), message.length(), 0);
+        }
+    }
+}
+
+void sendKeepAliveMessages()
+{
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::minutes(2));
+
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
         for (auto &pair : keepAliveMessages)
         {
-            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": " + pair.second);
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }
     }
@@ -191,7 +203,9 @@ int main(int argc, char *argv[])
     }
 
     pollManager.add(listenSock);
-    std::thread keepAliveThread(sendKeepAliveMessages, std::ref(serverManager));
+
+    std::thread statusReqThread(sendStatusReqMessages);
+    std::thread keepAliveThread(sendKeepAliveMessages);
 
     // Main server loop
     while (true)

@@ -14,7 +14,7 @@ SRC_DIR = src
 INCLUDE_DIR = include
 BUILD_DIR = build
 
-EXEC1 = server
+EXEC1 = tsamgroup5
 EXEC2 = client
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
