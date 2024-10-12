@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <thread>
 
 #include "utils.hpp"
 #include "server-manager.hpp"
@@ -35,7 +36,7 @@ private:
     void handleServers(int socket, std::string buffer);
     void handleHelo(int socket, std::vector<std::string> tokens);
     void handleKeepAlive(int socket, std::vector<std::string> tokens);
-    void handleSendMsg(int socket, std::vector<std::string> tokens);
+    void handleSendMsg(int socket, std::vector<std::string> tokens, std::string buffer);
     void handleGetMsgs(int socket, std::vector<std::string> tokens);
     void handleStatusReq(int socket, std::vector<std::string> tokens);
     void handleStatusResp(int socket, std::vector<std::string> tokens);
