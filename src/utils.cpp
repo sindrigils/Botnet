@@ -12,6 +12,11 @@ std::string stringToHex(const std::string &input)
 
 std::string stripQuotes(const std::string &str)
 {
+    if (str.empty())
+    {
+        return str;
+    }
+
     if (str.front() == '"' && str.back() == '"')
     {
         return str.substr(1, str.size() - 2); // Remove the first and last quotes
@@ -118,7 +123,6 @@ std::string getOwnIPFromSocket(int sock)
 
     return std::string(own_ip);
 }
-
 
 int connectToServer(const std::string &ip, int port, std::string myGroupId)
 {

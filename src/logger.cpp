@@ -14,7 +14,6 @@ std::string Logger::_getTime()
 
 int Logger::_openLogFile(std::ofstream &logFile)
 {
-    std::lock_guard<std::mutex> guard(logMutex);
     logFile.open("logs/logs.txt", std::ios::app);
     if (!logFile.is_open())
     {
@@ -26,6 +25,7 @@ int Logger::_openLogFile(std::ofstream &logFile)
 
 void Logger::write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole)
 {
+    std::lock_guard<std::mutex> guard(logMutex);
     std::ofstream logFile;
     if (_openLogFile(logFile) != -1)
     {
@@ -41,6 +41,7 @@ void Logger::write(const std::string message, const char *buffer, size_t bufferL
 
 void Logger::write(const std::string message, bool printToConsole)
 {
+    std::lock_guard<std::mutex> guard(logMutex);
     std::ofstream logFile;
     std::string logMessage = "[" + _getTime() + "] " + message;
     if (_openLogFile(logFile) != -1)

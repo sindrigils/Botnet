@@ -152,7 +152,7 @@ void sendKeepAliveMessages(ServerManager &serverManager)
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
         for (auto &pair : keepAliveMessages)
         {
-            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": here is msg " + pair.second);
+            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": " + pair.second);
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }
     }
