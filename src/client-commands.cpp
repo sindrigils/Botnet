@@ -74,12 +74,10 @@ void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
     std::string msg = "GETMSGS," + forGroupId;
     std::string message = constructServerMessage(msg);
 
-    for (auto &pair : serverManager.servers)
+    int sock = serverManager.getSockByName(fromGroupId);
+    if (sock != -1)
     {
-        if (pair.second->name == fromGroupId)
-        {
-            send(pair.second->sock, message.c_str(), message.length(), 0);
-        }
+        send(sock, message.c_str(), message.length(), 0);
     }
 }
 
@@ -103,48 +101,25 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + contentStream.str();
     std::string serverMessage = constructServerMessage(message);
 
-    for (auto const &pair : serverManager.servers)
+    int sock = serverManager.getSockByName(groupId);
+    if (sock == -1)
     {
-        if (pair.second->name.compare(groupId) == 0)
-        {
-            send(pair.second->sock, serverMessage.c_str(), serverMessage.length(), 0);
-            return;
-        }
+        logger.write("Storing message for " + groupId, true);
+        groupMessageManager.addMessage(trim(groupId), serverMessage);
+        return;
     }
-    logger.write("Storing message for " + groupId, true);
-    groupMessageManager.addMessage(trim(groupId), serverMessage);
+
+    send(sock, serverMessage.c_str(), serverMessage.length(), 0);
 }
 
 void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
 {
-    std::string msg;
-    for (auto i = tokens.begin() + 2; i != tokens.end(); i++)
-    {
-        msg += *i + " ";
-    }
-
-    for (auto const &pair : serverManager.servers)
-    {
-        send(pair.second->sock, msg.c_str(), msg.length(), 0);
-    }
+    // NOT IMPLEMENTED
 }
 
 void ClientCommands::handleListServers(std::vector<std::string> tokens)
 {
-    std::string message = "";
-    if (serverManager.servers.size() == 0)
-    {
-        message = "Not connected to any servers.";
-    }
-    else
-    {
-        for (const auto &pair : serverManager.servers)
-        {
-            message += pair.second->name + ", ";
-        }
-        message = message.substr(0, message.length() - 2);
-    }
-
+    std::string message = serverManager.getListOfServers();
     send(sock, message.c_str(), message.length(), 0);
 }
 
@@ -170,13 +145,10 @@ void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
     std::string groupId = tokens[1];
     std::string message = constructServerMessage("STATUSREQ");
 
-    for (const auto &pair : serverManager.servers)
+    int sock = serverManager.getSockByName(groupId);
+    if (sock != -1)
     {
-        if (pair.second->name == groupId)
-        {
-            send(pair.second->sock, message.c_str(), message.length(), 0);
-            break;
-        }
+        send(sock, message.c_str(), message.length(), 0);
     }
 }
 
