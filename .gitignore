@@ -3,7 +3,7 @@
 /logs/*
 !.gitkeep
 client
-server
+tsamgroup5
 .vscode
 build
 .DS_Store

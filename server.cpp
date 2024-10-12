@@ -163,7 +163,7 @@ void sendKeepAliveMessages()
         std::this_thread::sleep_for(std::chrono::minutes(2));
 
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
-        for (auto &pair : keepAliveMessages)
+        for (const auto &pair : keepAliveMessages)
         {
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }
@@ -230,7 +230,6 @@ int main(int argc, char *argv[])
             inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
             serverManager.add(clientSock, clientIpAddress);
-            serverManager.update(clientSock, serverPort);
             pollManager.add(clientSock);
 
             logger.write("New client connected: " + std::string(clientIpAddress), true);
