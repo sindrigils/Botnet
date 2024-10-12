@@ -246,6 +246,12 @@ int recvAndParseMsg(char *buffer, int bufferLength, int &clientSocket, std::stri
 
 int main(int argc, char *argv[])
 {
+    if (argc != 3)
+    {
+        printf("Usage: chat_server <port> <group_no>\n");
+        exit(0);
+    }
+
     char *serverPort = argv[1];
     char *GROUP_ID = argv[2];
 
@@ -255,12 +261,6 @@ int main(int argc, char *argv[])
     serverCommands.setPort(serverPort);
 
     int listenSock;
-
-    if (argc != 3)
-    {
-        printf("Usage: chat_server <port>\n");
-        exit(0);
-    }
 
     // Setup socket for server to listen to
     listenSock = open_socket(atoi(argv[1]));
