@@ -81,6 +81,7 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
     std::string sendMessage = constructServerMessage(message);
     send(socket, sendMessage.c_str(), sendMessage.length(), 0);
 }
+
 void ServerCommands::handleServers(int socket, std::string buffer)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
@@ -90,6 +91,12 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         std::string groupId = trim(serverInfo[0]);
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
+
+        if (token == tokens[0])
+        {
+            // the groupId should already be set, but if the other server did not send a HELO, then it wont be set
+            serverManager.update(socket, port, groupId);
+        }
 
         bool isAlreadyConnected = serverManager.hasConnectedToServer(ipAddress, port, groupId);
         if (isAlreadyConnected || groupId == myGroupId || port == "-1" || ipAddress == "-1")
@@ -164,7 +171,7 @@ void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens
 {
     std::unordered_map<std::string, int> totalStoredMessages = groupMessageManager.getAllMessagesCount();
     std::string message = "STATUSRESP,";
-    for (auto &pair : totalStoredMessages)
+    for (const auto &pair : totalStoredMessages)
     {
         message += pair.first + "," + std::to_string(pair.second) + ",";
     };
@@ -183,7 +190,7 @@ std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages(
     std::unordered_map<int, std::string> messages;
 
     std::unordered_map<int, std::string> connectedSockets = serverManager.getConnectedSockets();
-    for (auto &pair : connectedSockets)
+    for (const auto &pair : connectedSockets)
     {
         int messageCount = groupMessageManager.getMessageCount(pair.second);
         std::string message = "KEEPALIVE," + std::to_string(messageCount);

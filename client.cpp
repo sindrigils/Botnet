@@ -1,10 +1,3 @@
-//
-// Simple chat client for TSAM-409
-//
-// Command line: ./chat_client 4000
-//
-// Author: Jacky Mallett (jacky@ru.is)
-//
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -33,7 +26,7 @@
 void listenServer(int serverSocket)
 {
     int nread;         // Bytes read from socket
-    char buffer[1025]; // Buffer for reading input
+    char buffer[5001]; // Buffer for reading input
 
     while (true)
     {
@@ -128,12 +121,12 @@ int main(int argc, char *argv[])
 
         // Remove the newline character from the buffer
         size_t len = strlen(buffer);
-        if (len > 0 && buffer[len - 1] == '\n') {
+        if (len > 0 && buffer[len - 1] == '\n')
+        {
             buffer[len - 1] = '\0';
         }
 
         std::string message = constructServerMessage(buffer);
-
 
         nwrite = send(serverSocket, message.c_str(), message.length(), 0);
 
