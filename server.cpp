@@ -34,7 +34,7 @@
 #endif
 
 #define Backlog 5
-#define MAX_MESSAGE_LENGTH 5001
+#define MAX_MESSAGE_LENGTH 3*5000
 
 // #define GROUP_ID "5"
 
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 
                 if (bytesRead == -1)
                 {
-                    std::string errorMsg = "Failed to read from " + serverName + ", received -1 from recv. Error: " + strerror(errno);
+                    std::string errorMsg = "ERROR: Failed to read from " + serverName + ", received -1 from recv. Error: " + strerror(errno);
                     logger.write(errorMsg, true);
                     closeClient(clientSocket);
                     break;
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 
                 logger.write("Received from " + serverName, buffer + offset, bytesRead);
 
-                if (offset + bytesRead > MAX_MESSAGE_LENGTH)
+                if (offset + bytesRead >= MAX_MESSAGE_LENGTH)
                 {
                     logger.write("Dropped message from " + serverName + ": message exceeds " + std::to_string(MAX_MESSAGE_LENGTH) + " bytes.", true);
                     closeClient(clientSocket);
