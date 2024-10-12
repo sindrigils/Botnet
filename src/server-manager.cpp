@@ -3,7 +3,7 @@
 void ServerManager::add(int sock, const char *ipAddress, std::string port)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
-    servers[sock] = new Server(sock, ipAddress, port);
+    servers[sock] = std::make_shared<Server>(sock, ipAddress, port);
 }
 
 void ServerManager::close(int sock)
@@ -104,17 +104,15 @@ bool ServerManager::hasConnectedToServer(std::string ipAddress, std::string port
 std::string ServerManager::getAllServersInfo() const
 {
     std::lock_guard<std::mutex> guard(serverMutex);
-    std::string message = "";
-    for (auto &pair : servers)
+    std::stringstream ss;
+
+    for (const auto &pair : servers)
     {
         if (pair.second->name == "N/A")
         {
             continue;
         }
-
-        message += pair.second->name + ",";
-        message += pair.second->ipAddress + ",";
-        message += pair.second->port + ";";
+        ss << pair.second->name << "," << pair.second->ipAddress << "," << pair.second->port << ";";
     }
-    return message;
+    return ss.str();
 }

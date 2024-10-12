@@ -2,8 +2,9 @@
 #define SERVER_MANAGER_HPP
 
 #include <mutex>
-#include <map>
+#include <sstream>
 #include <unordered_map>
+#include <memory>
 
 #include "servers.hpp"
 
@@ -21,7 +22,8 @@ public:
     std::string getAllServersInfo() const;
 
 private:
-    std::map<int, Server *> servers;
+    std::unordered_map<int, std::shared_ptr<Server>> servers;
+
     mutable std::mutex serverMutex;
 };
 

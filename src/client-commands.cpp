@@ -109,6 +109,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
         return;
     }
 
+    logger.write("Sending MSG to: " + groupId + "- " + message, true);
     send(sock, serverMessage.c_str(), serverMessage.length(), 0);
 }
 
@@ -125,18 +126,22 @@ void ClientCommands::handleListServers(std::vector<std::string> tokens)
 
 void ClientCommands::handleConnect(std::vector<std::string> tokens)
 {
-    logger.write("Attempting to connect to server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
+
     std::string message = "";
     std::string ip = tokens[1];
     int port = stringToInt(tokens[2]);
     int serverSock = connectToServer(trim(tokens[1]), port, myGroupId);
     if (serverSock == -1)
     {
+        logger.write("Unable to connect to the server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
         return;
     }
     serverManager.add(serverSock, ip.c_str(), std::to_string(port));
     pollManager.add(serverSock);
-    message = serverSock ? "Successfully connected to the server." : "Unable to connect to the server.";
+    logger.write("Successfully connected to the server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
+
+    // remove these lines
+    message = "Successfully connected to the server.";
     send(sock, message.c_str(), message.length(), 0);
 }
 
@@ -157,7 +162,8 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
     std::string ip = "130.208.246.249";
     int port = 5000 + stringToInt(tokens[1]);
 
-    if(port < 5000 || port > 5003) {
+    if (port < 5000 || port > 5003)
+    {
         logger.write("Invalid port number for INSTR server in short connect (" + std::to_string(port) + ")", true);
         return;
     }

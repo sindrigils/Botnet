@@ -152,7 +152,7 @@ void sendKeepAliveMessages(ServerManager &serverManager)
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
         for (auto &pair : keepAliveMessages)
         {
-            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": here is msg " + pair.second);
+            logger.write("SENDINGG KEEPALIVE TO " + std::to_string(pair.first) + ": " + pair.second);
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }
     }
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
             int clientSocket = pollManager.getFd(i);
             std::string serverName = serverManager.getName(clientSocket);
-            
+
             // Read the data into a buffer, it's expected to start with SOH and and with EOT
             // however, it may be split into multiple packets, so we need to handle that.
             // We also need to handle the cases where the client does not wrap the message in SOH and EOT
