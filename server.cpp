@@ -32,7 +32,7 @@
 #define SOCK_NONBLOCK O_NONBLOCK
 #endif
 
-#define MAX_EOT_TRIES 5
+#define MAX_EOT_TRIES 10
 #define Backlog 5
 #define MAX_MESSAGE_LENGTH 3 * 5000
 
