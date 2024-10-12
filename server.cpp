@@ -163,7 +163,7 @@ void sendKeepAliveMessages()
         std::this_thread::sleep_for(std::chrono::minutes(2));
 
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
-        for (auto &pair : keepAliveMessages)
+        for (const auto &pair : keepAliveMessages)
         {
             send(pair.first, pair.second.c_str(), pair.second.length(), 0);
         }

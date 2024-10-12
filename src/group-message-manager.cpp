@@ -49,7 +49,7 @@ std::unordered_map<std::string, int> GroupMessageManager::getAllMessagesCount() 
     std::lock_guard<std::mutex> lock(mutex);
     std::unordered_map<std::string, int> groupTotalMessages;
 
-    for (auto &pair : groupMessages)
+    for (const auto &pair : groupMessages)
     {
         int counter = getMessageCount(pair.first);
         if (counter > 0)
