@@ -7,7 +7,7 @@
 #include <string>
 #include <mutex>
 
-#define MAX_MESSAGE_LENGTH 5
+#define MAX_MESSAGES 5
 
 class GroupMessageManager
 {

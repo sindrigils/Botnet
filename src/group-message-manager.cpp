@@ -6,7 +6,7 @@ void GroupMessageManager::addMessage(const std::string &groupId, const std::stri
 
     auto &messages = groupMessages[groupId];
 
-    if (messages.size() >= MAX_MESSAGE_LENGTH)
+    if (messages.size() >= MAX_MESSAGES)
     {
         std::cout << "Dropping message for group " << groupId << ": buffer is full." << std::endl;
         return;
