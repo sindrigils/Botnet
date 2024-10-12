@@ -29,7 +29,8 @@ private:
     void handleGetMsgFrom(std::vector<std::string> tokens);
     void handleSendMsg(std::vector<std::string> tokens);
     void handleMsgAll(std::vector<std::string> tokens);
-    void handleListServers(std::vector<std::string> tokens);
+    void handleListServers();
+    void handleListServersDetails();
     void handleConnect(std::vector<std::string> tokens);
     void handleStatusREQ(std::vector<std::string> tokens);
     void handleShortConnect(std::vector<std::string> tokens);

@@ -125,3 +125,21 @@ std::vector<int> ServerManager::getAllServerSocks() const
     }
     return socks;
 }
+
+std::string ServerManager::getListOfServersWithSocks() const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    std::string message;
+
+    if (servers.size() == 0)
+    {
+        message = "Not connected to any servers";
+        return message;
+    }
+
+    for (const auto &pair : servers)
+    {
+        message += std::to_string(pair.first) + ":" + pair.second->name + ", ";
+    }
+    return message.substr(0, message.length() - 2);
+}

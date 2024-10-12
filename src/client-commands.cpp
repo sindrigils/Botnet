@@ -40,7 +40,11 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     }
     else if (tokens[0].compare("LISTSERVERS") == 0)
     {
-        handleListServers(tokens);
+        handleListServers();
+    }
+    else if (tokens[0].compare("LISTALL") == 0)
+    {
+        handleListServersDetails();
     }
     else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 3)
     {
@@ -118,7 +122,7 @@ void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
     // NOT IMPLEMENTED
 }
 
-void ClientCommands::handleListServers(std::vector<std::string> tokens)
+void ClientCommands::handleListServers()
 {
     std::string message = serverManager.getListOfServers();
     send(sock, message.c_str(), message.length(), 0);
@@ -169,4 +173,10 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
     }
 
     handleConnect({tokens[0], ip, std::to_string(port)});
+}
+
+void ClientCommands::handleListServersDetails()
+{
+    std::string message = serverManager.getListOfServersWithSocks();
+    send(sock, message.c_str(), message.length(), 0);
 }
