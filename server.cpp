@@ -241,6 +241,15 @@ int main(int argc, char *argv[])
             for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
             {
                 bytesRead = recv(clientSocket, buffer + offset, sizeof(buffer) - offset, 0);
+
+                if (bytesRead == -1)
+                {
+                    std::string errorMsg = "Failed to read from " + serverName + ", received -1 from recv. Error: " + strerror(errno);
+                    logger.write(errorMsg, true);
+                    closeClient(clientSocket);
+                    break;
+                }
+
                 logger.write("Received from " + serverName, buffer + offset, bytesRead);
 
                 if (offset + bytesRead > MAX_MESSAGE_LENGTH)
