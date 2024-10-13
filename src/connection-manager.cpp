@@ -8,8 +8,16 @@ ConnectionManager::ConnectionManager(
                       pollManager(pollManager),
                       logger(logger) {};
 
-int ConnectionManager::connectToServer(const std::string &ip, std::string strPort, std::string myGroupId)
+int ConnectionManager::connectToServer(const std::string &ip, std::string strPort, std::string myGroupId, bool isUnknown, std::string groupId)
 {
+
+    bool isAlreadyConnected = serverManager.hasConnectedToServer(ip, strPort, "");
+    if (isAlreadyConnected)
+    {
+        logger.write("Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
+        return -1;
+    }
+    logger.write("Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
     int port = stringToInt(strPort);
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
@@ -18,11 +26,22 @@ int ConnectionManager::connectToServer(const std::string &ip, std::string strPor
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
     {
+        if (isUnknown)
+        {
+            serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
+        }
+        else
+        {
+            serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
+        }
+        logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
+        pollManager.add(serverSocket);
+
         std::string message = "HELO," + myGroupId;
-        std::string heloMessage = constructServerMessage(message);
-        send(serverSocket, heloMessage.c_str(), heloMessage.length(), 0);
+        sendTo(serverSocket, message);
         return serverSocket;
     }
+    logger.write("Unable to connect to server - groupId: " + groupId + ", ipAddress:  " + ip + ", port: " + strPort);
     return -1;
 }
 

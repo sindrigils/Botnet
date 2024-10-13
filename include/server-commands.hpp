@@ -22,12 +22,10 @@ public:
     void setOurClient(int sock);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
-    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
+    ServerCommands(ServerManager &serverManager, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
 
 private:
     ServerManager &serverManager;
-    PollManager &pollManager;
-    Logger &logger;
     GroupMessageManager &groupMessageManager;
     ConnectionManager &connectionManager;
 

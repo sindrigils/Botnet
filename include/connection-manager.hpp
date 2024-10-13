@@ -14,7 +14,7 @@
 class ConnectionManager
 {
 public:
-    int connectToServer(const std::string &ip, std::string port, std::string myGroupId);
+    int connectToServer(const std::string &ip, std::string port, std::string myGroupId, bool isUnknown, std::string groupId = "");
     int sendTo(int sock, std::string message, bool isFormatted = false);
     void closeSock(int sock);
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);

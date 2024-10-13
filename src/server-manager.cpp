@@ -1,27 +1,51 @@
 #include "server-manager.hpp"
 
-void ServerManager::add(int sock, const char *ipAddress, std::string port)
+void ServerManager::add(int sock, const char *ipAddress, std::string port, std::string groupId)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
-    servers[sock] = std::make_shared<Server>(sock, ipAddress, port);
+    servers[sock] = std::make_shared<Server>(sock, ipAddress, port, groupId);
+}
+
+void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port)
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    unknownServers[sock] = std::make_shared<Server>(sock, ipAddress);
+}
+
+int ServerManager::moveFromUnknown(int sock, std::string groupId)
+{
+    auto i = servers.find(sock);
+    if (i != servers.end())
+    {
+        return 0;
+    }
+
+    auto it = unknownServers.find(sock);
+    if (it != unknownServers.end())
+    {
+        std::shared_ptr<Server> server = it->second;
+        server->name = groupId;
+        servers[sock] = server;
+        unknownServers.erase(it);
+        return 0;
+    }
+    std::cout << "ADD FAILED FOR: " << std::to_string(sock) << std::endl;
+    return -1;
 }
 
 void ServerManager::close(int sock)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     servers.erase(sock);
+    unknownServers.erase(sock);
 }
 
-void ServerManager::update(int sock, std::string port, std::string name)
+void ServerManager::update(int sock, std::string port)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     if (port != "")
     {
         servers[sock]->port = port;
-    }
-    if (name != "")
-    {
-        servers[sock]->name = name;
     }
 }
 
@@ -34,7 +58,6 @@ std::string ServerManager::getName(int sock) const
         std::string name = it->second->name;
         if (name.empty())
         {
-            // If the name is empty, return "Sock" + sock value
             name = "Sock-" + std::to_string(it->first);
         }
         return name;
@@ -73,7 +96,7 @@ std::string ServerManager::getListOfServers() const
 
     for (const auto &pair : servers)
     {
-        message += pair.second->name + ", ";
+        message += std::to_string(pair.first) + ":" + pair.second->name + ", ";
     }
     return message.substr(0, message.length() - 2);
 }
@@ -131,20 +154,20 @@ std::vector<int> ServerManager::getAllServerSocks() const
     return socks;
 }
 
-std::string ServerManager::getListOfServersWithSocks() const
+std::string ServerManager::getListOfUnknownServersWithSocks() const
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     std::string message;
 
-    if (servers.size() == 0)
+    if (unknownServers.size() == 0)
     {
-        message = "Not connected to any servers";
+        message = "Not connected to any unknown servers";
         return message;
     }
 
-    for (const auto &pair : servers)
+    for (const auto &pair : unknownServers)
     {
-        message += std::to_string(pair.first) + ":" + pair.second->name + ", ";
+        message += std::to_string(pair.first) + ":" + pair.second->ipAddress + ", ";
     }
     return message.substr(0, message.length() - 2);
 }

@@ -4,12 +4,8 @@ std::mutex mtx;
 
 ServerCommands::ServerCommands(
     ServerManager &serverManager,
-    PollManager &pollManager,
-    Logger &logger,
     GroupMessageManager &groupMessageManager,
     ConnectionManager &connectionManager) : serverManager(serverManager),
-                                            pollManager(pollManager),
-                                            logger(logger),
                                             groupMessageManager(groupMessageManager),
                                             connectionManager(connectionManager),
                                             myIpAddress("-1"),
@@ -76,7 +72,7 @@ void ServerCommands::findCommand(int socket, std::string buffer)
 
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
-    serverManager.update(socket, "", tokens[1]);
+    serverManager.moveFromUnknown(socket, tokens[1]);
 
     std::string msg = "SERVERS," + myGroupId + "," + myIpAddress + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
@@ -92,13 +88,18 @@ void ServerCommands::handleServers(int socket, std::string buffer)
     for (auto &token : tokens)
     {
         std::vector<std::string> serverInfo = splitMessageOnDelimiter(token.c_str());
+        if (serverInfo.size() != 3)
+        {
+            continue;
+        }
+
         std::string groupId = trim(serverInfo[0]);
         std::string ipAddress = trim(serverInfo[1]);
         std::string port = trim(serverInfo[2]);
 
         if (token == tokens[0])
         {
-            serverManager.update(socket, port, groupId);
+            serverManager.update(socket, port);
         }
 
         bool isAlreadyConnected = serverManager.hasConnectedToServer(ipAddress, port, groupId);
@@ -108,19 +109,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         }
 
         std::thread([this, ipAddress = std::string(ipAddress), port = std::string(port), groupId = std::string(groupId)]()
-                    {
-            logger.write("Attempting to connect to ip: " + ipAddress + ", port: " + port + ", groupId: " + groupId);
-            int serverSock = connectionManager.connectToServer(ipAddress, port, myGroupId);
-            if (serverSock != -1)
-            {
-                logger.write("Server connected - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port + ", sock: " + std::to_string(serverSock));
-                serverManager.add(serverSock, ipAddress.c_str(), port);
-                pollManager.add(serverSock);
-            }
-            else
-            {
-                logger.write("Unable to connect to server - groupId: " + groupId + ", ipAddress:  " + ipAddress + ", port: " + port);
-            } })
+                    { connectionManager.connectToServer(ipAddress, port, myGroupId, false, groupId); })
             .detach();
     }
 }

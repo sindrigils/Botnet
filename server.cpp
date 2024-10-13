@@ -43,8 +43,8 @@ Logger logger;
 PollManager pollManager;
 GroupMessageManager groupMessageManager;
 ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger, groupMessageManager, connectionManager);
-ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger, groupMessageManager, connectionManager);
+ServerCommands serverCommands = ServerCommands(serverManager, groupMessageManager, connectionManager);
+ClientCommands clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
 std::string serverIpAddress;
 
 int ourClientSock = -1;
@@ -176,7 +176,7 @@ void handleNewConnection(int &listenSock, char *GROUP_ID)
     char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
     inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
-    serverManager.add(clientSock, clientIpAddress);
+    serverManager.addUnknown(clientSock, clientIpAddress);
     pollManager.add(clientSock);
 
     logger.write("New client connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);

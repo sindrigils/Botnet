@@ -2,11 +2,9 @@
 
 ClientCommands::ClientCommands(
     ServerManager &serverManager,
-    PollManager &pollManager,
     Logger &logger,
     GroupMessageManager &groupMessageManager,
     ConnectionManager &connectionManager) : serverManager(serverManager),
-                                            pollManager(pollManager),
                                             logger(logger),
                                             groupMessageManager(groupMessageManager),
                                             connectionManager(connectionManager) {};
@@ -32,6 +30,11 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleGetMsgFrom(tokens);
     }
+    // this function is just to send messages to servers that did not respond with HELO
+    else if (tokens[0].compare("SENDMSG") == 0 && tokens[1].compare("SOCK") == 0 && tokens.size() >= 4)
+    {
+        handleSendMsgToSock(tokens);
+    }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 3)
     {
         handleSendMsg(tokens);
@@ -44,9 +47,9 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleListServers();
     }
-    else if (tokens[0].compare("LISTALL") == 0)
+    else if (tokens[0].compare("LISTUNKNOWN") == 0)
     {
-        handleListServersDetails();
+        handleListUnknownServers();
     }
     else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 3)
     {
@@ -56,14 +59,14 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleStatusREQ(tokens);
     }
+    else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2)
+    {
+        handleDropConnection(tokens);
+    }
     // custom macros
     else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
     {
         handleShortConnect(tokens);
-    }
-    else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2)
-    {
-        handleDropConnection(tokens);
     }
     else
     {
@@ -121,6 +124,14 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     connectionManager.sendTo(sock, message);
 }
 
+void ClientCommands::handleSendMsgToSock(std::vector<std::string> tokens)
+{
+    std::string sock = tokens[2];
+    std::string groupId = tokens[3];
+    std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + tokens[4];
+    connectionManager.sendTo(stringToInt(sock), message);
+}
+
 void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
 {
     // NOT IMPLEMENTED
@@ -134,24 +145,10 @@ void ClientCommands::handleListServers()
 
 void ClientCommands::handleConnect(std::vector<std::string> tokens)
 {
-
     std::string message = "";
     std::string ip = trim(tokens[1]);
     std::string port = trim(tokens[2]);
-
-    int serverSock = connectionManager.connectToServer(ip, port, myGroupId);
-    if (serverSock == -1)
-    {
-        logger.write("Unable to connect to the server (by client), ip: " + ip + ", port: " + port, true);
-        return;
-    }
-    serverManager.add(serverSock, ip.c_str(), port);
-    pollManager.add(serverSock);
-    logger.write("Successfully connected to the server (by client), ip: " + ip + ", port: " + port, true);
-
-    // remove these lines
-    message = "Successfully connected to the server.";
-    send(sock, message.c_str(), message.length(), 0);
+    connectionManager.connectToServer(ip, port, myGroupId, true);
 }
 
 void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
@@ -180,9 +177,9 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
     handleConnect({tokens[0], ip, std::to_string(port)});
 }
 
-void ClientCommands::handleListServersDetails()
+void ClientCommands::handleListUnknownServers()
 {
-    std::string message = serverManager.getListOfServersWithSocks();
+    std::string message = serverManager.getListOfUnknownServersWithSocks();
     send(sock, message.c_str(), message.length(), 0);
 }
 
