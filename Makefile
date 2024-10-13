@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Iinclude -Wall -std=c++11
+CXXFLAGS = -Iinclude -Wall -std=c++14
 
 # Platform-specific settings
 UNAME_S := $(shell uname -s)

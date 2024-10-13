@@ -6,6 +6,7 @@
 #include "poll-manager.hpp"
 #include "logger.hpp"
 #include "group-message-manager.hpp"
+#include "connection-manager.hpp"
 
 class ClientCommands
 {
@@ -15,7 +16,7 @@ public:
     void setGroupId(const std::string &groupId);
     void setSock(int newSock);
     void findCommand(std::vector<std::string> tokens, const char *buffer);
-    ClientCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager);
+    ClientCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
 
 private:
     // remove
@@ -24,6 +25,7 @@ private:
     PollManager &pollManager;
     Logger &logger;
     GroupMessageManager &groupMessageManager;
+    ConnectionManager &connectionManager;
 
     void handleGetMsg(std::vector<std::string> tokens);
     void handleGetMsgFrom(std::vector<std::string> tokens);
@@ -34,6 +36,7 @@ private:
     void handleConnect(std::vector<std::string> tokens);
     void handleStatusREQ(std::vector<std::string> tokens);
     void handleShortConnect(std::vector<std::string> tokens);
+    void handleDropConnection(std::vector<std::string> tokens);
 };
 
 #endif

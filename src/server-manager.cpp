@@ -31,9 +31,14 @@ std::string ServerManager::getName(int sock) const
     auto it = servers.find(sock);
     if (it != servers.end() && it->second != nullptr)
     {
-        return it->second->name;
+        std::string name = it->second->name;
+        if (name.empty())
+        {
+            // If the name is empty, return "Sock" + sock value
+            name = "Sock-" + std::to_string(it->first);
+        }
+        return name;
     }
-    // should not be needed, since the default value is N/A, but for safety
     return "N/A";
 }
 

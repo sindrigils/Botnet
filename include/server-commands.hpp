@@ -4,12 +4,14 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <mutex>
 
 #include "utils.hpp"
 #include "server-manager.hpp"
 #include "poll-manager.hpp"
 #include "logger.hpp"
 #include "group-message-manager.hpp"
+#include "connection-manager.hpp"
 
 class ServerCommands
 {
@@ -20,13 +22,14 @@ public:
     void setOurClient(int sock);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
-    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager);
+    ServerCommands(ServerManager &serverManager, PollManager &pollManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
 
 private:
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
     GroupMessageManager &groupMessageManager;
+    ConnectionManager &connectionManager;
 
     const char *myIpAddress;
     std::string myGroupId;
