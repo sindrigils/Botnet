@@ -13,6 +13,7 @@ class ServerManager
 {
 public:
     void add(int sock, const char *ipAddress, std::string port = "-1");
+    void addUnknown(int sock, const char *ipAddress);
     void close(int sock);
     void update(int sock, std::string port = "", std::string name = "");
     std::unordered_map<int, std::string> getConnectedSockets() const;
@@ -26,7 +27,7 @@ public:
 
 private:
     std::unordered_map<int, std::shared_ptr<Server>> servers;
-
+    std::unordered_map<int, std::shared_ptr<Server>> unknownServers;
     mutable std::mutex serverMutex;
 };
 

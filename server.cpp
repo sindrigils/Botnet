@@ -24,6 +24,7 @@
 #include "logger.hpp"
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
+#include "connection-manager.hpp"
 
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
@@ -41,8 +42,9 @@ ServerManager serverManager;
 Logger logger;
 PollManager pollManager;
 GroupMessageManager groupMessageManager;
-ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger, groupMessageManager);
-ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger, groupMessageManager);
+ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
+ServerCommands serverCommands = ServerCommands(serverManager, pollManager, logger, groupMessageManager, connectionManager);
+ClientCommands clientCommands = ClientCommands(serverManager, pollManager, logger, groupMessageManager, connectionManager);
 std::string serverIpAddress;
 
 int ourClientSock = -1;
@@ -101,13 +103,6 @@ int open_socket(int portno)
     }
 }
 
-void closeClient(int clientSocket)
-{
-    close(clientSocket);
-    serverManager.close(clientSocket);
-    pollManager.close(clientSocket);
-}
-
 // Process command from client on the server
 void handleCommand(int clientSocket, const char *buffer)
 {
@@ -131,13 +126,6 @@ void handleCommand(int clientSocket, const char *buffer)
             send(clientSocket, message.c_str(), message.length(), 0);
             return;
         }
-        // i dont like this
-        else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2 && clientSocket == ourClientSock)
-        {
-            int dropSock = stringToInt(tokens[1]);
-            closeClient(dropSock);
-            return;
-        }
 
         if (clientSocket == ourClientSock)
         {
@@ -152,13 +140,12 @@ void sendStatusReqMessages()
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::minutes(5));
-        std::string message = constructServerMessage("STATUSREQ");
+        std::string message = "STATUSREQ";
         std::vector<int> socks = serverManager.getAllServerSocks();
 
         for (auto sock : socks)
         {
-            logger.write("Sending statusreq to: " + serverManager.getName(sock));
-            send(sock, message.c_str(), message.length(), 0);
+            connectionManager.sendTo(sock, message);
         }
     }
 }
@@ -172,8 +159,7 @@ void sendKeepAliveMessages()
         std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
         for (const auto &pair : keepAliveMessages)
         {
-            logger.write("Sending keepalive to: " + serverManager.getName(pair.first));
-            send(pair.first, pair.second.c_str(), pair.second.length(), 0);
+            connectionManager.sendTo(pair.first, pair.second, true);
         }
     }
 }
@@ -193,9 +179,9 @@ void handleNewConnection(int &listenSock, char *GROUP_ID)
     serverManager.add(clientSock, clientIpAddress);
     pollManager.add(clientSock);
 
-    logger.write("New client connected: " + std::string(clientIpAddress), true);
-    std::string serverMessage = constructServerMessage("HELO," + std::string(GROUP_ID));
-    send(clientSock, serverMessage.c_str(), serverMessage.length(), 0);
+    logger.write("New client connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
+    std::string message = "HELO," + std::string(GROUP_ID);
+    connectionManager.sendTo(clientSock, message);
 }
 
 // returns -1 = error, 0 = client disconnected, 1 = message received, 2 = message dropped
@@ -319,8 +305,7 @@ int main(int argc, char *argv[])
             int recvResult = recvAndParseMsg(buffer, sizeof(buffer), clientSocket, serverName);
             if (recvResult == -1 || recvResult == 0)
             {
-                closeClient(clientSocket);
-                logger.write("Closing connection to " + serverName, true);
+                connectionManager.closeSock(clientSocket);
                 continue;
             }
 

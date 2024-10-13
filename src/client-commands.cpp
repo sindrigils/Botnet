@@ -4,10 +4,12 @@ ClientCommands::ClientCommands(
     ServerManager &serverManager,
     PollManager &pollManager,
     Logger &logger,
-    GroupMessageManager &groupMessageManager) : serverManager(serverManager),
-                                                pollManager(pollManager),
-                                                logger(logger),
-                                                groupMessageManager(groupMessageManager) {};
+    GroupMessageManager &groupMessageManager,
+    ConnectionManager &connectionManager) : serverManager(serverManager),
+                                            pollManager(pollManager),
+                                            logger(logger),
+                                            groupMessageManager(groupMessageManager),
+                                            connectionManager(connectionManager) {};
 
 void ClientCommands::setGroupId(const std::string &groupId)
 {
@@ -59,6 +61,10 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     {
         handleShortConnect(tokens);
     }
+    else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2)
+    {
+        handleDropConnection(tokens);
+    }
     else
     {
         std::cout << "Unknown command from client:" << buffer << std::endl;
@@ -103,18 +109,16 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     }
 
     std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + contentStream.str();
-    std::string serverMessage = constructServerMessage(message);
 
     int sock = serverManager.getSockByName(groupId);
     if (sock == -1)
     {
         logger.write("Storing message for " + groupId, true);
-        groupMessageManager.addMessage(trim(groupId), serverMessage);
+        groupMessageManager.addMessage(trim(groupId), message);
         return;
     }
 
-    logger.write("Sending MSG to: " + groupId + "- " + message, true);
-    send(sock, serverMessage.c_str(), serverMessage.length(), 0);
+    connectionManager.sendTo(sock, message);
 }
 
 void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
@@ -132,17 +136,18 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
 {
 
     std::string message = "";
-    std::string ip = tokens[1];
-    int port = stringToInt(tokens[2]);
-    int serverSock = connectToServer(trim(tokens[1]), port, myGroupId);
+    std::string ip = trim(tokens[1]);
+    std::string port = trim(tokens[2]);
+
+    int serverSock = connectionManager.connectToServer(ip, port, myGroupId);
     if (serverSock == -1)
     {
-        logger.write("Unable to connect to the server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
+        logger.write("Unable to connect to the server (by client), ip: " + ip + ", port: " + port, true);
         return;
     }
-    serverManager.add(serverSock, ip.c_str(), std::to_string(port));
+    serverManager.add(serverSock, ip.c_str(), port);
     pollManager.add(serverSock);
-    logger.write("Successfully connected to the server (by client), ip: " + tokens[1] + ", port: " + tokens[2], true);
+    logger.write("Successfully connected to the server (by client), ip: " + ip + ", port: " + port, true);
 
     // remove these lines
     message = "Successfully connected to the server.";
@@ -152,12 +157,12 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
 void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    std::string message = constructServerMessage("STATUSREQ");
+    std::string message = "STATUSREQ";
 
     int sock = serverManager.getSockByName(groupId);
     if (sock != -1)
     {
-        send(sock, message.c_str(), message.length(), 0);
+        connectionManager.sendTo(sock, message);
     }
 }
 
@@ -179,4 +184,10 @@ void ClientCommands::handleListServersDetails()
 {
     std::string message = serverManager.getListOfServersWithSocks();
     send(sock, message.c_str(), message.length(), 0);
+}
+
+void ClientCommands::handleDropConnection(std::vector<std::string> tokens)
+{
+    int dropSock = stringToInt(tokens[1]);
+    connectionManager.closeSock(dropSock);
 }
