@@ -13,6 +13,12 @@
 #include "poll-manager.hpp"
 #include "utils.hpp"
 
+// fix SOCK_NONBLOCK for OSX
+#ifndef SOCK_NONBLOCK
+#include <fcntl.h>
+#define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 class ConnectionManager
 {
 public:
@@ -27,7 +33,7 @@ public:
 
     int openSock(int portno);
     void closeSock(int sock);
-    
+
     int getOurClientSock() const;
     std::string getOurIpAddress() const;
 

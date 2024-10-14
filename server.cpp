@@ -25,12 +25,6 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
-// fix SOCK_NONBLOCK for OSX
-#ifndef SOCK_NONBLOCK
-#include <fcntl.h>
-#define SOCK_NONBLOCK O_NONBLOCK
-#endif
-
 #define MY_GROUP_ID "A5_55"
 
 ServerManager serverManager;
