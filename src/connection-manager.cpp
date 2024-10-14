@@ -64,21 +64,29 @@ void ConnectionManager::handleNewConnection(int &listenSock, char *GROUP_ID)
 
     // New connection on the listening socket
     clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
+    if (clientSock < 0)
+    {
+        logger.write("Failed to accept connection: " + std::string(strerror(errno)), true);
+        return;
+    }
 
     char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
     inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
+    pollManager.add(clientSock);
+
+    // if this is the first client to connect, we will treat it as our client
     if (this->ourClientSock == -1)
     {
         this->ourClientSock = clientSock;
         this->ourIpAddress = getOwnIPFromSocket(clientSock);
+
         logger.write("Our client connected: " + std::string(ourIpAddress) + ", sock: " + std::to_string(ourClientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;
     }
 
     serverManager.addUnknown(clientSock, clientIpAddress);
-    pollManager.add(clientSock);
 
     logger.write("New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
     std::string message = "HELO," + std::string(GROUP_ID);
