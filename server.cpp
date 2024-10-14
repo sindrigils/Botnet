@@ -126,11 +126,11 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            std::vector<std::string> messages = extractCommands(buffer, strlen(buffer));
+            std::vector<std::string> commands = extractCommands(buffer, strlen(buffer));
 
             if (status == MSG_RECEIVED)
             {
-                handleCommands(sock, messages);
+                handleCommands(sock, commands);
             }
         }
     }
