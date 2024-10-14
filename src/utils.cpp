@@ -46,31 +46,43 @@ std::string constructServerMessage(const std::string &content)
     return finalMessage;
 }
 
-int findByteIndexInBuffer(const char *buffer, int bufferLength, int start, char sByte)
+int findSohEotIndexInBuffer(const char *buffer, int bufferLength, int startIndex, char byteType)
 {
-    int index = std::find(buffer + start, buffer + bufferLength, sByte) - buffer;
-    return (index < bufferLength) ? index : -1; // Return -1 if byte is not found
+    for (int i = startIndex; i < bufferLength; i++)
+    {
+        if (buffer[i] == ESC)
+        {
+            i++;
+            continue;
+        }
+        if (buffer[i] == byteType)
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
-std::string extractMessage(const char *buffer, int start, int end)
+std::string extractCommand(const char *buffer, int start, int end)
 {
     return std::string(buffer + start, end - start);
 }
 
-std::vector<std::string> extractMessages(const char *buffer, int bufferLength)
+std::vector<std::string> extractCommands(const char *buffer, int bufferLength)
 {
     std::vector<std::string> messageVector;
+
     for (int i = 0, start, end; i < bufferLength; i = end + 1)
     {
-        if ((start = findByteIndexInBuffer(buffer, bufferLength, i, SOH)) < 0)
+        if ((start = findSohEotIndexInBuffer(buffer, bufferLength, i, SOH)) < 0)
         {
             break;
         }
-        if ((end = findByteIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0)
+        if ((end = findSohEotIndexInBuffer(buffer, bufferLength, start + 1, EOT)) < 0)
         {
             break;
         }
-        messageVector.push_back(extractMessage(buffer, start + 1, end));
+        messageVector.push_back(extractCommand(buffer, start + 1, end));
     }
     return messageVector;
 }

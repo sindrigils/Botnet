@@ -17,16 +17,6 @@
 #define MAX_MSG_LENGTH 3 * 5000
 #define MY_GROUP_ID "A5_55"
 
-enum RecvStatus {
-    ERROR = -1,
-    SERVER_DISCONNECTED = 0,
-    MSG_RECEIVED = 1,
-    MSG_DROPPED = 2,
-    MSG_TOO_LONG = 3,
-    MSG_INVALID_SOH = 4,
-    MSG_INVALID_EOT = 5,
-};
-
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);
 
@@ -37,13 +27,13 @@ std::string stripQuotes(const std::string &str);
 std::string constructServerMessage(const std::string &content);
 
 // Finds the index of a byte in a buffer
-int findByteIndexInBuffer(const char *buffer, int bufferLength, int start, char sByte);
+int findSohEotIndexInBuffer(const char *buffer, int bufferLength, int start, char sByte);
 
 // Extracts a message from the buffer between start and end
-std::string extractMessage(const char *buffer, int start, int end);
+std::string extractCommand(const char *buffer, int start, int end);
 
 // Extracts messages from a buffer and adds them to a vector
-std::vector<std::string> extractMessages(const char *buffer, int bufferLength);
+std::vector<std::string> extractCommands(const char *buffer, int bufferLength);
 
 // Trim leading and trailing whitespace from a string
 std::string trim(const std::string &str);
