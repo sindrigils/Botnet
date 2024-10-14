@@ -1,6 +1,6 @@
 #include "group-message-manager.hpp"
 
-void GroupMessageManager::addMessage(const std::string &groupId, const std::string &message)
+void GroupMsgManager::addMessage(const std::string &groupId, const std::string &message)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -14,7 +14,7 @@ void GroupMessageManager::addMessage(const std::string &groupId, const std::stri
     messages.push_back(message);
 }
 
-std::vector<std::string> GroupMessageManager::getMessages(const std::string &groupId)
+std::vector<std::string> GroupMsgManager::getMessages(const std::string &groupId)
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -30,7 +30,7 @@ std::vector<std::string> GroupMessageManager::getMessages(const std::string &gro
     return messages;
 }
 
-int GroupMessageManager::getMessageCount(const std::string &groupId) const
+int GroupMsgManager::getMessageCount(const std::string &groupId) const
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -44,7 +44,7 @@ int GroupMessageManager::getMessageCount(const std::string &groupId) const
     return 0;
 }
 
-std::unordered_map<std::string, int> GroupMessageManager::getAllMessagesCount() const
+std::unordered_map<std::string, int> GroupMsgManager::getAllMessagesCount() const
 {
     std::lock_guard<std::mutex> lock(mutex);
     std::unordered_map<std::string, int> groupTotalMessages;

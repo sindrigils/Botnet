@@ -1,7 +1,7 @@
 #include "client-commands.hpp"
 
-ClientCommands::ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager)
-    : serverManager(serverManager), logger(logger), groupMessageManager(groupMessageManager), connectionManager(connectionManager)
+ClientCommands::ClientCommands(ServerManager &serverManager, Logger &logger, GroupMsgManager &groupMsgManager, ConnectionManager &connectionManager)
+    : serverManager(serverManager), logger(logger), groupMsgManager(groupMsgManager), connectionManager(connectionManager)
 {
 }
 
@@ -65,7 +65,7 @@ void ClientCommands::findCommand(std::string message)
 void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    std::vector<std::string> messages = groupMessageManager.getMessages(groupId);
+    std::vector<std::string> messages = groupMsgManager.getMessages(groupId);
 
     for (auto message : messages)
     {
@@ -122,7 +122,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     if (sock == -1)
     {
         logger.write("Storing message for " + groupId, true);
-        groupMessageManager.addMessage(trim(groupId), message);
+        groupMsgManager.addMessage(trim(groupId), message);
         return;
     }
 

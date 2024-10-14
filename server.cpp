@@ -9,19 +9,17 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
-
 #include <thread>
 #include <chrono>
 #include <unordered_map>
 
-ServerManager       serverManager;
-Logger              logger;
-PollManager         pollManager;
-GroupMessageManager groupMessageManager;
-ConnectionManager   connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands      serverCommands = ServerCommands(serverManager, groupMessageManager, connectionManager);
-ClientCommands      clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
-std::string         serverIpAddress;
+Logger            logger;
+PollManager       pollManager;
+ServerManager     serverManager;
+GroupMsgManager   groupMsgManager;
+ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
+ServerCommands    serverCommands    = ServerCommands(serverManager, groupMsgManager, connectionManager);
+ClientCommands    clientCommands    = ClientCommands(serverManager, logger, groupMsgManager, connectionManager);
 
 void handleCommands(int sock, std::vector<std::string> commands)
 {

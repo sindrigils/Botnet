@@ -9,7 +9,7 @@
 
 #define MAX_MESSAGES 5
 
-class GroupMessageManager
+class GroupMsgManager
 {
 public:
     void addMessage(const std::string &groupId, const std::string &message);

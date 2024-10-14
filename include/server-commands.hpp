@@ -19,11 +19,11 @@ public:
     void setPort(const std::string &port);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
-    ServerCommands(ServerManager &serverManager, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
+    ServerCommands(ServerManager &serverManager, GroupMsgManager &groupMsgManager, ConnectionManager &connectionManager);
 
 private:
     ServerManager &serverManager;
-    GroupMessageManager &groupMessageManager;
+    GroupMsgManager &groupMsgManager;
     ConnectionManager &connectionManager;
 
     std::string myPort;

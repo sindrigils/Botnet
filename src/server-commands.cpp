@@ -4,9 +4,9 @@ std::mutex mtx;
 
 ServerCommands::ServerCommands(
     ServerManager &serverManager,
-    GroupMessageManager &groupMessageManager,
+    GroupMsgManager &groupMsgManager,
     ConnectionManager &connectionManager) : serverManager(serverManager),
-                                            groupMessageManager(groupMessageManager),
+                                            groupMsgManager(groupMsgManager),
                                             connectionManager(connectionManager),
                                             myPort("-1") {};
 
@@ -120,7 +120,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     if (toGroupId != std::string(MY_GROUP_ID))
     {
         std::string message = constructServerMessage(buffer);
-        groupMessageManager.addMessage(toGroupId, message);
+        groupMsgManager.addMessage(toGroupId, message);
         std::cout << "found a message not for us: storing for " << toGroupId << std::endl;
         return;
     }
@@ -144,7 +144,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
 void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
 {
     std::string forGroupId = tokens[1];
-    std::vector<std::string> messages = groupMessageManager.getMessages(forGroupId);
+    std::vector<std::string> messages = groupMsgManager.getMessages(forGroupId);
 
     for (auto msg : messages)
     {
@@ -153,7 +153,7 @@ void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
 }
 void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens)
 {
-    std::unordered_map<std::string, int> totalStoredMessages = groupMessageManager.getAllMessagesCount();
+    std::unordered_map<std::string, int> totalStoredMessages = groupMsgManager.getAllMessagesCount();
     std::string message = "STATUSRESP,";
     for (const auto &pair : totalStoredMessages)
     {
@@ -175,7 +175,7 @@ std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages(
     std::unordered_map<int, std::string> connectedSockets = serverManager.getConnectedSockets();
     for (const auto &pair : connectedSockets)
     {
-        int messageCount = groupMessageManager.getMessageCount(pair.second);
+        int messageCount = groupMsgManager.getMessageCount(pair.second);
         std::string message = "KEEPALIVE," + std::to_string(messageCount);
         std::string serverMessage = constructServerMessage(message);
         messages[pair.first] = serverMessage;

@@ -12,12 +12,12 @@ class ClientCommands
 {
 public:
     void findCommand(std::string message);
-    ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
+    ClientCommands(ServerManager &serverManager, Logger &logger, GroupMsgManager &groupMsgManager, ConnectionManager &connectionManager);
 
 private:
     ServerManager &serverManager;
     Logger &logger;
-    GroupMessageManager &groupMessageManager;
+    GroupMsgManager &groupMsgManager;
     ConnectionManager &connectionManager;
 
     void handleGetMsg(std::vector<std::string> tokens);
