@@ -19,6 +19,7 @@
 #include "poll-manager.hpp"
 #include "utils.hpp"
 
+
 enum RecvStatus {
     ERROR = -1,
     SERVER_DISCONNECTED = 0,
@@ -28,6 +29,12 @@ enum RecvStatus {
     MSG_INVALID_SOH = 4,
     MSG_INVALID_EOT = 5,
 };
+
+// fix SOCK_NONBLOCK for OSX
+#ifndef SOCK_NONBLOCK
+#include <fcntl.h>
+#define SOCK_NONBLOCK O_NONBLOCK
+#endif
 
 class ConnectionManager
 {
@@ -43,7 +50,7 @@ public:
 
     int openSock(int portno);
     void closeSock(int sock);
-    
+
     int getOurClientSock() const;
     std::string getOurIpAddress() const;
 

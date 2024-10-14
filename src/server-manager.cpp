@@ -154,7 +154,7 @@ std::vector<int> ServerManager::getAllServerSocks() const
     return socks;
 }
 
-std::string ServerManager::getListOfUnknownServersWithSocks() const
+std::string ServerManager::getListOfUnknownServers() const
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     std::string message;

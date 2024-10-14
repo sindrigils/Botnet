@@ -9,11 +9,10 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
+
 #include <thread>
 #include <chrono>
 #include <unordered_map>
-
-#define MY_GROUP_ID "A5_55"
 
 ServerManager       serverManager;
 Logger              logger;
@@ -24,7 +23,7 @@ ServerCommands      serverCommands = ServerCommands(serverManager, groupMessageM
 ClientCommands      clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
 std::string         serverIpAddress;
 
-void handleCommand(int sock, std::vector<std::string>commands)
+void handleCommand(int sock, std::vector<std::string> commands)
 {
     for (auto command : commands)
     {
@@ -113,7 +112,6 @@ int main(int argc, char *argv[])
         {
             connectionManager.handleNewConnection(listenSock, GROUP_ID);
         }
-
 
         // Check for events on the remote-server sockets
         for (int i = 1; i < pollManager.nfds; i++)
