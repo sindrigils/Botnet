@@ -1,26 +1,18 @@
 #include "client-commands.hpp"
 
-ClientCommands::ClientCommands(
-    ServerManager &serverManager,
-    Logger &logger,
-    GroupMessageManager &groupMessageManager,
-    ConnectionManager &connectionManager) : serverManager(serverManager),
-                                            logger(logger),
-                                            groupMessageManager(groupMessageManager),
-                                            connectionManager(connectionManager) {};
+ClientCommands::ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager)
+    : serverManager(serverManager), logger(logger), groupMessageManager(groupMessageManager), connectionManager(connectionManager){
+}
 
 void ClientCommands::setGroupId(const std::string &groupId)
 {
     myGroupId = groupId; // Set the group ID
 }
 
-void ClientCommands::setSock(int newSock)
+void ClientCommands::findCommand(std::string message)
 {
-    sock = newSock;
-}
+    std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
-void ClientCommands::findCommand(std::vector<std::string> tokens, const char *buffer)
-{
     // á eftir að abstracta þetta meira
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
@@ -70,14 +62,14 @@ void ClientCommands::findCommand(std::vector<std::string> tokens, const char *bu
     }
     else
     {
-        std::cout << "Unknown command from client:" << buffer << std::endl;
+        std::cout << "Unknown command from client:" << message << std::endl;
     }
 }
 
 void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
 {
     std::string message = "NOT IMPLEMENTED";
-    send(sock, message.c_str(), message.length(), 0);
+    send(connectionManager.getOurClientSock(), message.c_str(), message.length(), 0);
 }
 
 void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
@@ -139,8 +131,9 @@ void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
 
 void ClientCommands::handleListServers()
 {
+    int ourClientSock = connectionManager.getOurClientSock();
     std::string message = serverManager.getListOfServers();
-    send(sock, message.c_str(), message.length(), 0);
+    send(ourClientSock, message.c_str(), message.length(), 0);
 }
 
 void ClientCommands::handleConnect(std::vector<std::string> tokens)
@@ -179,8 +172,9 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 
 void ClientCommands::handleListUnknownServers()
 {
+    int ourClientSock = connectionManager.getOurClientSock();
     std::string message = serverManager.getListOfUnknownServersWithSocks();
-    send(sock, message.c_str(), message.length(), 0);
+    send(ourClientSock, message.c_str(), message.length(), 0);
 }
 
 void ClientCommands::handleDropConnection(std::vector<std::string> tokens)

@@ -11,11 +11,9 @@
 class ClientCommands
 {
 public:
-    int sock;
     // remove
     void setGroupId(const std::string &groupId);
-    void setSock(int newSock);
-    void findCommand(std::vector<std::string> tokens, const char *buffer);
+    void findCommand(std::string message);
     ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
 
 private:

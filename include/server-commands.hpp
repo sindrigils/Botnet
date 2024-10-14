@@ -16,10 +16,8 @@
 class ServerCommands
 {
 public:
-    void setIpAddress(const char *ip);
     void setGroupId(const std::string &groupId);
     void setPort(const std::string &port);
-    void setOurClient(int sock);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
     ServerCommands(ServerManager &serverManager, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
@@ -29,10 +27,8 @@ private:
     GroupMessageManager &groupMessageManager;
     ConnectionManager &connectionManager;
 
-    const char *myIpAddress;
     std::string myGroupId;
     std::string myPort;
-    int ourClient;
 
     void handleServers(int socket, std::string buffer);
     void handleHelo(int socket, std::vector<std::string> tokens);

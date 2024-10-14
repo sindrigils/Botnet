@@ -8,14 +8,9 @@ ServerCommands::ServerCommands(
     ConnectionManager &connectionManager) : serverManager(serverManager),
                                             groupMessageManager(groupMessageManager),
                                             connectionManager(connectionManager),
-                                            myIpAddress("-1"),
                                             myGroupId("-1"),
                                             myPort("-1") {};
 
-void ServerCommands::setIpAddress(const char *ip)
-{
-    myIpAddress = ip;
-}
 
 void ServerCommands::setGroupId(const std::string &groupId)
 {
@@ -27,21 +22,18 @@ void ServerCommands::setPort(const std::string &port)
     myPort = port;
 }
 
-void ServerCommands::setOurClient(int sock)
-{
-    ourClient = sock;
-}
 
-void ServerCommands::findCommand(int socket, std::string buffer)
+void ServerCommands::findCommand(int socket, std::string message)
 {
-    std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.c_str());
+    std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
+
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         handleHelo(socket, tokens);
     }
     else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
     {
-        handleServers(socket, buffer);
+        handleServers(socket, message);
     }
 
     else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
@@ -54,7 +46,7 @@ void ServerCommands::findCommand(int socket, std::string buffer)
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
     {
-        handleSendMsg(socket, tokens, buffer);
+        handleSendMsg(socket, tokens, message);
     }
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
@@ -66,15 +58,16 @@ void ServerCommands::findCommand(int socket, std::string buffer)
     }
     else
     {
-        std::cout << "Unknown command from server:" << buffer << std::endl;
+        std::cout << "Unknown command from server:" << message << std::endl;
     }
 }
 
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     serverManager.moveFromUnknown(socket, tokens[1]);
+    std::string myIp = connectionManager.getOurIpAddress();
 
-    std::string msg = "SERVERS," + myGroupId + "," + myIpAddress + "," + myPort + ";";
+    std::string msg = "SERVERS," + myGroupId + "," + myIp + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
     std::string message = msg + serversInfo;
 
@@ -150,6 +143,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
         }
     }
     std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
+    int ourClient = connectionManager.getOurClientSock();
     connectionManager.sendTo(ourClient, message, true);
 }
 
