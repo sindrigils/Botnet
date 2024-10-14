@@ -12,6 +12,21 @@
 #define EOT 0x04
 #define ESC 0x1B
 
+#define MAX_EOT_TRIES 10
+#define Backlog 5
+#define MAX_MSG_LENGTH 3 * 5000
+#define MY_GROUP_ID "A5_55"
+
+enum RecvStatus {
+    ERROR = -1,
+    SERVER_DISCONNECTED = 0,
+    MSG_RECEIVED = 1,
+    MSG_DROPPED = 2,
+    MSG_TOO_LONG = 3,
+    MSG_INVALID_SOH = 4,
+    MSG_INVALID_EOT = 5,
+};
+
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);
 

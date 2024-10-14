@@ -6,8 +6,8 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
-
 #include "servers.hpp"
+#include "utils.hpp"
 
 class ServerManager
 {
@@ -26,10 +26,19 @@ public:
     std::string getAllServersInfo() const;
     std::vector<int> getAllServerSocks() const;
 
+    void setOurPort(int port);
+    void setOurIpAddress(const char *ipAddress);
+    void setOurClientSock(int sock);
+
+
 private:
     std::unordered_map<int, std::shared_ptr<Server>> servers;
     std::unordered_map<int, std::shared_ptr<Server>> unknownServers;
     mutable std::mutex serverMutex;
+
+    int ourClientSock = -1;
+    int ourPort = -1;
+    const char* ourIpAddress = "123.123.123.123"; // stupid default value so it's easier to debug
 };
 
 #endif
