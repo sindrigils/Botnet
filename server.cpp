@@ -70,15 +70,12 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    char *serverPort = argv[1];
-    char *GROUP_ID = argv[2];
-
-    serverCommands.setPort(serverPort);
+    serverCommands.setPort(argv[1]);
 
     int listenSock;
 
     // Setup socket for server to listen to
-    listenSock = connectionManager.openSock(atoi(serverPort));
+    listenSock = connectionManager.openSock(atoi(argv[1]));
 
     logger.write("Listening on port: " + std::string(argv[1]) + " as group: " + MY_GROUP_ID, true);
 
@@ -108,7 +105,7 @@ int main(int argc, char *argv[])
         // Check for events on the listening socket
         if (pollManager.hasData(0)) // listen sock should always be 0
         {
-            connectionManager.handleNewConnection(listenSock, GROUP_ID);
+            connectionManager.handleNewConnection(listenSock);
         }
 
         // Check for events on the remote-server sockets

@@ -56,7 +56,7 @@ int ConnectionManager::connectToServer(const std::string &ip, std::string strPor
     return -1;
 }
 
-void ConnectionManager::handleNewConnection(int &listenSock, char *GROUP_ID)
+void ConnectionManager::handleNewConnection(int &listenSock)
 {
     int clientSock;
     struct sockaddr_in client;
@@ -89,7 +89,7 @@ void ConnectionManager::handleNewConnection(int &listenSock, char *GROUP_ID)
     serverManager.addUnknown(clientSock, clientIpAddress);
 
     logger.write("New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
-    std::string message = "HELO," + std::string(GROUP_ID);
+    std::string message = "HELO," + std::string(MY_GROUP_ID);
     this->sendTo(clientSock, message);
     
 }

@@ -46,7 +46,7 @@ public:
     RecvStatus recvFrame(int sock, char *buffer, int bufferLength);
 
     // Responds to a new connection with a HELO and adds it to the server manager
-    void handleNewConnection(int &listenSock, char *GROUP_ID);
+    void handleNewConnection(int &listenSock);
 
     int openSock(int portno);
     void closeSock(int sock);
