@@ -23,7 +23,7 @@ ServerCommands      serverCommands = ServerCommands(serverManager, groupMessageM
 ClientCommands      clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
 std::string         serverIpAddress;
 
-void handleCommand(int sock, std::vector<std::string> commands)
+void handleCommands(int sock, std::vector<std::string> commands)
 {
     for (auto command : commands)
     {
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
             if (status == MSG_RECEIVED)
             {
-                handleCommand(sock, messages);
+                handleCommands(sock, messages);
             }
         }
     }
