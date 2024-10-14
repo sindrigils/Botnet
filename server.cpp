@@ -42,7 +42,7 @@ ServerCommands serverCommands = ServerCommands(serverManager, groupMessageManage
 ClientCommands clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
 std::string serverIpAddress;
 
-void handleCommand(int sock, std::vector<std::string>commands)
+void handleCommand(int sock, std::vector<std::string> commands)
 {
     for (auto command : commands)
     {
@@ -131,7 +131,6 @@ int main(int argc, char *argv[])
         {
             connectionManager.handleNewConnection(listenSock, GROUP_ID);
         }
-
 
         // Check for events on the remote-server sockets
         for (int i = 1; i < pollManager.nfds; i++)

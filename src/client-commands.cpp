@@ -1,7 +1,8 @@
 #include "client-commands.hpp"
 
 ClientCommands::ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager)
-    : serverManager(serverManager), logger(logger), groupMessageManager(groupMessageManager), connectionManager(connectionManager){
+    : serverManager(serverManager), logger(logger), groupMessageManager(groupMessageManager), connectionManager(connectionManager)
+{
 }
 
 void ClientCommands::findCommand(std::string message)
@@ -63,8 +64,25 @@ void ClientCommands::findCommand(std::string message)
 
 void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
 {
-    std::string message = "NOT IMPLEMENTED";
-    send(connectionManager.getOurClientSock(), message.c_str(), message.length(), 0);
+    std::string groupId = tokens[1];
+    std::vector<std::string> messages = groupMessageManager.getMessages(groupId);
+
+    for (auto message : messages)
+    {
+        std::vector<std::string> msg = splitMessageOnDelimiter(message.c_str());
+
+        std::ostringstream contentStream;
+        for (auto it = msg.begin() + 3; it != msg.end(); it++)
+        {
+            contentStream << *it;
+            if (it + 1 != msg.end())
+            {
+                contentStream << ", ";
+            }
+        }
+        int sock = connectionManager.getOurClientSock();
+        connectionManager.sendTo(sock, contentStream.str(), true);
+    }
 }
 
 void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
@@ -168,7 +186,7 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 void ClientCommands::handleListUnknownServers()
 {
     int ourClientSock = connectionManager.getOurClientSock();
-    std::string message = serverManager.getListOfUnknownServersWithSocks();
+    std::string message = serverManager.getListOfUnknownServers();
     send(ourClientSock, message.c_str(), message.length(), 0);
 }
 
