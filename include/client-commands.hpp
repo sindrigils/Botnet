@@ -11,14 +11,10 @@
 class ClientCommands
 {
 public:
-    // remove
-    void setGroupId(const std::string &groupId);
     void findCommand(std::string message);
     ClientCommands(ServerManager &serverManager, Logger &logger, GroupMessageManager &groupMessageManager, ConnectionManager &connectionManager);
 
 private:
-    // remove
-    std::string myGroupId;
     ServerManager &serverManager;
     Logger &logger;
     GroupMessageManager &groupMessageManager;

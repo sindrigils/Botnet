@@ -15,6 +15,7 @@
 #define MAX_EOT_TRIES 10
 #define Backlog 5
 #define MAX_MSG_LENGTH 3 * 5000
+#define MY_GROUP_ID "A5_55"
 
 enum RecvStatus {
     ERROR = -1,

@@ -8,14 +8,8 @@ ServerCommands::ServerCommands(
     ConnectionManager &connectionManager) : serverManager(serverManager),
                                             groupMessageManager(groupMessageManager),
                                             connectionManager(connectionManager),
-                                            myGroupId("-1"),
                                             myPort("-1") {};
 
-
-void ServerCommands::setGroupId(const std::string &groupId)
-{
-    myGroupId = groupId;
-}
 
 void ServerCommands::setPort(const std::string &port)
 {
@@ -67,7 +61,7 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
     serverManager.moveFromUnknown(socket, tokens[1]);
     std::string myIp = connectionManager.getOurIpAddress();
 
-    std::string msg = "SERVERS," + myGroupId + "," + myIp + "," + myPort + ";";
+    std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + myIp + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
     std::string message = msg + serversInfo;
 
@@ -96,13 +90,13 @@ void ServerCommands::handleServers(int socket, std::string buffer)
         }
 
         bool isAlreadyConnected = serverManager.hasConnectedToServer(ipAddress, port, groupId);
-        if (isAlreadyConnected || groupId == myGroupId || port == "-1" || ipAddress == "-1" || groupId.empty() || ipAddress.empty() || port.empty())
+        if (isAlreadyConnected || groupId == std::string(MY_GROUP_ID) || port == "-1" || ipAddress == "-1" || groupId.empty() || ipAddress.empty() || port.empty())
         {
             continue;
         }
 
         std::thread([this, ipAddress = std::string(ipAddress), port = std::string(port), groupId = std::string(groupId)]()
-                    { connectionManager.connectToServer(ipAddress, port, myGroupId, false, groupId); })
+                    { connectionManager.connectToServer(ipAddress, port, std::string(MY_GROUP_ID), false, groupId); })
             .detach();
     }
 }
@@ -114,7 +108,7 @@ void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens
         return;
     }
 
-    std::string message = "GETMSGS," + myGroupId;
+    std::string message = "GETMSGS," + std::string(MY_GROUP_ID);
     connectionManager.sendTo(socket, message);
 }
 
@@ -123,7 +117,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
-    if (toGroupId != myGroupId)
+    if (toGroupId != std::string(MY_GROUP_ID))
     {
         std::string message = constructServerMessage(buffer);
         groupMessageManager.addMessage(toGroupId, message);

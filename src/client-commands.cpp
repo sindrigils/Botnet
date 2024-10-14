@@ -4,11 +4,6 @@ ClientCommands::ClientCommands(ServerManager &serverManager, Logger &logger, Gro
     : serverManager(serverManager), logger(logger), groupMessageManager(groupMessageManager), connectionManager(connectionManager){
 }
 
-void ClientCommands::setGroupId(const std::string &groupId)
-{
-    myGroupId = groupId; // Set the group ID
-}
-
 void ClientCommands::findCommand(std::string message)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
@@ -103,7 +98,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
         }
     }
 
-    std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + contentStream.str();
+    std::string message = "SENDMSG," + groupId + "," + MY_GROUP_ID + "," + contentStream.str();
 
     int sock = serverManager.getSockByName(groupId);
     if (sock == -1)
@@ -120,7 +115,7 @@ void ClientCommands::handleSendMsgToSock(std::vector<std::string> tokens)
 {
     std::string sock = tokens[2];
     std::string groupId = tokens[3];
-    std::string message = "SENDMSG," + groupId + "," + myGroupId + "," + tokens[4];
+    std::string message = "SENDMSG," + groupId + "," + MY_GROUP_ID + "," + tokens[4];
     connectionManager.sendTo(stringToInt(sock), message);
 }
 
@@ -141,7 +136,7 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
     std::string message = "";
     std::string ip = trim(tokens[1]);
     std::string port = trim(tokens[2]);
-    connectionManager.connectToServer(ip, port, myGroupId, true);
+    connectionManager.connectToServer(ip, port, MY_GROUP_ID, true);
 }
 
 void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)

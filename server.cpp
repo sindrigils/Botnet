@@ -31,7 +31,7 @@
 #define SOCK_NONBLOCK O_NONBLOCK
 #endif
 
-// #define GROUP_ID "5"
+#define MY_GROUP_ID "A5_55"
 
 ServerManager serverManager;
 Logger logger;
@@ -85,18 +85,15 @@ void sendKeepAliveMessages()
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 2)
     {
-        printf("Usage: chat_server <port> <group_no>\n");
+        printf("Usage: chat_server <port>\n");
         exit(0);
     }
 
     char *serverPort = argv[1];
     char *GROUP_ID = argv[2];
 
-    // remove both lines
-    serverCommands.setGroupId(GROUP_ID);
-    clientCommands.setGroupId(GROUP_ID);
     serverCommands.setPort(serverPort);
 
     int listenSock;
@@ -104,7 +101,7 @@ int main(int argc, char *argv[])
     // Setup socket for server to listen to
     listenSock = connectionManager.openSock(atoi(serverPort));
 
-    logger.write("Listening on port: " + std::string(argv[1]), true);
+    logger.write("Listening on port: " + std::string(argv[1]) + " as group: " + MY_GROUP_ID, true);
 
     if (listen(listenSock, Backlog) < 0)
     {

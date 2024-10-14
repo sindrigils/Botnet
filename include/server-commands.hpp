@@ -16,7 +16,6 @@
 class ServerCommands
 {
 public:
-    void setGroupId(const std::string &groupId);
     void setPort(const std::string &port);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
@@ -27,7 +26,6 @@ private:
     GroupMessageManager &groupMessageManager;
     ConnectionManager &connectionManager;
 
-    std::string myGroupId;
     std::string myPort;
 
     void handleServers(int socket, std::string buffer);
