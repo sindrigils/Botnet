@@ -1,19 +1,3 @@
-#include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <map>
-
-#include <thread>
-#include <chrono>
 
 #include "utils.hpp"
 #include "servers.hpp"
@@ -25,16 +9,19 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
-#define MY_GROUP_ID "A5_55"
 
-ServerManager serverManager;
-Logger logger;
-PollManager pollManager;
+#include <thread>
+#include <chrono>
+#include <unordered_map>
+
+ServerManager       serverManager;
+Logger              logger;
+PollManager         pollManager;
 GroupMessageManager groupMessageManager;
-ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands serverCommands = ServerCommands(serverManager, groupMessageManager, connectionManager);
-ClientCommands clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
-std::string serverIpAddress;
+ConnectionManager   connectionManager = ConnectionManager(serverManager, pollManager, logger);
+ServerCommands      serverCommands = ServerCommands(serverManager, groupMessageManager, connectionManager);
+ClientCommands      clientCommands = ClientCommands(serverManager, logger, groupMessageManager, connectionManager);
+std::string         serverIpAddress;
 
 void handleCommand(int sock, std::vector<std::string> commands)
 {
@@ -144,7 +131,7 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            std::vector<std::string> messages = extractMessages(buffer, strlen(buffer));
+            std::vector<std::string> messages = extractCommands(buffer, strlen(buffer));
 
             if (status == MSG_RECEIVED)
             {
