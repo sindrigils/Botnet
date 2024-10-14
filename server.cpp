@@ -1,19 +1,3 @@
-#include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <map>
-
-#include <thread>
-#include <chrono>
 
 #include "utils.hpp"
 #include "servers.hpp"
@@ -25,11 +9,9 @@
 #include "poll-manager.hpp"
 #include "group-message-manager.hpp"
 
-// fix SOCK_NONBLOCK for OSX
-#ifndef SOCK_NONBLOCK
-#include <fcntl.h>
-#define SOCK_NONBLOCK O_NONBLOCK
-#endif
+#include <thread>
+#include <chrono>
+#include <unordered_map>
 
 #define MY_GROUP_ID "A5_55"
 

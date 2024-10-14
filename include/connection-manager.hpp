@@ -8,6 +8,12 @@
 #include <errno.h>      // For errno
 #include <string.h>     // For strerror
 
+// fix SOCK_NONBLOCK for OSX
+#ifndef SOCK_NONBLOCK
+#include <fcntl.h>
+#define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
 #include "logger.hpp"
 #include "server-manager.hpp"
 #include "poll-manager.hpp"
