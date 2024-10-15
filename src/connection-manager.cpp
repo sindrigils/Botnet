@@ -109,6 +109,7 @@ int ConnectionManager::sendTo(int sock, std::string message, bool isFormatted)
     if (bytesSent == -1)
     {
         logger.write("Failed to send to " + groupId + ": " + message + ", received -1 from send. Error: " + strerror(errno), true);
+        this->closeSock(sock);
     }
     return bytesSent;
 }
