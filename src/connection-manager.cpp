@@ -46,6 +46,14 @@ int ConnectionManager::connectToServer(const std::string &ip, std::string strPor
             serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
         }
         logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
+
+        // TODO: FIX MAYBE?
+        // This will set our remote IP address to the first server we connect to
+        if(this->ourIpAddress == "127.0.0.1")
+        {
+            this->ourIpAddress = getOwnIPFromSocket(serverSocket);
+        }
+
         pollManager.add(serverSocket);
 
         std::string message = "HELO," + myGroupId;
@@ -79,8 +87,6 @@ void ConnectionManager::handleNewConnection(int &listenSock)
     if (this->ourClientSock == -1)
     {
         this->ourClientSock = clientSock;
-        this->ourIpAddress = getOwnIPFromSocket(clientSock);
-
         logger.write("Our client connected: " + std::string(ourIpAddress) + ", sock: " + std::to_string(ourClientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;

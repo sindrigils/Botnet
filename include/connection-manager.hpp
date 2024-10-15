@@ -58,7 +58,7 @@ public:
 
 private:
     int ourClientSock = -1;
-    std::string ourIpAddress = "123.123.123.123"; // default so its hard to spot if not set
+    std::string ourIpAddress = "127.0.0.1"; // default is local, it is changed when we connect to a server
 
     ServerManager &serverManager;
     PollManager &pollManager;
