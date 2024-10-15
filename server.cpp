@@ -12,13 +12,14 @@
 #include <thread>
 #include <chrono>
 #include <unordered_map>
+#include <csignal>
 
 Logger            logger;
 PollManager       pollManager;
 ServerManager     serverManager;
 GroupMsgManager   groupMsgManager;
 ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands    serverCommands    = ServerCommands(serverManager, groupMsgManager, connectionManager);
+ServerCommands    serverCommands    = ServerCommands(serverManager, groupMsgManager, connectionManager, logger);
 ClientCommands    clientCommands    = ClientCommands(serverManager, logger, groupMsgManager, connectionManager);
 
 void handleCommands(int sock, std::vector<std::string> commands)
@@ -35,30 +36,53 @@ void handleCommands(int sock, std::vector<std::string> commands)
 
 void sendStatusReqMessages()
 {
-    while (true)
+    try
     {
-        std::this_thread::sleep_for(std::chrono::minutes(5));
-        std::string message = "STATUSREQ";
-        std::vector<int> socks = serverManager.getAllServerSocks();
-
-        for (auto sock : socks)
+        while (true)
         {
-            connectionManager.sendTo(sock, message);
+            std::this_thread::sleep_for(std::chrono::minutes(5));
+            std::string message = "STATUSREQ";
+            std::vector<int> socks = serverManager.getAllServerSocks();
+            logger.write("Sending STATUSREQ to all server sockets");
+            for (int sock : socks)
+            {
+                connectionManager.sendTo(sock, message);
+            }
         }
+    }
+    catch (const std::exception &e)
+    {
+        logger.write("Exception caught in sendStatusReqMessages: " + std::string(e.what()));
+    }
+    catch (...)
+    {
+        logger.write("Unknown exception caught in sendStatusReqMessages: " + std::string(strerror(errno)));
     }
 }
 
 void sendKeepAliveMessages()
 {
-    while (true)
+    try
     {
-        std::this_thread::sleep_for(std::chrono::minutes(2));
-
-        std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
-        for (const auto &pair : keepAliveMessages)
+        while (true)
         {
-            connectionManager.sendTo(pair.first, pair.second, true);
+            std::this_thread::sleep_for(std::chrono::minutes(2));
+
+            std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
+            logger.write("Sending KEEPALIVE messages to all server sockets");
+            for (const auto &pair : keepAliveMessages)
+            {
+                connectionManager.sendTo(pair.first, pair.second, true);
+            }
         }
+    }
+    catch (const std::exception &e)
+    {
+        logger.write("Exception caught in sendKeepAliveMessages: " + std::string(e.what()));
+    }
+    catch (...)
+    {
+        logger.write("Unknown exception caught in sendKeepAliveMessages:" + std::string(strerror(errno)));
     }
 }
 
@@ -69,6 +93,9 @@ int main(int argc, char *argv[])
         printf("Usage: chat_server <port>\n");
         exit(0);
     }
+
+    // Ignore SIGPIPE signal
+    signal(SIGPIPE, SIG_IGN);
 
     serverCommands.setPort(argv[1]);
 
@@ -136,5 +163,7 @@ int main(int argc, char *argv[])
     }
 
     close(listenSock);
+    statusReqThread.join();
+    keepAliveThread.join();
     return 0;
 }

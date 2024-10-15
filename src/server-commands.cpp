@@ -5,9 +5,11 @@ std::mutex mtx;
 ServerCommands::ServerCommands(
     ServerManager &serverManager,
     GroupMsgManager &groupMsgManager,
-    ConnectionManager &connectionManager) : serverManager(serverManager),
+    ConnectionManager &connectionManager,
+    Logger &logger) : serverManager(serverManager),
                                             groupMsgManager(groupMsgManager),
                                             connectionManager(connectionManager),
+                                            logger(logger),
                                             myPort("-1") {};
 
 
@@ -52,7 +54,7 @@ void ServerCommands::findCommand(int socket, std::string message)
     }
     else
     {
-        std::cout << "Unknown command from server:" << message << std::endl;
+        logger.write("Unknown command from server:" + message, true);
     }
 }
 
@@ -121,7 +123,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     {
         std::string message = constructServerMessage(buffer);
         groupMsgManager.addMessage(toGroupId, message);
-        std::cout << "found a message not for us: storing for " << toGroupId << std::endl;
+        logger.write("Storing message for " + toGroupId, true);
         return;
     }
 

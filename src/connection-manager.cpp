@@ -99,7 +99,12 @@ int ConnectionManager::sendTo(int sock, std::string message, bool isFormatted)
     std::string groupId = serverManager.getName(sock);
     logger.write("Sending to " + groupId + ": " + message);
     std::string serverMessage = isFormatted ? message : constructServerMessage(message);
-    return send(sock, serverMessage.c_str(), serverMessage.length(), 0);
+    int bytesSent = send(sock, serverMessage.c_str(), serverMessage.length(), 0);
+    if (bytesSent == -1)
+    {
+        logger.write("Failed to send to " + groupId + ": " + message + ", received -1 from send. Error: " + strerror(errno), true);
+    }
+    return bytesSent;
 }
 
 RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength)
@@ -214,7 +219,7 @@ int ConnectionManager::openSock(int portno)
 void ConnectionManager::closeSock(int sock)
 {
     std::string groupId = serverManager.getName(sock);
-    logger.write("Closing connection to " + groupId);
+    logger.write("Closing connection to " + groupId, true);
     close(sock);
     serverManager.close(sock);
     pollManager.close(sock);

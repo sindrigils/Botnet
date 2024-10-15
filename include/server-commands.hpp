@@ -12,6 +12,7 @@
 #include "logger.hpp"
 #include "group-message-manager.hpp"
 #include "connection-manager.hpp"
+#include "logger.hpp"
 
 class ServerCommands
 {
@@ -19,12 +20,13 @@ public:
     void setPort(const std::string &port);
     void findCommand(int socket, std::string buffer);
     std::unordered_map<int, std::string> constructKeepAliveMessages();
-    ServerCommands(ServerManager &serverManager, GroupMsgManager &groupMsgManager, ConnectionManager &connectionManager);
+    ServerCommands(ServerManager &serverManager, GroupMsgManager &groupMsgManager, ConnectionManager &connectionManager, Logger &logger);
 
 private:
     ServerManager &serverManager;
     GroupMsgManager &groupMsgManager;
     ConnectionManager &connectionManager;
+    Logger &logger;
 
     std::string myPort;
 
