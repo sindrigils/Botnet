@@ -59,9 +59,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     serverManager.moveFromUnknown(socket, tokens[1]);
-    std::string myIp = connectionManager.getOurIpAddress();
-
-    std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + myIp + "," + myPort + ";";
+    std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + connectionManager.getOwnIPFromSocket(socket) + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
     std::string message = msg + serversInfo;
 

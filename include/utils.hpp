@@ -42,9 +42,6 @@ std::string trim(const std::string &str);
 // Split a message on a delimiter
 std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
 
-// Get the IP address of the socket
-std::string getOwnIPFromSocket(int sock);
-
 int stringToInt(const std::string &str);
 
 #endif

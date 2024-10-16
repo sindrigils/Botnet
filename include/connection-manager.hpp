@@ -54,16 +54,15 @@ public:
 
     int openSock(int portno);
     void closeSock(int sock);
+    std::string getOwnIPFromSocket(int sock);
 
     int getOurClientSock() const;
-    std::string getOurIpAddress() const;
 
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
     int _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
     int ourClientSock = -1;
-    std::string ourIpAddress = "127.0.0.1"; // default is local, it is changed when we connect to a server
 
     std::set<std::string> ongoingConnections;
     mutable std::mutex connectionMutex;

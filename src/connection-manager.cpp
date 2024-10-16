@@ -14,9 +14,22 @@ int ConnectionManager::getOurClientSock() const
     return this->ourClientSock;
 }
 
-std::string ConnectionManager::getOurIpAddress() const
+std::string ConnectionManager::getOwnIPFromSocket(int sock)
 {
-    return this->ourIpAddress;
+    struct sockaddr_in own_addr;
+
+    socklen_t own_addr_len = sizeof(own_addr);
+
+    if (getsockname(sock, (struct sockaddr *)&own_addr, &own_addr_len) < 0)
+    {
+        perror("can't get own IP address from socket");
+        exit(1);
+    }
+
+    char own_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &own_addr.sin_addr, own_ip, INET_ADDRSTRLEN);
+
+    return std::string(own_ip);
 }
 
 // Creates a connection-key from the ip and port, then checks if the connection is already in progress
@@ -73,11 +86,6 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     }
     logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
 
-    if(this->ourIpAddress == "127.0.0.1")
-    {
-        this->ourIpAddress = getOwnIPFromSocket(serverSocket);
-    }
-
     pollManager.add(serverSocket);
 
     std::string message = "HELO," + std::string(MY_GROUP_ID);
@@ -122,7 +130,7 @@ void ConnectionManager::handleNewConnection(int &listenSock)
     {
         this->ourClientSock = clientSock;
         
-        logger.write("Our client connected: " + std::string(ourIpAddress) + ", sock: " + std::to_string(ourClientSock), true);
+        logger.write("Our client connected: " + this->getOwnIPFromSocket(clientSock) + ", sock: " + std::to_string(ourClientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;
     }

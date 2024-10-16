@@ -118,24 +118,6 @@ std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimi
     return tokens;
 }
 
-std::string getOwnIPFromSocket(int sock)
-{
-    struct sockaddr_in own_addr;
-
-    socklen_t own_addr_len = sizeof(own_addr);
-
-    if (getsockname(sock, (struct sockaddr *)&own_addr, &own_addr_len) < 0)
-    {
-        perror("can't get own IP address from socket");
-        exit(1);
-    }
-
-    char own_ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &own_addr.sin_addr, own_ip, INET_ADDRSTRLEN);
-
-    return std::string(own_ip);
-}
-
 int stringToInt(const std::string &str)
 {
     try
