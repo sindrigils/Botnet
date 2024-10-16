@@ -58,6 +58,13 @@ void ServerCommands::findCommand(int socket, std::string message)
 
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
+    std::string groupId = tokens[1];
+    if (groupId == "A5_666")
+    {
+        connectionManager.closeSock(socket);
+        return;
+    }
+
     serverManager.moveFromUnknown(socket, tokens[1]);
     std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + connectionManager.getOwnIPFromSocket(socket) + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();

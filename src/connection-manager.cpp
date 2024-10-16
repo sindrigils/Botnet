@@ -33,14 +33,18 @@ std::string ConnectionManager::getOwnIPFromSocket(int sock)
 
 // Creates a connection-key from the ip and port, then checks if the connection is already in progress
 // before attempting to connect to the server
-int ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
+void ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
 {
+    if (groupId == "A5_666")
+    {
+        return;
+    }
     std::string connectionKey = ip + ":" + strPort;
     {
         std::lock_guard<std::mutex> lock(connectionMutex);
         if (ongoingConnections.find(connectionKey) != ongoingConnections.end())
         {
-            return -1;
+            return;
         }
         ongoingConnections.insert(connectionKey);
     }
@@ -48,11 +52,9 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     if (serverManager.hasConnectedToServer(ip, strPort, ""))
     {
         logger.write("Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
-
         std::lock_guard<std::mutex> lock(connectionMutex);
         ongoingConnections.erase(connectionKey);
-
-        return -1;
+        return;
     }
 
     logger.write("Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
@@ -68,11 +70,9 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     {
         logger.write("Failed to connect to server - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket) + ", error: " + strerror(errno));
         close(serverSocket);
-        {
-            std::lock_guard<std::mutex> lock(connectionMutex);
-            ongoingConnections.erase(connectionKey);
-        }
-        return -1;
+        std::lock_guard<std::mutex> lock(connectionMutex);
+        ongoingConnections.erase(connectionKey);
+        return;
     }
 
     if (isUnknown)
@@ -89,13 +89,9 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     pollManager.add(serverSocket);
 
     std::string message = "HELO," + std::string(MY_GROUP_ID);
-    sendTo(serverSocket, message);
-
-    {
-        std::lock_guard<std::mutex> lock(connectionMutex);
-        ongoingConnections.erase(connectionKey);
-    }
-    return serverSocket;
+    this->sendTo(serverSocket, message);
+    std::lock_guard<std::mutex> lock(connectionMutex);
+    ongoingConnections.erase(connectionKey);
 }
 
 void ConnectionManager::connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
@@ -127,7 +123,7 @@ void ConnectionManager::handleNewConnection(int &listenSock)
     if (this->ourClientSock == -1)
     {
         this->ourClientSock = clientSock;
-        
+
         logger.write("Our client connected: " + this->getOwnIPFromSocket(clientSock) + ", sock: " + std::to_string(ourClientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;
@@ -165,7 +161,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
     for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
     {
         auto server = serverManager.getServer(sock);
-        std::string serverNameIpPort =  server->name + " (" + server->ipAddress + ":" + server->port + ")";
+        std::string serverNameIpPort = server->name + " (" + server->ipAddress + ":" + server->port + ")";
 
         bytesRead = recv(sock, buffer + offset, bufferLength - offset, 0);
 
@@ -180,7 +176,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
             return SERVER_DISCONNECTED;
         }
 
-        logger.write("Received RAW from "  + serverNameIpPort, buffer + offset, bytesRead);
+        logger.write("Received RAW from " + serverNameIpPort, buffer + offset, bytesRead);
 
         if (offset + bytesRead >= MAX_MSG_LENGTH)
         {

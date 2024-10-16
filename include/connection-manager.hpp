@@ -23,8 +23,8 @@
 #include <set>
 #include <thread>
 
-
-enum RecvStatus {
+enum RecvStatus
+{
     ERROR = -1,
     SERVER_DISCONNECTED = 0,
     MSG_RECEIVED = 1,
@@ -61,7 +61,7 @@ public:
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
-    int _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
+    void _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
     int ourClientSock = -1;
 
     std::set<std::string> ongoingConnections;
