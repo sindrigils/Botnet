@@ -15,8 +15,7 @@ void PollManager::add(int sock)
 {
     std::lock_guard<std::mutex> lock(fdMutex);
 
-    // TODO FIX ÞAR SEM CLIENT + LISTEN SOCKET ERU I NFDS
-    if (nfds >= 8)
+    if (nfds >= MAX_CONNECTIONS)
     {
         return;
     }
