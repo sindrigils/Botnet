@@ -19,6 +19,10 @@
 #include "poll-manager.hpp"
 #include "utils.hpp"
 
+#include <mutex>
+#include <set>
+#include <thread>
+
 
 enum RecvStatus {
     ERROR = -1,
@@ -39,7 +43,7 @@ enum RecvStatus {
 class ConnectionManager
 {
 public:
-    int connectToServer(const std::string &ip, std::string port, std::string myGroupId, bool isUnknown, std::string groupId = "");
+    void connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId = "");
     int sendTo(int sock, std::string message, bool isFormatted = false);
 
     // Attempts to receive a message encapsulated in SOH and EOT from a socket, can be split into multiple packets
@@ -57,8 +61,12 @@ public:
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
+    int _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
     int ourClientSock = -1;
     std::string ourIpAddress = "127.0.0.1"; // default is local, it is changed when we connect to a server
+
+    std::set<std::string> ongoingConnections;
+    mutable std::mutex connectionMutex;
 
     ServerManager &serverManager;
     PollManager &pollManager;

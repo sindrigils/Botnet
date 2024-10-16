@@ -96,7 +96,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             continue;
         }
 
-        connectionManager.connectToServer(ipAddress, port, std::string(MY_GROUP_ID), false, groupId);
+        connectionManager.connectToServer(ipAddress, port, false, groupId);
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)

@@ -18,9 +18,9 @@ Logger logger;
 PollManager pollManager;
 ServerManager serverManager;
 GroupMsgManager groupMsgManager;
-ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands serverCommands = ServerCommands(serverManager, groupMsgManager, connectionManager, logger);
-ClientCommands clientCommands = ClientCommands(serverManager, logger, groupMsgManager, connectionManager);
+ConnectionManager connectionManager(serverManager, pollManager, logger);
+ServerCommands serverCommands(serverManager, groupMsgManager, connectionManager, logger);
+ClientCommands clientCommands(serverManager, logger, groupMsgManager, connectionManager);
 
 void handleCommands(int sock, std::vector<std::string> commands)
 {

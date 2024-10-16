@@ -19,49 +19,83 @@ std::string ConnectionManager::getOurIpAddress() const
     return this->ourIpAddress;
 }
 
-int ConnectionManager::connectToServer(const std::string &ip, std::string strPort, std::string myGroupId, bool isUnknown, std::string groupId)
+// Creates a connection-key from the ip and port, then checks if the connection is already in progress
+// before attempting to connect to the server
+int ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
 {
+    std::string connectionKey = ip + ":" + strPort;
+    {
+        std::lock_guard<std::mutex> lock(connectionMutex);
+        if (ongoingConnections.find(connectionKey) != ongoingConnections.end())
+        {
+            logger.write("Connection attempt already in progress - ip: " + ip + ", port: " + strPort);
+            return -1;
+        }
+        ongoingConnections.insert(connectionKey);
+    }
 
-    bool isAlreadyConnected = serverManager.hasConnectedToServer(ip, strPort, "");
-    if (isAlreadyConnected)
+    if (serverManager.hasConnectedToServer(ip, strPort, ""))
     {
         logger.write("Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
+        {
+            std::lock_guard<std::mutex> lock(connectionMutex);
+            ongoingConnections.erase(connectionKey);
+        }
         return -1;
     }
+
     logger.write("Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
+
     int port = stringToInt(strPort);
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0)
+
+    if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
     {
-        if (isUnknown)
+        logger.write("Failed to connect to server - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket) + ", error: " + strerror(errno));
         {
-            serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
+            std::lock_guard<std::mutex> lock(connectionMutex);
+            ongoingConnections.erase(connectionKey);
         }
-        else
-        {
-            serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
-        }
-        logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
-
-        // TODO: FIX MAYBE?
-        // This will set our remote IP address to the first server we connect to
-        if(this->ourIpAddress == "127.0.0.1")
-        {
-            this->ourIpAddress = getOwnIPFromSocket(serverSocket);
-        }
-
-        pollManager.add(serverSocket);
-
-        std::string message = "HELO," + myGroupId;
-        sendTo(serverSocket, message);
-        return serverSocket;
+        return -1; 
     }
-    logger.write("Unable to connect to server - groupId: " + groupId + ", ipAddress:  " + ip + ", port: " + strPort);
-    return -1;
+    
+    if (isUnknown)
+    {
+        serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
+    }
+    else
+    {
+        serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
+    }
+    logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
+
+    if(this->ourIpAddress == "127.0.0.1")
+    {
+        this->ourIpAddress = getOwnIPFromSocket(serverSocket);
+    }
+
+    pollManager.add(serverSocket);
+
+    std::string message = "HELO," + std::string(MY_GROUP_ID);
+    sendTo(serverSocket, message);
+
+    {
+        std::lock_guard<std::mutex> lock(connectionMutex);
+        ongoingConnections.erase(connectionKey);
+    }
+    return serverSocket;
+
+    return 0;
+}
+
+void ConnectionManager::connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
+{
+
+    std::thread(&ConnectionManager::_connectToServer, this, ip, strPort, isUnknown, groupId).detach();
 }
 
 void ConnectionManager::handleNewConnection(int &listenSock)
