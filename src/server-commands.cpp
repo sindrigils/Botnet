@@ -7,17 +7,15 @@ ServerCommands::ServerCommands(
     GroupMsgManager &groupMsgManager,
     ConnectionManager &connectionManager,
     Logger &logger) : serverManager(serverManager),
-                                            groupMsgManager(groupMsgManager),
-                                            connectionManager(connectionManager),
-                                            logger(logger),
-                                            myPort("-1") {};
-
+                      groupMsgManager(groupMsgManager),
+                      connectionManager(connectionManager),
+                      logger(logger),
+                      myPort("-1") {};
 
 void ServerCommands::setPort(const std::string &port)
 {
     myPort = port;
 }
-
 
 void ServerCommands::findCommand(int socket, std::string message)
 {
@@ -72,6 +70,7 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 
 void ServerCommands::handleServers(int socket, std::string buffer)
 {
+    // TODO ATHUGA HVORT VIÐ HÖFUM MESSAGE FYRIR ÞENNAN UNCONNECTED SERVER SEM VIÐ MEIGUM SAMT EKKI TENGJAST VIÐ
     std::lock_guard<std::mutex> guard(mtx);
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
     for (auto &token : tokens)
@@ -119,6 +118,8 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
+    // TODO BREYTA OG ATHUGA HVORT VIÐ SEUM TENGDUR HONUM EF SVO SENDA Á HANN
+    // ANNARS GEYMA ÞAÐ FYRIR HANN
     if (toGroupId != std::string(MY_GROUP_ID))
     {
         std::string message = constructServerMessage(buffer);
@@ -168,6 +169,8 @@ void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens
 }
 void ServerCommands::handleStatusResp(int socket, std::vector<std::string> tokens)
 {
+    // TODO athuga hvort það séu eih message fyrir server sem við erum tengt við (PASSA ÞAÐ SÉ EKKI SERVERINN SJALFUR) ef svo
+    //  taka messageið frá honum (og senda það til réttu manneskjuna)
 }
 
 std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages()
