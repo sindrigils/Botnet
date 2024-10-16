@@ -6,6 +6,25 @@ void ServerManager::add(int sock, const char *ipAddress, std::string port, std::
     servers[sock] = std::make_shared<Server>(sock, ipAddress, port, groupId);
 }
 
+std::shared_ptr<Server> ServerManager::getServer(int sock) const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    auto it = servers.find(sock);
+    if (it != servers.end())
+    {
+        return it->second;
+    }
+
+    auto it2 = unknownServers.find(sock);
+    if (it2 != unknownServers.end())
+    {
+        return it2->second;
+    }
+    
+    // Return a default Server object with meaningful default values
+    return std::make_shared<Server>(sock, "N/A", "N/A", "N/A");
+}
+
 void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port)
 {
     std::lock_guard<std::mutex> guard(serverMutex);

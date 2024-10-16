@@ -22,6 +22,7 @@ public:
     std::string getName(int sock) const;
     std::string getListOfServers() const;
     std::string getListOfUnknownServers() const;
+    std::shared_ptr<Server> getServer(int sock) const;
 
     int getSockByName(std::string name) const;
     bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;

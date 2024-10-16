@@ -48,10 +48,10 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     if (serverManager.hasConnectedToServer(ip, strPort, ""))
     {
         logger.write("Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
-        {
-            std::lock_guard<std::mutex> lock(connectionMutex);
-            ongoingConnections.erase(connectionKey);
-        }
+
+        std::lock_guard<std::mutex> lock(connectionMutex);
+        ongoingConnections.erase(connectionKey);
+
         return -1;
     }
 
@@ -67,6 +67,7 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
     {
         logger.write("Failed to connect to server - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket) + ", error: " + strerror(errno));
+        close(serverSocket);
         {
             std::lock_guard<std::mutex> lock(connectionMutex);
             ongoingConnections.erase(connectionKey);
@@ -82,6 +83,7 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
     {
         serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
     }
+
     logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
 
     pollManager.add(serverSocket);
@@ -94,8 +96,6 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
         ongoingConnections.erase(connectionKey);
     }
     return serverSocket;
-
-    return 0;
 }
 
 void ConnectionManager::connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
@@ -142,13 +142,14 @@ void ConnectionManager::handleNewConnection(int &listenSock)
 
 int ConnectionManager::sendTo(int sock, std::string message, bool isFormatted)
 {
-    std::string groupId = serverManager.getName(sock);
-    logger.write("Sending to " + groupId + ": " + message);
+    auto server = serverManager.getServer(sock);
+
+    logger.write("Sending to " + server->name + "(" + server->ipAddress + ":" + server->port + "): " + message);
     std::string serverMessage = isFormatted ? message : constructServerMessage(message);
     int bytesSent = send(sock, serverMessage.c_str(), serverMessage.length(), 0);
     if (bytesSent == -1)
     {
-        logger.write("Failed to send to " + groupId + ": " + message + ", received -1 from send. Error: " + strerror(errno), true);
+        logger.write("Failed to send to " + server->name + " (" + server->ipAddress + ":" + server->port + "): " + message + ". Error: " + strerror(errno), true);
         this->closeSock(sock);
     }
     return bytesSent;
@@ -163,31 +164,33 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
     // needs to split the buffer into individual messages.
     for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
     {
-        std::string groupId = serverManager.getName(sock);
+        auto server = serverManager.getServer(sock);
+        std::string serverNameIpPort =  server->name + " (" + server->ipAddress + ":" + server->port + ")";
+
         bytesRead = recv(sock, buffer + offset, bufferLength - offset, 0);
 
         if (bytesRead == -1)
         {
-            logger.write("ERROR: Failed to read from " + groupId + ", received -1 from recv. Error: " + strerror(errno), true);
+            logger.write("ERROR: Failed to read from " + serverNameIpPort + ", sock: " + std::to_string(sock) + ". Error: " + strerror(errno), true);
             return ERROR;
         }
         if (bytesRead == 0)
         {
-            logger.write("Remote server disconnected: " + groupId, true);
+            logger.write("Remote server disconnected: " + serverNameIpPort, true);
             return SERVER_DISCONNECTED;
         }
 
-        logger.write("Received RAW from " + groupId, buffer + offset, bytesRead);
+        logger.write("Received RAW from "  + serverNameIpPort, buffer + offset, bytesRead);
 
         if (offset + bytesRead >= MAX_MSG_LENGTH)
         {
-            logger.write("Message from " + groupId + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.", true);
+            logger.write("Message from " + serverNameIpPort + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.", true);
             return MSG_TOO_LONG;
         }
 
         if (buffer[0] != SOH && offset == 0)
         {
-            logger.write("Message from " + groupId + ": message does not start with SOH", true);
+            logger.write("Message from " + serverNameIpPort + ": message does not start with SOH", true);
             return MSG_INVALID_SOH;
         }
 
@@ -200,7 +203,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         // Tried to read the message MAX_EOT_TRIES times, but still no EOT
         if (i == MAX_EOT_TRIES - 1)
         {
-            logger.write("Message from " + groupId + ": message does not end with EOT", true);
+            logger.write("Message from " + serverNameIpPort + ": message does not end with EOT", true);
             return MSG_INVALID_EOT;
         }
     }
