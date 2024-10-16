@@ -171,3 +171,21 @@ std::string ServerManager::getListOfUnknownServers() const
     }
     return message.substr(0, message.length() - 2);
 }
+
+bool ServerManager::isConnectedToGroupId(std::string groupId, int fromSock) const
+{
+    if (groupId == MY_GROUP_ID)
+    {
+        return true;
+    }
+
+    std::lock_guard<std::mutex> guard(serverMutex);
+    for (const auto &pair : servers)
+    {
+        if ((pair.second->name == groupId && pair.first != fromSock))
+        {
+            return true;
+        }
+    }
+    return false;
+}

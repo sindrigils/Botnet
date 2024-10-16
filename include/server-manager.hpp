@@ -27,6 +27,7 @@ public:
     bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;
     std::string getAllServersInfo() const;
     std::vector<int> getAllServerSocks() const;
+    bool isConnectedToGroupId(std::string groupId, int fromSock) const;
 
 private:
     // map of all the valid connected servers

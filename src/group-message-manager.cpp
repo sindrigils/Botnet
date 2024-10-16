@@ -2,7 +2,7 @@
 
 void GroupMsgManager::addMessage(const std::string &groupId, const std::string &message)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(groupMutex);
 
     auto &messages = groupMessages[groupId];
 
@@ -14,9 +14,9 @@ void GroupMsgManager::addMessage(const std::string &groupId, const std::string &
     messages.push_back(message);
 }
 
-std::vector<std::string> GroupMsgManager::getMessages(const std::string &groupId)
+std::vector<std::string> GroupMsgManager::getMessages(std::string groupId)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(groupMutex);
 
     std::vector<std::string> messages;
 
@@ -30,9 +30,9 @@ std::vector<std::string> GroupMsgManager::getMessages(const std::string &groupId
     return messages;
 }
 
-int GroupMsgManager::getMessageCount(const std::string &groupId) const
+int GroupMsgManager::getMessageCount(std::string groupId) const
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(groupMutex);
 
     // Find the group ID in the map
     auto it = groupMessages.find(groupId);
@@ -46,12 +46,12 @@ int GroupMsgManager::getMessageCount(const std::string &groupId) const
 
 std::unordered_map<std::string, int> GroupMsgManager::getAllMessagesCount() const
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(groupMutex);
     std::unordered_map<std::string, int> groupTotalMessages;
 
-    for (const auto &pair : groupMessages)
+    for (const auto &pair : this->groupMessages)
     {
-        int counter = getMessageCount(pair.first);
+        int counter = pair.second.size();
         if (counter > 0)
         {
             groupTotalMessages[pair.first] = counter;

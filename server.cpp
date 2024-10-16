@@ -72,7 +72,7 @@ void sendKeepAliveMessages()
             logger.write("Sending KEEPALIVE messages to all server sockets");
             for (const auto &pair : keepAliveMessages)
             {
-                connectionManager.sendTo(pair.first, pair.second, true);
+                connectionManager.sendTo(pair.first, pair.second);
             }
         }
     }
@@ -95,7 +95,7 @@ void sendHeloMessages()
         std::string message = "HELO," + std::string(MY_GROUP_ID);
         for (const auto &pair : socks)
         {
-            connectionManager.sendTo(pair.first, message.c_str(), message.length());
+            connectionManager.sendTo(pair.first, message);
         }
     }
 }
@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
     pollManager.add(listenSock);
 
     // TODO GERA THREAD SEM FER YFIR ÞÁ SEM HAFA EKKI SENT HELO OG DROPPA ÞEIM
-
     std::thread statusReqThread(sendStatusReqMessages);
     std::thread keepAliveThread(sendKeepAliveMessages);
     std::thread heloThread(sendHeloMessages);
