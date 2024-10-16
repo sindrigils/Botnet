@@ -77,6 +77,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     if (isUnknown)
     {
+        
         serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
     }
     else

@@ -28,7 +28,7 @@ std::shared_ptr<Server> ServerManager::getServer(int sock) const
 void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
-    unknownServers[sock] = std::make_shared<Server>(sock, ipAddress);
+    unknownServers[sock] = std::make_shared<Server>(sock, ipAddress, port);
 }
 
 int ServerManager::moveFromUnknown(int sock, std::string groupId)
