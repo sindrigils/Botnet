@@ -49,10 +49,6 @@ void PollManager::close(int sock)
 int PollManager::getFd(int i) const
 {
     std::lock_guard<std::mutex> lock(fdMutex);
-    if (i > 8)
-    {
-        return -1;
-    }
     return pollfds[i].fd;
 }
 

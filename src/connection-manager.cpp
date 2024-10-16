@@ -100,7 +100,7 @@ void ConnectionManager::connectToServer(const std::string &ip, std::string strPo
     std::thread(&ConnectionManager::_connectToServer, this, ip, strPort, isUnknown, groupId).detach();
 }
 
-void ConnectionManager::handleNewConnection(int &listenSock)
+void ConnectionManager::handleNewConnection(int listenSock)
 {
     int clientSock;
     struct sockaddr_in client;
