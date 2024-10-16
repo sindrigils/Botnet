@@ -87,6 +87,7 @@ void ConnectionManager::handleNewConnection(int &listenSock)
     if (this->ourClientSock == -1)
     {
         this->ourClientSock = clientSock;
+        
         logger.write("Our client connected: " + std::string(ourIpAddress) + ", sock: " + std::to_string(ourClientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;

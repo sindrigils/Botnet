@@ -97,9 +97,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             continue;
         }
 
-        std::thread([this, ipAddress = std::string(ipAddress), port = std::string(port), groupId = std::string(groupId)]()
-                    { connectionManager.connectToServer(ipAddress, port, std::string(MY_GROUP_ID), false, groupId); })
-            .detach();
+        connectionManager.connectToServer(ipAddress, port, std::string(MY_GROUP_ID), false, groupId);
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
