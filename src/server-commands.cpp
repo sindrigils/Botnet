@@ -114,30 +114,35 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
-    // TODO BREYTA OG ATHUGA HVORT VIÐ SEUM TENGDUR HONUM EF SVO SENDA Á HANN
-    // ANNARS GEYMA ÞAÐ FYRIR HANN
-    if (toGroupId != std::string(MY_GROUP_ID))
+    if (toGroupId == MY_GROUP_ID)
     {
-        std::string message = constructServerMessage(buffer);
-        groupMsgManager.addMessage(toGroupId, message);
-        logger.write("Storing message for " + toGroupId, true);
+        std::ostringstream contentStream;
+        for (auto it = tokens.begin() + 3; it != tokens.end(); it++)
+        {
+            contentStream << *it;
+            // since if it got split then that means that there was a comma there
+            if (it + 1 != tokens.end())
+            {
+                // but we dont know if he had a space in front of the comma or not
+                contentStream << ", ";
+            }
+        }
+        std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
+        int ourClient = connectionManager.getOurClientSock();
+        connectionManager.sendTo(ourClient, message, true);
         return;
     }
 
-    std::ostringstream contentStream;
-    for (auto it = tokens.begin() + 3; it != tokens.end(); it++)
+    bool isConnected = serverManager.isConnectedToGroupId(toGroupId, socket);
+    if (isConnected)
     {
-        contentStream << *it;
-        // since if it got split then that means that there was a comma there
-        if (it + 1 != tokens.end())
-        {
-            // but we dont know if he had a space in front of the comma or not
-            contentStream << ", ";
-        }
+        int groupSock = serverManager.getSockByName(toGroupId);
+        connectionManager.sendTo(groupSock, buffer);
+        return;
     }
-    std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
-    int ourClient = connectionManager.getOurClientSock();
-    connectionManager.sendTo(ourClient, message, true);
+
+    groupMsgManager.addMessage(toGroupId, buffer);
+    logger.write("Storing message for " + toGroupId, true);
 }
 
 void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
@@ -150,6 +155,7 @@ void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)
         connectionManager.sendTo(socket, msg);
     };
 }
+
 void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens)
 {
     std::unordered_map<std::string, int> totalStoredMessages = groupMsgManager.getAllMessagesCount();
@@ -160,13 +166,20 @@ void ServerCommands::handleStatusReq(int socket, std::vector<std::string> tokens
     };
     // remove the trailing ",", even if there is no stored messages, then we remove the "," from the command
     message.pop_back();
-
     connectionManager.sendTo(socket, message);
 }
 void ServerCommands::handleStatusResp(int socket, std::vector<std::string> tokens)
 {
-    // TODO athuga hvort það séu eih message fyrir server sem við erum tengt við (PASSA ÞAÐ SÉ EKKI SERVERINN SJALFUR) ef svo
-    //  taka messageið frá honum (og senda það til réttu manneskjuna)
+    for (size_t i = 1; i + 1 < tokens.size(); i += 2)
+    {
+        std::string groupId = tokens[i];
+
+        bool isConnectedTo = serverManager.isConnectedToGroupId(groupId, socket);
+        if (isConnectedTo)
+        {
+            connectionManager.sendTo(socket, "GETMSGS," + groupId);
+        }
+    }
 }
 
 std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages()
@@ -178,8 +191,7 @@ std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages(
     {
         int messageCount = groupMsgManager.getMessageCount(pair.second);
         std::string message = "KEEPALIVE," + std::to_string(messageCount);
-        std::string serverMessage = constructServerMessage(message);
-        messages[pair.first] = serverMessage;
+        messages[pair.first] = message;
     }
 
     return messages;

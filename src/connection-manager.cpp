@@ -8,7 +8,6 @@ ConnectionManager::ConnectionManager(
                       pollManager(pollManager),
                       logger(logger) {};
 
-
 int ConnectionManager::getOurClientSock() const
 {
     return this->ourClientSock;
@@ -41,7 +40,6 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
         std::lock_guard<std::mutex> lock(connectionMutex);
         if (ongoingConnections.find(connectionKey) != ongoingConnections.end())
         {
-            logger.write("Connection attempt already in progress - ip: " + ip + ", port: " + strPort);
             return -1;
         }
         ongoingConnections.insert(connectionKey);
@@ -73,9 +71,9 @@ int ConnectionManager::_connectToServer(const std::string &ip, std::string strPo
             std::lock_guard<std::mutex> lock(connectionMutex);
             ongoingConnections.erase(connectionKey);
         }
-        return -1; 
+        return -1;
     }
-    
+
     if (isUnknown)
     {
         serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
@@ -140,7 +138,6 @@ void ConnectionManager::handleNewConnection(int &listenSock)
     logger.write("New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
     std::string message = "HELO," + std::string(MY_GROUP_ID);
     this->sendTo(clientSock, message);
-    
 }
 
 int ConnectionManager::sendTo(int sock, std::string message, bool isFormatted)
@@ -170,7 +167,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         bytesRead = recv(sock, buffer + offset, bufferLength - offset, 0);
 
         if (bytesRead == -1)
-        { 
+        {
             logger.write("ERROR: Failed to read from " + groupId + ", received -1 from recv. Error: " + strerror(errno), true);
             return ERROR;
         }
@@ -192,7 +189,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         {
             logger.write("Message from " + groupId + ": message does not start with SOH", true);
             return MSG_INVALID_SOH;
-        }       
+        }
 
         if (buffer[offset + bytesRead - 1] == EOT && buffer[offset + bytesRead - 2] != ESC)
         {
@@ -205,7 +202,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         {
             logger.write("Message from " + groupId + ": message does not end with EOT", true);
             return MSG_INVALID_EOT;
-        }  
+        }
     }
 
     logger.write("ConnectionManager.recvFrame: Should not reach here", true);
@@ -229,7 +226,7 @@ int ConnectionManager::openSock(int portno)
 #else
     if ((sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
     {
-        logger.write("Failed to open socket: " + std::string(strerror(errno)));    
+        logger.write("Failed to open socket: " + std::string(strerror(errno)));
         return (-1);
     }
 #endif
