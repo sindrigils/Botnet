@@ -14,13 +14,13 @@
 #include <unordered_map>
 #include <csignal>
 
-Logger            logger;
-PollManager       pollManager;
-ServerManager     serverManager;
-GroupMsgManager   groupMsgManager;
+Logger logger;
+PollManager pollManager;
+ServerManager serverManager;
+GroupMsgManager groupMsgManager;
 ConnectionManager connectionManager = ConnectionManager(serverManager, pollManager, logger);
-ServerCommands    serverCommands    = ServerCommands(serverManager, groupMsgManager, connectionManager, logger);
-ClientCommands    clientCommands    = ClientCommands(serverManager, logger, groupMsgManager, connectionManager);
+ServerCommands serverCommands = ServerCommands(serverManager, groupMsgManager, connectionManager, logger);
+ClientCommands clientCommands = ClientCommands(serverManager, logger, groupMsgManager, connectionManager);
 
 void handleCommands(int sock, std::vector<std::string> commands)
 {
@@ -86,6 +86,20 @@ void sendKeepAliveMessages()
     }
 }
 
+void sendHeloMessages()
+{
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::minutes(2));
+        std::unordered_map<int, std::string> socks = serverManager.getConnectedSockets();
+        std::string message = "HELO," + std::string(MY_GROUP_ID);
+        for (const auto &pair : socks)
+        {
+            connectionManager.sendTo(pair.first, message.c_str(), message.length());
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -114,8 +128,11 @@ int main(int argc, char *argv[])
 
     pollManager.add(listenSock);
 
+    // TODO GERA THREAD SEM FER YFIR ÞÁ SEM HAFA EKKI SENT HELO OG DROPPA ÞEIM
+
     std::thread statusReqThread(sendStatusReqMessages);
     std::thread keepAliveThread(sendKeepAliveMessages);
+    std::thread heloThread(sendHeloMessages);
 
     // Main server loop
     while (true)
@@ -163,7 +180,5 @@ int main(int argc, char *argv[])
     }
 
     close(listenSock);
-    statusReqThread.join();
-    keepAliveThread.join();
     return 0;
 }

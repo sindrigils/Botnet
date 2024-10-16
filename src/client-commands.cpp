@@ -27,10 +27,6 @@ void ClientCommands::findCommand(std::string message)
     {
         handleSendMsg(tokens);
     }
-    else if (tokens[0].compare("MSG") == 0 && tokens[1].compare("ALL") == 0)
-    {
-        handleMsgAll(tokens);
-    }
     else if (tokens[0].compare("LISTSERVERS") == 0)
     {
         handleListServers();
@@ -135,11 +131,6 @@ void ClientCommands::handleSendMsgToSock(std::vector<std::string> tokens)
     std::string groupId = tokens[3];
     std::string message = "SENDMSG," + groupId + "," + MY_GROUP_ID + "," + tokens[4];
     connectionManager.sendTo(stringToInt(sock), message);
-}
-
-void ClientCommands::handleMsgAll(std::vector<std::string> tokens)
-{
-    // NOT IMPLEMENTED
 }
 
 void ClientCommands::handleListServers()

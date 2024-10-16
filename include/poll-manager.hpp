@@ -6,7 +6,7 @@
 #include <iostream>
 #include <mutex>
 #define MAX_CONNECTIONS 10 // i think
-#define POLL_TIMEOUT 100    // 100ms
+#define POLL_TIMEOUT 100   // 100ms
 
 class PollManager
 {
@@ -19,7 +19,7 @@ public:
     int getPollCount();
     int getFd(int i) const;
     int hasData(int i) const;
-    PollManager(); // Constructor to initialize the poll manager
+    PollManager();
 
 private:
     mutable std::mutex fdMutex;

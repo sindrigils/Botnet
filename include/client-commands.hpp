@@ -24,7 +24,6 @@ private:
     void handleGetMsgFrom(std::vector<std::string> tokens);
     void handleSendMsg(std::vector<std::string> tokens);
     void handleSendMsgToSock(std::vector<std::string> tokens);
-    void handleMsgAll(std::vector<std::string> tokens);
     void handleListServers();
     void handleListUnknownServers();
     void handleConnect(std::vector<std::string> tokens);

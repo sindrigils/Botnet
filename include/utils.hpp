@@ -1,5 +1,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
+
 #include <string>
 #include <iomanip>   // For std::setw and std::setfill
 #include <sstream>   // For std::stringstream

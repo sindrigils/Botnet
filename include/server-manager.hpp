@@ -14,6 +14,7 @@ class ServerManager
 public:
     void add(int sock, const char *ipAddress, std::string port, std::string groupId);
     void addUnknown(int sock, const char *ipAddress, std::string port = "-1");
+    // this functions moves the server sock from known to unknown, this happens when he has send a HELO
     int moveFromUnknown(int sock, std::string groupId);
     void close(int sock);
     void update(int sock, std::string port = "");
@@ -28,10 +29,12 @@ public:
     std::vector<int> getAllServerSocks() const;
 
 private:
+    // map of all the valid connected servers
     std::unordered_map<int, std::shared_ptr<Server>> servers;
+    // map to keep all the sockets that have not sent an HELO (trying to give them an chance), and if they
+    // dont send it soon we will drop them
     std::unordered_map<int, std::shared_ptr<Server>> unknownServers;
     mutable std::mutex serverMutex;
-
 };
 
 #endif
