@@ -35,13 +35,14 @@ std::string ConnectionManager::getOwnIPFromSocket(int sock)
 // before attempting to connect to the server
 void ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
 {
-    if (groupId == "A5_666")
+    if (this->isBlacklisted(groupId, ip, strPort))
     {
         return;
     }
+
     std::string connectionKey = ip + ":" + strPort;
     {
-        std::lock_guard<std::mutex> lock(connectionMutex);
+        std::lock_guard<std::mutex> lock(this->connectionMutex);
         if (ongoingConnections.find(connectionKey) != ongoingConnections.end())
         {
             return;
@@ -77,7 +78,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     if (isUnknown)
     {
-        
+
         serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
     }
     else
@@ -220,7 +221,7 @@ int ConnectionManager::openSock(int portno)
 #ifdef __APPLE__
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        perror("Failed to open socket");
+        logger.write("Failed to open socket: " + std::string(strerror(errno)));
         return (-1);
     }
 #else
@@ -270,4 +271,27 @@ void ConnectionManager::closeSock(int sock)
     close(sock);
     serverManager.close(sock);
     pollManager.close(sock);
+}
+
+void ConnectionManager::addToBlacklist(std::string groupId, std::string ip, std::string port)
+{
+    std::lock_guard<std::mutex> lock(blacklistMutex);
+    std::tuple<std::string, std::string, std::string> server(groupId, ip, port);
+    blacklist.insert(server);
+}
+
+bool ConnectionManager::isBlacklisted(std::string groupId, std::string ip, std::string port)
+{
+    std::lock_guard<std::mutex> lock(blacklistMutex);
+
+    for (const auto &server : blacklist)
+    {
+
+        if (std::get<0>(server) == groupId || (std::get<1>(server) == ip && std::get<2>(server) == port))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

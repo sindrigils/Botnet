@@ -20,16 +20,17 @@ private:
     GroupMsgManager &groupMsgManager;
     ConnectionManager &connectionManager;
 
-    void handleGetMsg(std::vector<std::string> tokens);
-    void handleGetMsgFrom(std::vector<std::string> tokens);
-    void handleSendMsg(std::vector<std::string> tokens);
-    void handleSendMsgToSock(std::vector<std::string> tokens);
-    void handleListServers();
-    void handleListUnknownServers();
-    void handleConnect(std::vector<std::string> tokens);
-    void handleStatusREQ(std::vector<std::string> tokens);
-    void handleShortConnect(std::vector<std::string> tokens);
     void handleDropConnection(std::vector<std::string> tokens);
+    void handleAddToBlacklist(std::vector<std::string> tokens);
+    void handleSendMsgToSock(std::vector<std::string> tokens);
+    void handleShortConnect(std::vector<std::string> tokens);
+    void handleGetMsgFrom(std::vector<std::string> tokens);
+    void handleStatusREQ(std::vector<std::string> tokens);
+    void handleSendMsg(std::vector<std::string> tokens);
+    void handleConnect(std::vector<std::string> tokens);
+    void handleGetMsg(std::vector<std::string> tokens);
+    void handleListUnknownServers();
+    void handleListServers();
 };
 
 #endif
