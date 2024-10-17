@@ -12,23 +12,25 @@
 class ServerManager
 {
 public:
+    bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;
     void add(int sock, const char *ipAddress, std::string port, std::string groupId);
     void addUnknown(int sock, const char *ipAddress, std::string port = "-1");
+    bool isConnectedToGroupId(std::string groupId, int fromSock = -1) const;
+    std::unordered_map<int, std::string> getConnectedSockets() const;
     // this functions moves the server sock from known to unknown, this happens when he has send a HELO
     int moveFromUnknown(int sock, std::string groupId);
-    void close(int sock);
-    void update(int sock, std::string port = "");
-    std::unordered_map<int, std::string> getConnectedSockets() const;
-    std::string getName(int sock) const;
-    std::string getListOfServers() const;
-    std::string getListOfUnknownServers() const;
-    std::shared_ptr<Server> getServer(int sock) const;
 
-    int getSockByName(std::string name) const;
-    bool hasConnectedToServer(std::string ipAddress, std::string port, std::string groupId) const;
-    std::string getAllServersInfo() const;
+    std::shared_ptr<Server> getServer(int sock) const;
+    void update(int sock, std::string port = "");
+    std::string getListOfUnknownServers() const;
     std::vector<int> getAllServerSocks() const;
-    bool isConnectedToGroupId(std::string groupId, int fromSock) const;
+    int getSockByName(std::string name) const;
+    std::string getAllServersInfo() const;
+    std::string getListOfServers() const;
+    std::vector<int> getListOfServersToRemove();
+    std::string getName(int sock) const;
+    bool isKnown(int sock) const;
+    void close(int sock);
 
 private:
     // map of all the valid connected servers
@@ -36,6 +38,12 @@ private:
     // map to keep all the sockets that have not sent an HELO (trying to give them an chance), and if they
     // dont send it soon we will drop them
     std::unordered_map<int, std::shared_ptr<Server>> unknownServers;
+
+    // a map to track the how long ago the unknown servers connected, we use this
+    // to keep track of them so we can drop them if we don't receive HELO from them
+    std::unordered_map<int, std::chrono::time_point<std::chrono::steady_clock>> connectionTime;
+    const std::chrono::seconds heloTimeout = std::chrono::seconds(5);
+
     mutable std::mutex serverMutex;
 };
 

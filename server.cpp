@@ -36,53 +36,31 @@ void handleCommands(int sock, std::vector<std::string> commands)
 
 void sendStatusReqMessages()
 {
-    try
+
+    while (true)
     {
-        while (true)
+        std::this_thread::sleep_for(std::chrono::minutes(5));
+        std::string message = "STATUSREQ";
+        std::vector<int> socks = serverManager.getAllServerSocks();
+        logger.write("Sending STATUSREQ to all server sockets");
+        for (int sock : socks)
         {
-            std::this_thread::sleep_for(std::chrono::minutes(5));
-            std::string message = "STATUSREQ";
-            std::vector<int> socks = serverManager.getAllServerSocks();
-            logger.write("Sending STATUSREQ to all server sockets");
-            for (int sock : socks)
-            {
-                connectionManager.sendTo(sock, message);
-            }
+            connectionManager.sendTo(sock, message);
         }
-    }
-    catch (const std::exception &e)
-    {
-        logger.write("Exception caught in sendStatusReqMessages: " + std::string(e.what()));
-    }
-    catch (...)
-    {
-        logger.write("Unknown exception caught in sendStatusReqMessages: " + std::string(strerror(errno)));
     }
 }
 
 void sendKeepAliveMessages()
 {
-    try
+    while (true)
     {
-        while (true)
-        {
-            std::this_thread::sleep_for(std::chrono::minutes(2));
+        std::this_thread::sleep_for(std::chrono::minutes(2));
 
-            std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
-            logger.write("Sending KEEPALIVE messages to all server sockets");
-            for (const auto &pair : keepAliveMessages)
-            {
-                connectionManager.sendTo(pair.first, pair.second);
-            }
+        std::unordered_map<int, std::string> keepAliveMessages = serverCommands.constructKeepAliveMessages();
+        for (const auto &pair : keepAliveMessages)
+        {
+            connectionManager.sendTo(pair.first, pair.second);
         }
-    }
-    catch (const std::exception &e)
-    {
-        logger.write("Exception caught in sendKeepAliveMessages: " + std::string(e.what()));
-    }
-    catch (...)
-    {
-        logger.write("Unknown exception caught in sendKeepAliveMessages:" + std::string(strerror(errno)));
     }
 }
 
@@ -96,6 +74,21 @@ void sendHeloMessages()
         for (const auto &pair : socks)
         {
             connectionManager.sendTo(pair.first, message);
+        }
+    }
+}
+
+void checkHELOTimeout()
+{
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::vector<int> toRemove = serverManager.getListOfServersToRemove();
+
+        for (int sock : toRemove)
+        {
+            logger.write("Closing connection to sock: " + std::to_string(sock) + ", because of HELO timeout.");
+            connectionManager.closeSock(sock);
         }
     }
 }
@@ -128,7 +121,7 @@ int main(int argc, char *argv[])
 
     pollManager.add(listenSock);
 
-    // TODO GERA THREAD SEM FER YFIR ÞÁ SEM HAFA EKKI SENT HELO OG DROPPA ÞEIM
+    std::thread dropConnections(checkHELOTimeout);
     std::thread statusReqThread(sendStatusReqMessages);
     std::thread keepAliveThread(sendKeepAliveMessages);
     std::thread heloThread(sendHeloMessages);

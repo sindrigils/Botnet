@@ -47,6 +47,10 @@ void ClientCommands::findCommand(std::string message)
     {
         handleDropConnection(tokens);
     }
+    else if (tokens[0].compare("BLACKLIST") == 0 && tokens.size() == 4)
+    {
+        handleAddToBlacklist(tokens);
+    }
     // custom macros
     else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
     {
@@ -185,4 +189,9 @@ void ClientCommands::handleDropConnection(std::vector<std::string> tokens)
 {
     int dropSock = stringToInt(tokens[1]);
     connectionManager.closeSock(dropSock);
+}
+
+void ClientCommands::handleAddToBlacklist(std::vector<std::string> tokens)
+{
+    connectionManager.addToBlacklist(tokens[1], tokens[2], tokens[3]);
 }

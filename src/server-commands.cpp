@@ -23,9 +23,16 @@ void ServerCommands::findCommand(int socket, std::string message)
 
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
-        handleHelo(socket, tokens);
+        return handleHelo(socket, tokens);
     }
-    else if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
+
+    if (!serverManager.isKnown(socket))
+    {
+        logger.write("Message from unknown server, sock: " + std::to_string(socket) + ", message: " + message);
+        return;
+    }
+
+    if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
     {
         handleServers(socket, message);
     }
@@ -59,7 +66,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    if (groupId == "A5_666")
+    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket))
     {
         connectionManager.closeSock(socket);
         return;
@@ -75,7 +82,6 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 
 void ServerCommands::handleServers(int socket, std::string buffer)
 {
-    // TODO ATHUGA HVORT VIÐ HÖFUM MESSAGE FYRIR ÞENNAN UNCONNECTED SERVER SEM VIÐ MEIGUM SAMT EKKI TENGJAST VIÐ
     std::lock_guard<std::mutex> guard(mtx);
     std::vector<std::string> tokens = splitMessageOnDelimiter(buffer.substr(8).c_str(), ';');
     for (auto &token : tokens)

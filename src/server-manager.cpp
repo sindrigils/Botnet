@@ -20,7 +20,7 @@ std::shared_ptr<Server> ServerManager::getServer(int sock) const
     {
         return it2->second;
     }
-    
+
     // Return a default Server object with meaningful default values
     return std::make_shared<Server>(sock, "N/A", "N/A", "N/A");
 }
@@ -29,6 +29,7 @@ void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port
 {
     std::lock_guard<std::mutex> guard(serverMutex);
     unknownServers[sock] = std::make_shared<Server>(sock, ipAddress, port);
+    connectionTime[sock] = std::chrono::steady_clock::now();
 }
 
 int ServerManager::moveFromUnknown(int sock, std::string groupId)
@@ -57,6 +58,7 @@ void ServerManager::close(int sock)
     std::lock_guard<std::mutex> guard(serverMutex);
     servers.erase(sock);
     unknownServers.erase(sock);
+    connectionTime.erase(sock);
 }
 
 void ServerManager::update(int sock, std::string port)
@@ -205,6 +207,33 @@ bool ServerManager::isConnectedToGroupId(std::string groupId, int fromSock) cons
         {
             return true;
         }
+    }
+    return false;
+}
+
+std::vector<int> ServerManager::getListOfServersToRemove()
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    std::vector<int> toRemove;
+    auto now = std::chrono::steady_clock::now();
+
+    for (const auto &pair : unknownServers)
+    {
+        if (now - connectionTime[pair.first] > heloTimeout)
+        {
+            toRemove.push_back(pair.first);
+        }
+    }
+    return toRemove;
+}
+
+bool ServerManager::isKnown(int sock) const
+{
+    std::lock_guard<std::mutex> guard(serverMutex);
+    auto i = servers.find(sock);
+    if (i != servers.end())
+    {
+        return true;
     }
     return false;
 }

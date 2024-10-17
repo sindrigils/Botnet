@@ -8,6 +8,11 @@
 #include <errno.h>      // For errno
 #include <string.h>     // For strerror
 
+#include <tuple>
+#include <mutex>
+#include <set>
+#include <thread>
+
 // fix SOCK_NONBLOCK for OSX
 #ifndef SOCK_NONBLOCK
 #include <fcntl.h>
@@ -18,10 +23,6 @@
 #include "server-manager.hpp"
 #include "poll-manager.hpp"
 #include "utils.hpp"
-
-#include <mutex>
-#include <set>
-#include <thread>
 
 enum RecvStatus
 {
@@ -44,32 +45,38 @@ class ConnectionManager
 {
 public:
     void connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId = "");
+    bool isBlacklisted(std::string groupId, std::string ip = "", std::string port = "");
+    void addToBlacklist(std::string groupId, std::string ip, std::string port);
     int sendTo(int sock, std::string message, bool isFormatted = false);
 
     // Attempts to receive a message encapsulated in SOH and EOT from a socket, can be split into multiple packets
     RecvStatus recvFrame(int sock, char *buffer, int bufferLength);
 
-    // Responds to a new connection with a HELO and adds it to the server manager
     void handleNewConnection(int listenSock);
 
+    std::string getOwnIPFromSocket(int sock);
+    int getOurClientSock() const;
     int openSock(int portno);
     void closeSock(int sock);
-    std::string getOwnIPFromSocket(int sock);
-
-    int getOurClientSock() const;
-
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
 
 private:
-    void _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
-    int ourClientSock = -1;
-
-    std::set<std::string> ongoingConnections;
-    mutable std::mutex connectionMutex;
-
     ServerManager &serverManager;
     PollManager &pollManager;
     Logger &logger;
+
+    // a set of servers that are blacklisted
+    std::set<std::tuple<std::string, std::string, std::string>> blacklist;
+    // a set of ongoingConnections at this moment, so two threads don't try to connect to the same server at similar times
+    std::set<std::string> ongoingConnections;
+
+    // the sock of our client
+    int ourClientSock = -1;
+
+    mutable std::mutex connectionMutex;
+    mutable std::mutex blacklistMutex;
+
+    void _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
 };
 
 #endif

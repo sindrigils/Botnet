@@ -11,14 +11,16 @@
 class PollManager
 {
 public:
+    // Array to hold pollfd structures
+    struct pollfd pollfds[MAX_CONNECTIONS];
     int nfds;
-    struct pollfd pollfds[MAX_CONNECTIONS]; // Array to hold pollfd structures
 
-    void add(int sock);
-    void close(int sock);
-    int getPollCount();
-    int getFd(int i) const;
     int hasData(int i) const;
+    int getFd(int i) const;
+    void close(int sock);
+    void add(int sock);
+    int getPollCount();
+
     PollManager();
 
 private:
