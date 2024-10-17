@@ -15,14 +15,16 @@ class Logger
 public:
     std::string filePath;
 
-    void write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole = false);
-    void write(const std::string message, bool printToConsole = false);
+    // Write to log file and append the buffer to the log message
+    void write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole = false, const std::string logFile = "logs.txt");
+    // Write to log file a standard message
+    void write(const std::string message, bool printToConsole = false, const std::string logFile = "logs.txt");
+    void _write(const std::string message, const std::string logFile);
 
 private:
     std::mutex logMutex;
-
-    int _openLogFile(std::ofstream &logFile);
-    std::string _getTime();
+    int _openLogFile(std::ofstream &file, const std::string logFile);
+    std::string _getTimeFormat();
 };
 
 #endif

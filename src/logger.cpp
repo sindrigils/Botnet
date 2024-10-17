@@ -1,6 +1,6 @@
 #include "logger.hpp"
 
-std::string Logger::_getTime()
+std::string Logger::_getTimeFormat()
 {
     auto now = std::chrono::system_clock::now();
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
@@ -9,49 +9,48 @@ std::string Logger::_getTime()
     std::ostringstream timeStream;
     timeStream << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S");
 
-    return timeStream.str();
+    return "[" + timeStream.str() + "] ";
 }
 
-int Logger::_openLogFile(std::ofstream &logFile)
+int Logger::_openLogFile(std::ofstream &file, const std::string logFile)
 {
-    logFile.open("logs/logs.txt", std::ios::app);
-    if (!logFile.is_open())
+    file.open("logs/" + logFile, std::ios::app | std::ios::out);
+    if (!file.is_open())
     {
-        std::cerr << "Unable to open log file" << std::endl;
+        perror("Error opening log file");
         return -1;
     }
     return 0;
 }
 
-void Logger::write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole)
+void Logger::_write(const std::string message, const std::string logFile)
 {
     std::lock_guard<std::mutex> guard(logMutex);
-    std::ofstream logFile;
-    if (_openLogFile(logFile) != -1)
+    std::ofstream file;
+    if (_openLogFile(file, logFile) != -1)
     {
-        logFile << "[" << _getTime() << "] " << message << ": " << std::string(buffer, bufferLen) << std::endl;
-        logFile.close();
-    }
-
-    if (printToConsole)
-    {
-        std::cout << "[" << _getTime() << "] " << message << std::endl;
+        file << this->_getTimeFormat() << message << std::endl;
+        file.close();
     }
 }
 
-void Logger::write(const std::string message, bool printToConsole)
+void Logger::write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole, const std::string logFile)
 {
-    std::lock_guard<std::mutex> guard(logMutex);
-    std::ofstream logFile;
-    std::string logMessage = "[" + _getTime() + "] " + message;
-    if (_openLogFile(logFile) != -1)
+    std::string logMessage = message + ": " + std::string(buffer, bufferLen) + "\n";
+    this->_write(logMessage, logFile);
+    if (printToConsole)
     {
-        logFile << logMessage << std::endl;
-        logFile.close();
+        std::cout << this->_getTimeFormat() << message << std::endl;
     }
+}
 
+void Logger::write(const std::string message, bool printToConsole, const std::string logFile)
+{
+    std::string logMessage = message;
+    this->_write(logMessage, logFile);
     if (printToConsole)
     {
         std::cout << logMessage << std::endl;
     }
 }
+

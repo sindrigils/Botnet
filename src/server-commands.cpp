@@ -141,6 +141,13 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
             }
         }
         std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
+
+        // Seperately log numbers to collect them... gotta collect them all.
+        if(fromGroupId == "NUMBER")
+        {
+            logger.write(contentStream.str(), false, "numbers.txt");
+        }
+
         int ourClient = connectionManager.getOurClientSock();
         connectionManager.sendTo(ourClient, message, true);
         return;
