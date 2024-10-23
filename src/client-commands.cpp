@@ -149,7 +149,7 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
     std::string message = "";
     std::string ip = trim(tokens[1]);
     std::string port = trim(tokens[2]);
-    connectionManager.connectToServer(ip, port, true);
+    connectionManager.connectToServer(ip, port);
 }
 
 void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
