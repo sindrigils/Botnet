@@ -107,7 +107,7 @@ void ServerCommands::handleServers(int socket, std::string buffer)
             continue;
         }
 
-        connectionManager.connectToServer(ipAddress, port, false, groupId);
+        connectionManager.connectToServer(ipAddress, port, groupId);
     }
 }
 void ServerCommands::handleKeepAlive(int socket, std::vector<std::string> tokens)
@@ -193,9 +193,9 @@ void ServerCommands::handleStatusResp(int socket, std::vector<std::string> token
     for (size_t i = 1; i + 1 < tokens.size(); i += 2)
     {
         std::string groupId = tokens[i];
-
+        int amountOfMessages = stringToInt(tokens[i + 1]);
         bool isConnectedTo = serverManager.isConnectedToGroupId(groupId, socket);
-        if (isConnectedTo)
+        if (isConnectedTo && amountOfMessages > 0)
         {
             connectionManager.sendTo(socket, "GETMSGS," + groupId);
         }

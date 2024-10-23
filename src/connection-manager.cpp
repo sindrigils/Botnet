@@ -29,7 +29,7 @@ std::string ConnectionManager::getOwnIPFromSocket(int sock)
 
 // Creates a connection-key from the ip and port, then checks if the connection is already in progress
 // before attempting to connect to the server
-void ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
+void ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, std::string groupId)
 {
     if (this->isBlacklisted(groupId, ip, strPort))
     {
@@ -72,18 +72,8 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
         return;
     }
 
-    if (isUnknown)
-    {
-
-        serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
-    }
-    else
-    {
-        serverManager.add(serverSocket, ip.c_str(), strPort, groupId);
-    }
-
+    serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
     logger.write("[INFO] Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
-
     pollManager.add(serverSocket);
 
     std::string message = "HELO," + std::string(MY_GROUP_ID);
@@ -92,10 +82,10 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
     ongoingConnections.erase(connectionKey);
 }
 
-void ConnectionManager::connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId)
+void ConnectionManager::connectToServer(const std::string &ip, std::string strPort, std::string groupId)
 {
 
-    std::thread(&ConnectionManager::_connectToServer, this, ip, strPort, isUnknown, groupId).detach();
+    std::thread(&ConnectionManager::_connectToServer, this, ip, strPort, groupId).detach();
 }
 
 void ConnectionManager::handleNewConnection(int listenSock)

@@ -44,7 +44,7 @@ enum RecvStatus
 class ConnectionManager
 {
 public:
-    void connectToServer(const std::string &ip, std::string strPort, bool isUnknown, std::string groupId = "");
+    void connectToServer(const std::string &ip, std::string strPort, std::string groupId = "");
     bool isBlacklisted(std::string groupId, std::string ip = "", std::string port = "");
     void addToBlacklist(std::string groupId, std::string ip, std::string port);
     int sendTo(int sock, std::string message, bool isFormatted = false);
@@ -72,7 +72,7 @@ private:
     mutable std::mutex connectionMutex;
     mutable std::mutex blacklistMutex;
 
-    void _connectToServer(const std::string &ip, std::string port, bool isUnknown, std::string groupId = "");
+    void _connectToServer(const std::string &ip, std::string port, std::string groupId = "");
 };
 
 #endif
