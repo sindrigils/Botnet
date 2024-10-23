@@ -36,7 +36,6 @@ void handleCommands(int sock, std::vector<std::string> commands)
 
 void sendStatusReqMessages()
 {
-
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::minutes(5));
@@ -82,7 +81,7 @@ void checkHELOTimeout()
 {
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         std::vector<int> toRemove = serverManager.getListOfServersToRemove();
 
         for (int sock : toRemove)
