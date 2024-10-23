@@ -8,10 +8,6 @@ ConnectionManager::ConnectionManager(
                       pollManager(pollManager),
                       logger(logger) {};
 
-int ConnectionManager::getOurClientSock() const
-{
-    return this->ourClientSock;
-}
 
 std::string ConnectionManager::getOwnIPFromSocket(int sock)
 {
@@ -52,13 +48,13 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     if (serverManager.hasConnectedToServer(ip, strPort, ""))
     {
-        logger.write("Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
+        logger.write("[INFO] Attempting to connect to an already connected server - ip: " + ip + ", port: " + strPort);
         std::lock_guard<std::mutex> lock(connectionMutex);
         ongoingConnections.erase(connectionKey);
         return;
     }
 
-    logger.write("Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
+    logger.write("[INFO] Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
 
     int port = stringToInt(strPort);
     struct sockaddr_in serverAddr;
@@ -69,7 +65,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     if (connect(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
     {
-        logger.write("Failed to connect to server - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket) + ", error: " + strerror(errno));
+        logger.write("[ERROR] Failed to connect to server - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket) + ", error: " + strerror(errno));
         close(serverSocket);
         std::lock_guard<std::mutex> lock(connectionMutex);
         ongoingConnections.erase(connectionKey);
@@ -77,8 +73,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
     }
 
     serverManager.addUnknown(serverSocket, ip.c_str(), strPort);
-    logger.write("Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
-
+    logger.write("[INFO] Server connected - groupId: " + groupId + ", ipAddress: " + ip + ", port: " + strPort + ", sock: " + std::to_string(serverSocket));
     pollManager.add(serverSocket);
 
     std::string message = "HELO," + std::string(MY_GROUP_ID);
@@ -103,7 +98,7 @@ void ConnectionManager::handleNewConnection(int listenSock)
     clientSock = accept(listenSock, (struct sockaddr *)&client, &clientLen);
     if (clientSock < 0)
     {
-        logger.write("Failed to accept connection: " + std::string(strerror(errno)), true);
+        logger.write("[ERROR] Failed to accept connection: " + std::string(strerror(errno)), true);
         return;
     }
 
@@ -113,18 +108,18 @@ void ConnectionManager::handleNewConnection(int listenSock)
     pollManager.add(clientSock);
 
     // if this is the first client to connect, we will treat it as our client
-    if (this->ourClientSock == -1)
+    if (serverManager.getOurClientSock() == -1)
     {
-        this->ourClientSock = clientSock;
+        serverManager.setOurClientSock(clientSock);
 
-        logger.write("Our client connected: " + this->getOwnIPFromSocket(clientSock) + ", sock: " + std::to_string(ourClientSock), true);
+        logger.write("[INFO] Our client connected: " + this->getOwnIPFromSocket(clientSock) + ", sock: " + std::to_string(clientSock), true);
         this->sendTo(clientSock, "Well hello there!");
         return;
     }
 
     serverManager.addUnknown(clientSock, clientIpAddress);
 
-    logger.write("New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
+    logger.write("[INFO] New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
     std::string message = "HELO," + std::string(MY_GROUP_ID);
     this->sendTo(clientSock, message);
 }
@@ -133,12 +128,12 @@ int ConnectionManager::sendTo(int sock, std::string message, bool isFormatted)
 {
     auto server = serverManager.getServer(sock);
 
-    logger.write("Sending to " + server->name + "(" + server->ipAddress + ":" + server->port + "): " + message);
+    logger.write("[SENDING] " + server->name + "(" + server->port + "): " + message);
     std::string serverMessage = isFormatted ? message : constructServerMessage(message);
     int bytesSent = send(sock, serverMessage.c_str(), serverMessage.length(), 0);
     if (bytesSent == -1)
     {
-        logger.write("Failed to send to " + server->name + " (" + server->ipAddress + ":" + server->port + "): " + message + ". Error: " + strerror(errno), true);
+        logger.write("[ERROR] Failed to send to " + server->name + " (" + server->ipAddress + ":" + server->port + "): " + message + ". Error: " + strerror(errno));
         this->closeSock(sock);
     }
     return bytesSent;
@@ -154,32 +149,32 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
     for (int i = 0, offset = 0, bytesRead = 0; i < MAX_EOT_TRIES; i++, offset += bytesRead)
     {
         auto server = serverManager.getServer(sock);
-        std::string serverNameIpPort = server->name + " (" + server->ipAddress + ":" + server->port + ")";
+        std::string serverNamePort = server->name + " (" + server->port + ")";
 
         bytesRead = recv(sock, buffer + offset, bufferLength - offset, 0);
 
         if (bytesRead == -1)
         {
-            logger.write("ERROR: Failed to read from " + serverNameIpPort + ", sock: " + std::to_string(sock) + ". Error: " + strerror(errno), true);
+            logger.write("[FAILURE] Failed to read from " + serverNamePort + ", sock: " + std::to_string(sock) + ". Error: " + strerror(errno));
             return ERROR;
         }
         if (bytesRead == 0)
         {
-            logger.write("Remote server disconnected: " + serverNameIpPort, true);
+            logger.write("[INFO] Remote server disconnected: " + serverNamePort, true);
             return SERVER_DISCONNECTED;
         }
 
-        logger.write("Received RAW from " + serverNameIpPort, buffer + offset, bytesRead);
+        logger.write("[RECEIVED] " + serverNamePort, buffer + offset, bytesRead);
 
         if (offset + bytesRead >= MAX_MSG_LENGTH)
         {
-            logger.write("Message from " + serverNameIpPort + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.", true);
+            logger.write("[FAILURE] Message from " + serverNamePort + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.");
             return MSG_TOO_LONG;
         }
 
         if (buffer[0] != SOH && offset == 0)
         {
-            logger.write("Message from " + serverNameIpPort + ": message does not start with SOH", true);
+            logger.write("[FAILURE] Message from " + serverNamePort + ": message does not start with SOH");
             return MSG_INVALID_SOH;
         }
 
@@ -192,12 +187,12 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         // Tried to read the message MAX_EOT_TRIES times, but still no EOT
         if (i == MAX_EOT_TRIES - 1)
         {
-            logger.write("Message from " + serverNameIpPort + ": message does not end with EOT", true);
+            logger.write("[FAILURE] Message from " + serverNamePort + ": message does not end with EOT");
             return MSG_INVALID_EOT;
         }
     }
 
-    logger.write("ConnectionManager.recvFrame: Should not reach here", true);
+    logger.write("[ERROR] ConnectionManager.recvFrame: Should not reach here", true);
     return ERROR;
 }
 
@@ -212,13 +207,13 @@ int ConnectionManager::openSock(int portno)
 #ifdef __APPLE__
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        logger.write("Failed to open socket: " + std::string(strerror(errno)));
+        logger.write("[ERROR] Failed to open socket: " + std::string(strerror(errno)));
         return (-1);
     }
 #else
     if ((sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
     {
-        logger.write("Failed to open socket: " + std::string(strerror(errno)));
+        logger.write("[ERROR] Failed to open socket: " + std::string(strerror(errno)));
         return (-1);
     }
 #endif
@@ -228,13 +223,13 @@ int ConnectionManager::openSock(int portno)
 
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &set, sizeof(set)) < 0)
     {
-        logger.write("Failed to set SO_REUSEADDR: " + std::string(strerror(errno)));
+        logger.write("[ERROR] Failed to set SO_REUSEADDR: " + std::string(strerror(errno)));
     }
     set = 1;
 #ifdef __APPLE__
     if (setsockopt(sock, SOL_SOCKET, SOCK_NONBLOCK, &set, sizeof(set)) < 0)
     {
-        logger.write("Failed to set SOCK_NOBBLOCK: " + std::string(strerror(errno)));
+        logger.write("[ERROR] Failed to set SOCK_NOBBLOCK: " + std::string(strerror(errno)));
     }
 #endif
     memset(&sk_addr, 0, sizeof(sk_addr));
@@ -246,7 +241,7 @@ int ConnectionManager::openSock(int portno)
     // Bind to socket to listen for connections from clients
     if (bind(sock, (struct sockaddr *)&sk_addr, sizeof(sk_addr)) < 0)
     {
-        logger.write("Failed to bind to socket: " + std::string(strerror(errno)));
+        logger.write("[ERROR] Failed to bind to socket: " + std::string(strerror(errno)));
         return (-1);
     }
     else
@@ -257,8 +252,8 @@ int ConnectionManager::openSock(int portno)
 
 void ConnectionManager::closeSock(int sock)
 {
-    std::string groupId = serverManager.getName(sock);
-    logger.write("Closing connection to " + groupId, true);
+    auto server = serverManager.getServer(sock);
+    logger.write("[INFO] Closing connection to " + server->name + ", sock: " + std::to_string(sock), true);
     close(sock);
     serverManager.close(sock);
     pollManager.close(sock);

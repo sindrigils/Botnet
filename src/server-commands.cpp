@@ -28,7 +28,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 
     if (!serverManager.isKnown(socket))
     {
-        logger.write("Message from unknown server, sock: " + std::to_string(socket) + ", message: " + message);
+        logger.write("[INFO] Message from unknown server, sock: " + std::to_string(socket) + ", message: " + message);
         return;
     }
 
@@ -59,7 +59,7 @@ void ServerCommands::findCommand(int socket, std::string message)
     }
     else
     {
-        logger.write("Unknown command from server:" + message, true);
+        logger.write("[FAILURE] Unknown command from server:" + message, true);
     }
 }
 
@@ -140,7 +140,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
                 contentStream << ", ";
             }
         }
-        std::string message = "Message from " + fromGroupId + ": " + contentStream.str() + "\n";
+        std::string message = "Message from " + fromGroupId + ": " + contentStream.str();
 
         // Seperately log numbers to collect them... gotta collect them all.
         if (fromGroupId == "NUMBER")
@@ -148,7 +148,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
             logger.write(contentStream.str(), false, "numbers.txt");
         }
 
-        int ourClient = connectionManager.getOurClientSock();
+        int ourClient = serverManager.getOurClientSock();
         connectionManager.sendTo(ourClient, message, true);
         return;
     }
@@ -162,7 +162,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     }
 
     groupMsgManager.addMessage(toGroupId, buffer);
-    logger.write("Storing message for " + toGroupId, true);
+    logger.write("[INFO] Storing message for " + toGroupId, true);
 }
 
 void ServerCommands::handleGetMsgs(int socket, std::vector<std::string> tokens)

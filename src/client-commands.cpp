@@ -80,7 +80,7 @@ void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
                 contentStream << ", ";
             }
         }
-        int sock = connectionManager.getOurClientSock();
+        int sock = serverManager.getOurClientSock();
         connectionManager.sendTo(sock, contentStream.str(), true);
     }
 }
@@ -121,7 +121,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     int sock = serverManager.getSockByName(groupId);
     if (sock == -1)
     {
-        logger.write("Storing message for " + groupId, true);
+        logger.write("[INFO] Storing message for " + groupId, true);
         groupMsgManager.addMessage(trim(groupId), message);
         return;
     }
@@ -139,7 +139,7 @@ void ClientCommands::handleSendMsgToSock(std::vector<std::string> tokens)
 
 void ClientCommands::handleListServers()
 {
-    int ourClientSock = connectionManager.getOurClientSock();
+    int ourClientSock = serverManager.getOurClientSock();
     std::string message = serverManager.getListOfServers();
     send(ourClientSock, message.c_str(), message.length(), 0);
 }
@@ -167,12 +167,11 @@ void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
 void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 {
     std::string ip = "130.208.246.249";
-    int port = 5000 + stringToInt(tokens[1]);
 
-    if (port < 5000 || port > 5003)
-    {
-        logger.write("Invalid port number for INSTR server in short connect (" + std::to_string(port) + ")", true);
-        return;
+    int port = stringToInt(tokens[1]);
+
+    if(port >= 1 && port <= 3){
+        port += 5000;
     }
 
     handleConnect({tokens[0], ip, std::to_string(port)});
@@ -180,7 +179,7 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 
 void ClientCommands::handleListUnknownServers()
 {
-    int ourClientSock = connectionManager.getOurClientSock();
+    int ourClientSock = serverManager.getOurClientSock();
     std::string message = serverManager.getListOfUnknownServers();
     send(ourClientSock, message.c_str(), message.length(), 0);
 }

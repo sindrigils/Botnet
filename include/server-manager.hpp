@@ -28,9 +28,10 @@ public:
     std::string getAllServersInfo() const;
     std::string getListOfServers() const;
     std::vector<int> getListOfServersToRemove();
-    std::string getName(int sock) const;
     bool isKnown(int sock) const;
     void close(int sock);
+    int getOurClientSock() const;
+    void setOurClientSock(int sock);
 
 private:
     // map of all the valid connected servers
@@ -43,6 +44,8 @@ private:
     // to keep track of them so we can drop them if we don't receive HELO from them
     std::unordered_map<int, std::chrono::time_point<std::chrono::steady_clock>> connectionTime;
     const std::chrono::seconds heloTimeout = std::chrono::seconds(5);
+    
+    int ourClientSock = -1;
 
     mutable std::mutex serverMutex;
 };
