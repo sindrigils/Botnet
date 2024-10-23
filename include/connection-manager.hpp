@@ -55,7 +55,6 @@ public:
     void handleNewConnection(int listenSock);
 
     std::string getOwnIPFromSocket(int sock);
-    int getOurClientSock() const;
     int openSock(int portno);
     void closeSock(int sock);
     ConnectionManager(ServerManager &serverManager, PollManager &pollManager, Logger &logger);
@@ -69,9 +68,6 @@ private:
     std::set<std::tuple<std::string, std::string, std::string>> blacklist;
     // a set of ongoingConnections at this moment, so two threads don't try to connect to the same server at similar times
     std::set<std::string> ongoingConnections;
-
-    // the sock of our client
-    int ourClientSock = -1;
 
     mutable std::mutex connectionMutex;
     mutable std::mutex blacklistMutex;

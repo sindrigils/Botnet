@@ -1,5 +1,15 @@
 #include "server-manager.hpp"
 
+int ServerManager::getOurClientSock() const
+{
+    return this->ourClientSock;
+}
+
+void ServerManager::setOurClientSock(int sock)
+{
+    this->ourClientSock = sock;
+}
+
 void ServerManager::add(int sock, const char *ipAddress, std::string port, std::string groupId)
 {
     std::lock_guard<std::mutex> guard(serverMutex);
@@ -8,7 +18,13 @@ void ServerManager::add(int sock, const char *ipAddress, std::string port, std::
 
 std::shared_ptr<Server> ServerManager::getServer(int sock) const
 {
+    if(sock == this->ourClientSock)
+    {
+        return std::make_shared<Server>(sock, "127.0.0.1", "0000", "CLIENT");
+    }
+
     std::lock_guard<std::mutex> guard(serverMutex);
+
     auto it = servers.find(sock);
     if (it != servers.end())
     {
@@ -68,22 +84,6 @@ void ServerManager::update(int sock, std::string port)
     {
         servers[sock]->port = port;
     }
-}
-
-std::string ServerManager::getName(int sock) const
-{
-    std::lock_guard<std::mutex> guard(serverMutex);
-    auto it = servers.find(sock);
-    if (it != servers.end() && it->second != nullptr)
-    {
-        std::string name = it->second->name;
-        if (name.empty())
-        {
-            name = "Sock-" + std::to_string(it->first);
-        }
-        return name;
-    }
-    return "N/A";
 }
 
 std::unordered_map<int, std::string> ServerManager::getConnectedSockets() const

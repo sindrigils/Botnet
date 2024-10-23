@@ -26,7 +26,7 @@ void handleCommands(int sock, std::vector<std::string> commands)
 {
     for (auto command : commands)
     {
-        if (sock == connectionManager.getOurClientSock())
+        if (sock == serverManager.getOurClientSock())
         {
             return clientCommands.findCommand(command);
         }
@@ -41,7 +41,7 @@ void sendStatusReqMessages()
         std::this_thread::sleep_for(std::chrono::minutes(5));
         std::string message = "STATUSREQ";
         std::vector<int> socks = serverManager.getAllServerSocks();
-        logger.write("Sending STATUSREQ to all server sockets");
+        logger.write("[INFO] Sending STATUSREQ to all server sockets");
         for (int sock : socks)
         {
             connectionManager.sendTo(sock, message);
@@ -86,7 +86,7 @@ void checkHELOTimeout()
 
         for (int sock : toRemove)
         {
-            logger.write("Closing connection to sock: " + std::to_string(sock) + ", because of HELO timeout.");
+            logger.write("[INFO] Closing connection to sock: " + std::to_string(sock) + ", because of HELO timeout.");
             connectionManager.closeSock(sock);
         }
     }
@@ -110,11 +110,11 @@ int main(int argc, char *argv[])
     // Setup socket for server to listen to
     listenSock = connectionManager.openSock(atoi(argv[1]));
 
-    logger.write("Listening on port: " + std::string(argv[1]) + " as group: " + MY_GROUP_ID, true);
+    logger.write("[INFO] Listening on port: " + std::string(argv[1]) + " as group: " + MY_GROUP_ID, true);
 
     if (listen(listenSock, Backlog) < 0)
     {
-        logger.write("Listen failed on port " + std::string(argv[1]), true);
+        logger.write("[ERROR] Listen failed on port " + std::string(argv[1]), true);
         exit(0);
     }
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 
         if (pollCount == -1)
         {
-            logger.write("Poll failed: " + std::string(strerror(errno)), true);
+            logger.write("[ERROR] Poll failed: " + std::string(strerror(errno)), true);
             close(listenSock);
             break;
         }
