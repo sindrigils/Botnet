@@ -36,7 +36,7 @@ void Logger::_write(const std::string message, const std::string logFile)
 
 void Logger::write(const std::string message, const char *buffer, size_t bufferLen, bool printToConsole, const std::string logFile)
 {
-    std::string logMessage = message + ": " + std::string(buffer, bufferLen) + "\n";
+    std::string logMessage = message + ": " + std::string(buffer, bufferLen);
     this->_write(logMessage, logFile);
     if (printToConsole)
     {
