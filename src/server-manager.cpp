@@ -18,7 +18,7 @@ void ServerManager::add(int sock, const char *ipAddress, std::string port, std::
 
 std::shared_ptr<Server> ServerManager::getServer(int sock) const
 {
-    if(sock == this->ourClientSock)
+    if (sock == this->ourClientSock)
     {
         return std::make_shared<Server>(sock, "127.0.0.1", "0000", "CLIENT");
     }
@@ -50,6 +50,7 @@ void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port
 
 int ServerManager::moveFromUnknown(int sock, std::string groupId)
 {
+    std::lock_guard<std::mutex> guard(serverMutex);
     auto i = servers.find(sock);
     if (i != servers.end())
     {
