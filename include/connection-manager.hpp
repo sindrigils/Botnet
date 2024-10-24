@@ -29,10 +29,6 @@ enum RecvStatus
     ERROR = -1,
     SERVER_DISCONNECTED = 0,
     MSG_RECEIVED = 1,
-    MSG_DROPPED = 2,
-    MSG_TOO_LONG = 3,
-    MSG_INVALID_SOH = 4,
-    MSG_INVALID_EOT = 5,
 };
 
 // fix SOCK_NONBLOCK for OSX
@@ -45,6 +41,7 @@ class ConnectionManager
 {
 public:
     void connectToServer(const std::string &ip, std::string strPort, std::string groupId = "");
+    std::set<std::tuple<std::string, std::string, std::string>> getBlacklistedServers() const;
     bool isBlacklisted(std::string groupId, std::string ip = "", std::string port = "");
     void addToBlacklist(std::string groupId, std::string ip, std::string port);
     int sendTo(int sock, std::string message, bool isFormatted = false);

@@ -8,7 +8,6 @@ ConnectionManager::ConnectionManager(
                       pollManager(pollManager),
                       logger(logger) {};
 
-
 std::string ConnectionManager::getOwnIPFromSocket(int sock)
 {
     struct sockaddr_in own_addr;
@@ -38,7 +37,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     std::string connectionKey = ip + ":" + strPort;
     {
-        std::lock_guard<std::mutex> lock(this->connectionMutex);
+        std::lock_guard<std::mutex> lock(connectionMutex);
         if (ongoingConnections.find(connectionKey) != ongoingConnections.end())
         {
             return;
@@ -169,13 +168,13 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         if (offset + bytesRead >= MAX_MSG_LENGTH)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.");
-            return MSG_TOO_LONG;
+            return ERROR;
         }
 
         if (buffer[0] != SOH && offset == 0)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message does not start with SOH");
-            return MSG_INVALID_SOH;
+            return ERROR;
         }
 
         if (buffer[offset + bytesRead - 1] == EOT && buffer[offset + bytesRead - 2] != ESC)
@@ -188,7 +187,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         if (i == MAX_EOT_TRIES - 1)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message does not end with EOT");
-            return MSG_INVALID_EOT;
+            return ERROR;
         }
     }
 
@@ -280,4 +279,10 @@ bool ConnectionManager::isBlacklisted(std::string groupId, std::string ip, std::
     }
 
     return false;
+}
+
+std::set<std::tuple<std::string, std::string, std::string>> ConnectionManager::getBlacklistedServers() const
+{
+    std::lock_guard<std::mutex> lock(blacklistMutex);
+    return this->blacklist;
 }

@@ -18,7 +18,7 @@ void ServerManager::add(int sock, const char *ipAddress, std::string port, std::
 
 std::shared_ptr<Server> ServerManager::getServer(int sock) const
 {
-    if(sock == this->ourClientSock)
+    if (sock == this->ourClientSock)
     {
         return std::make_shared<Server>(sock, "127.0.0.1", "0000", "CLIENT");
     }
@@ -50,6 +50,8 @@ void ServerManager::addUnknown(int sock, const char *ipAddress, std::string port
 
 int ServerManager::moveFromUnknown(int sock, std::string groupId)
 {
+    std::lock_guard<std::mutex> guard(serverMutex);
+
     auto i = servers.find(sock);
     if (i != servers.end())
     {
@@ -175,24 +177,6 @@ std::vector<int> ServerManager::getAllServerSocks() const
     return socks;
 }
 
-std::string ServerManager::getListOfUnknownServers() const
-{
-    std::lock_guard<std::mutex> guard(serverMutex);
-    std::string message;
-
-    if (unknownServers.size() == 0)
-    {
-        message = "Not connected to any unknown servers";
-        return message;
-    }
-
-    for (const auto &pair : unknownServers)
-    {
-        message += std::to_string(pair.first) + ":" + pair.second->ipAddress + ", ";
-    }
-    return message.substr(0, message.length() - 2);
-}
-
 bool ServerManager::isConnectedToGroupId(std::string groupId, int fromSock) const
 {
     if (groupId == MY_GROUP_ID)
@@ -203,6 +187,8 @@ bool ServerManager::isConnectedToGroupId(std::string groupId, int fromSock) cons
     std::lock_guard<std::mutex> guard(serverMutex);
     for (const auto &pair : servers)
     {
+        // so just in case the other server is also advertising its own stored messages
+        // then we dont want to get them, so we compare the sockets
         if ((pair.second->name == groupId && pair.first != fromSock))
         {
             return true;

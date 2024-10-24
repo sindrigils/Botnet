@@ -23,7 +23,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
-        return handleHelo(socket, tokens);
+        return this->handleHelo(socket, tokens);
     }
 
     if (!serverManager.isKnown(socket))
@@ -34,28 +34,28 @@ void ServerCommands::findCommand(int socket, std::string message)
 
     if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
     {
-        handleServers(socket, message);
+        this->handleServers(socket, message);
     }
 
     else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
     {
-        handleKeepAlive(socket, tokens);
+        this->handleKeepAlive(socket, tokens);
     }
     else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
     {
-        handleGetMsgs(socket, tokens);
+        this->handleGetMsgs(socket, tokens);
     }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
     {
-        handleSendMsg(socket, tokens, message);
+        this->handleSendMsg(socket, tokens, message);
     }
     else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
-        handleStatusReq(socket, tokens);
+        this->handleStatusReq(socket, tokens);
     }
     else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
     {
-        handleStatusResp(socket, tokens);
+        this->handleStatusResp(socket, tokens);
     }
     else
     {
@@ -66,13 +66,19 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || this->validateGroupId(groupId))
+    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !this->validateGroupId(groupId))
     {
         connectionManager.closeSock(socket);
         return;
     }
 
-    serverManager.moveFromUnknown(socket, tokens[1]);
+    int success = serverManager.moveFromUnknown(socket, tokens[1]);
+    if (success == -1)
+    {
+        connectionManager.closeSock(socket);
+        return;
+    }
+
     std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + connectionManager.getOwnIPFromSocket(socket) + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
     std::string message = msg + serversInfo;

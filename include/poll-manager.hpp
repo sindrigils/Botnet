@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 #include <mutex>
-#define MAX_CONNECTIONS 10 // i think
+#define MAX_CONNECTIONS 30 // +1 for listen port +1 for client then +8 for other servers
 #define POLL_TIMEOUT 100   // 100ms
 
 class PollManager

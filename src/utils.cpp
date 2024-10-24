@@ -82,6 +82,11 @@ std::vector<std::string> extractCommands(const char *buffer, int bufferLength)
         {
             break;
         }
+        if (start + 1 == end)
+        {
+            break;
+        }
+
         messageVector.push_back(extractCommand(buffer, start + 1, end));
     }
     return messageVector;
@@ -136,4 +141,11 @@ int stringToInt(const std::string &str)
     {
         return -1;
     }
+}
+
+std::string toLower(const std::string &str)
+{
+    std::string lowerStr = str;
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
+    return lowerStr;
 }

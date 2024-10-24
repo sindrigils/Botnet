@@ -38,7 +38,7 @@ void sendStatusReqMessages()
 {
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::minutes(5));
+        std::this_thread::sleep_for(std::chrono::minutes(1));
         std::string message = "STATUSREQ";
         std::vector<int> socks = serverManager.getAllServerSocks();
         logger.write("[INFO] Sending STATUSREQ to all server sockets");
@@ -67,7 +67,7 @@ void sendHeloMessages()
 {
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::minutes(2));
+        std::this_thread::sleep_for(std::chrono::minutes(3));
         std::unordered_map<int, std::string> socks = serverManager.getConnectedSockets();
         std::string message = "HELO," + std::string(MY_GROUP_ID);
         for (const auto &pair : socks)
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
     logger.write("[INFO] Listening on port: " + std::string(argv[1]) + " as group: " + MY_GROUP_ID, true);
 
-    if (listen(listenSock, Backlog) < 0)
+    if (listen(listenSock, BACKLOG) < 0)
     {
         logger.write("[ERROR] Listen failed on port " + std::string(argv[1]), true);
         exit(0);
@@ -160,13 +160,14 @@ int main(int argc, char *argv[])
                 connectionManager.closeSock(sock);
                 continue;
             }
-
             std::vector<std::string> commands = extractCommands(buffer, strlen(buffer));
-
-            if (status == MSG_RECEIVED)
+            if (commands.size() == 0)
             {
-                handleCommands(sock, commands);
+                connectionManager.closeSock(sock);
+                continue;
             }
+
+            handleCommands(sock, commands);
         }
     }
 
