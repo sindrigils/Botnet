@@ -14,15 +14,6 @@ void ClientCommands::findCommand(std::string message)
     {
         handleGetMsg(tokens);
     }
-    else if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 3)
-    {
-        handleGetMsgFrom(tokens);
-    }
-    // this function is just to send messages to servers that did not respond with HELO
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens[1].compare("SOCK") == 0 && tokens.size() >= 4)
-    {
-        handleSendMsgToSock(tokens);
-    }
     else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 3)
     {
         handleSendMsg(tokens);
@@ -39,10 +30,6 @@ void ClientCommands::findCommand(std::string message)
     {
         handleConnect(tokens);
     }
-    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 2)
-    {
-        handleStatusREQ(tokens);
-    }
     else if (tokens[0].compare("DROP") == 0 && tokens.size() == 2)
     {
         handleDropConnection(tokens);
@@ -50,6 +37,14 @@ void ClientCommands::findCommand(std::string message)
     else if (tokens[0].compare("BLACKLIST") == 0 && tokens.size() == 4)
     {
         handleAddToBlacklist(tokens);
+    }
+    else if (tokens[0].compare("HELP") == 0 && tokens.size() == 1)
+    {
+        handleHelp();
+    }
+    else if (tokens[0].compare("BLACKLIST") && tokens.size() == 1)
+    {
+        handleViewBlacklist();
     }
     // custom macros
     else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
@@ -85,20 +80,6 @@ void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
     }
 }
 
-void ClientCommands::handleGetMsgFrom(std::vector<std::string> tokens)
-{
-    std::string forGroupId = tokens[1];
-    std::string fromGroupId = tokens[2];
-    std::string msg = "GETMSGS," + forGroupId;
-    std::string message = constructServerMessage(msg);
-
-    int sock = serverManager.getSockByName(fromGroupId);
-    if (sock != -1)
-    {
-        send(sock, message.c_str(), message.length(), 0);
-    }
-}
-
 void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
@@ -129,14 +110,6 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
     connectionManager.sendTo(sock, message);
 }
 
-void ClientCommands::handleSendMsgToSock(std::vector<std::string> tokens)
-{
-    std::string sock = tokens[2];
-    std::string groupId = tokens[3];
-    std::string message = "SENDMSG," + groupId + "," + MY_GROUP_ID + "," + tokens[4];
-    connectionManager.sendTo(stringToInt(sock), message);
-}
-
 void ClientCommands::handleListServers()
 {
     int ourClientSock = serverManager.getOurClientSock();
@@ -152,25 +125,14 @@ void ClientCommands::handleConnect(std::vector<std::string> tokens)
     connectionManager.connectToServer(ip, port);
 }
 
-void ClientCommands::handleStatusREQ(std::vector<std::string> tokens)
-{
-    std::string groupId = tokens[1];
-    std::string message = "STATUSREQ";
-
-    int sock = serverManager.getSockByName(groupId);
-    if (sock != -1)
-    {
-        connectionManager.sendTo(sock, message);
-    }
-}
-
 void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 {
     std::string ip = "130.208.246.249";
 
     int port = stringToInt(tokens[1]);
 
-    if(port >= 1 && port <= 3){
+    if (port >= 1 && port <= 3)
+    {
         port += 5000;
     }
 
@@ -193,4 +155,50 @@ void ClientCommands::handleDropConnection(std::vector<std::string> tokens)
 void ClientCommands::handleAddToBlacklist(std::vector<std::string> tokens)
 {
     connectionManager.addToBlacklist(tokens[1], tokens[2], tokens[3]);
+}
+
+void ClientCommands::handleHelp()
+{
+    std::string message = "================================== HELP =====================================\n";
+    message += "Command                         Description\n";
+    message += "----------------------------------------------\n";
+    message += "LISTSERVERS                     View all connected servers by name\n";
+    message += "GETMSG,<groupId>                Get a message from the server for that group\n";
+    message += "SENDMSG,<groupId>,<msg>         Send a message from you to that server\n";
+    message += "CONNECT,<ip>,<port>             Connect to the server with that IP and port\n";
+    message += "DROP,<groupId>                  Drop the connection to that group\n";
+    message += "BLACKLIST,<groupId>,<ip>,<port> Blacklist the server\n";
+    message += "BLACKLIST                       View all blacklisted servers\n";
+    message += "==============================================================================\n";
+
+    int sock = serverManager.getOurClientSock();
+    connectionManager.sendTo(sock, message, true);
+}
+
+void ClientCommands::handleViewBlacklist()
+{
+    std::string message;
+    std::set<std::tuple<std::string, std::string, std::string>> blacklist = connectionManager.getBlacklistedServers();
+
+    if (blacklist.empty())
+    {
+        message += "No servers are currently blacklisted.\n";
+    }
+    else
+    {
+        message += "Blacklisted Servers:\n";
+
+        int count = 1;
+        for (const auto &server : blacklist)
+        {
+            std::string groupId = std::get<0>(server);
+            std::string ip = std::get<1>(server);
+            std::string port = std::get<2>(server);
+
+            message += std::to_string(count++) + ". Group ID: " + groupId + ", IP: " + ip + ", Port: " + port + "\n";
+        }
+    }
+
+    int sock = serverManager.getOurClientSock();
+    connectionManager.sendTo(sock, message, true);
 }

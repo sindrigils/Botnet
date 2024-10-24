@@ -45,13 +45,13 @@ class ConnectionManager
 {
 public:
     void connectToServer(const std::string &ip, std::string strPort, std::string groupId = "");
+    std::set<std::tuple<std::string, std::string, std::string>> getBlacklistedServers() const;
     bool isBlacklisted(std::string groupId, std::string ip = "", std::string port = "");
     void addToBlacklist(std::string groupId, std::string ip, std::string port);
     int sendTo(int sock, std::string message, bool isFormatted = false);
 
     // Attempts to receive a message encapsulated in SOH and EOT from a socket, can be split into multiple packets
     RecvStatus recvFrame(int sock, char *buffer, int bufferLength);
-
     void handleNewConnection(int listenSock);
 
     std::string getOwnIPFromSocket(int sock);

@@ -163,10 +163,13 @@ int main(int argc, char *argv[])
 
             std::vector<std::string> commands = extractCommands(buffer, strlen(buffer));
 
-            if (status == MSG_RECEIVED)
+            if (commands.size() == 0)
             {
-                handleCommands(sock, commands);
+                connectionManager.closeSock(sock);
+                continue;
             }
+
+            handleCommands(sock, commands);
         }
     }
 

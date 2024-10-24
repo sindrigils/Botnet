@@ -174,7 +174,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         if (buffer[0] != SOH && offset == 0)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message does not start with SOH");
-            return MSG_INVALID_SOH;
+            return ERROR;
         }
 
         if (buffer[offset + bytesRead - 1] == EOT && buffer[offset + bytesRead - 2] != ESC)
@@ -187,7 +187,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         if (i == MAX_EOT_TRIES - 1)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message does not end with EOT");
-            return MSG_INVALID_EOT;
+            return ERROR;
         }
     }
 
@@ -279,4 +279,10 @@ bool ConnectionManager::isBlacklisted(std::string groupId, std::string ip, std::
     }
 
     return false;
+}
+
+std::set<std::tuple<std::string, std::string, std::string>> ConnectionManager::getBlacklistedServers() const
+{
+    std::lock_guard<std::mutex> lock(blacklistMutex);
+    return this->blacklist;
 }

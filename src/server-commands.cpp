@@ -72,7 +72,12 @@ void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
         return;
     }
 
-    serverManager.moveFromUnknown(socket, tokens[1]);
+    int success = serverManager.moveFromUnknown(socket, tokens[1]);
+    if (success == -1)
+    {
+        connectionManager.closeSock(socket);
+        return;
+    }
     std::string msg = "SERVERS," + std::string(MY_GROUP_ID) + "," + connectionManager.getOwnIPFromSocket(socket) + "," + myPort + ";";
     std::string serversInfo = serverManager.getAllServersInfo();
     std::string message = msg + serversInfo;

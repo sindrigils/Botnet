@@ -61,5 +61,9 @@ int PollManager::getPollCount()
 int PollManager::hasData(int i) const
 {
     std::lock_guard<std::mutex> lock(fdMutex);
+    if (i >= nfds)
+    {
+        return -1;
+    }
     return pollfds[i].revents & POLLIN;
 }

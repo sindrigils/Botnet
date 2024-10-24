@@ -82,6 +82,10 @@ std::vector<std::string> extractCommands(const char *buffer, int bufferLength)
         {
             break;
         }
+        if (start + 1 == end)
+        {
+            break;
+        }
         messageVector.push_back(extractCommand(buffer, start + 1, end));
     }
     return messageVector;
