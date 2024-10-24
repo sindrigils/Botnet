@@ -66,7 +66,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || this->validateGroupId(groupId))
+    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !this->validateGroupId(groupId))
     {
         connectionManager.closeSock(socket);
         return;

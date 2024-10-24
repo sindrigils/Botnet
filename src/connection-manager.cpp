@@ -8,7 +8,6 @@ ConnectionManager::ConnectionManager(
                       pollManager(pollManager),
                       logger(logger) {};
 
-
 std::string ConnectionManager::getOwnIPFromSocket(int sock)
 {
     struct sockaddr_in own_addr;
