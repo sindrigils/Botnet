@@ -38,7 +38,6 @@ private:
     void handleGetMsgs(int socket, std::vector<std::string> tokens);
     void handleHelo(int socket, std::vector<std::string> tokens);
     void handleServers(int socket, std::string buffer);
-    bool validateGroupId(std::string groupId);
 };
 
 #endif

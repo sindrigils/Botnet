@@ -9,7 +9,7 @@ void ClientCommands::findCommand(std::string message)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
-    // á eftir að abstracta þetta meira
+    // required commands
     if (tokens[0].compare("GETMSG") == 0 && tokens.size() == 2)
     {
         handleGetMsg(tokens);
@@ -22,10 +22,7 @@ void ClientCommands::findCommand(std::string message)
     {
         handleListServers();
     }
-    else if (tokens[0].compare("LISTUNKNOWN") == 0)
-    {
-        handleListUnknownServers();
-    }
+    // custom commands we made
     else if (tokens[0].compare("CONNECT") == 0 && tokens.size() == 3)
     {
         handleConnect(tokens);
@@ -42,9 +39,13 @@ void ClientCommands::findCommand(std::string message)
     {
         handleHelp();
     }
-    else if (tokens[0].compare("BLACKLIST") && tokens.size() == 1)
+    else if (tokens[0].compare("BLACKLIST") == 0 && tokens.size() == 1)
     {
         handleViewBlacklist();
+    }
+    else if (tokens[0].compare("MSGS") == 0 && tokens.size() == 1)
+    {
+        handleViewMsgs();
     }
     // custom macros
     else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
@@ -83,6 +84,12 @@ void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
 void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
+    if (groupId == MY_GROUP_ID)
+    {
+        std::string message = "Why are you talking to yourself?";
+        int sock = serverManager.getOurClientSock();
+        connectionManager.sendTo(sock, message, true);
+    }
 
     std::ostringstream contentStream;
     for (auto it = tokens.begin() + 2; it != tokens.end(); it++)
@@ -139,13 +146,6 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
     handleConnect({tokens[0], ip, std::to_string(port)});
 }
 
-void ClientCommands::handleListUnknownServers()
-{
-    int ourClientSock = serverManager.getOurClientSock();
-    std::string message = serverManager.getListOfUnknownServers();
-    send(ourClientSock, message.c_str(), message.length(), 0);
-}
-
 void ClientCommands::handleDropConnection(std::vector<std::string> tokens)
 {
     int dropSock = stringToInt(tokens[1]);
@@ -166,9 +166,10 @@ void ClientCommands::handleHelp()
     message += "GETMSG,<groupId>                Get a message from the server for that group\n";
     message += "SENDMSG,<groupId>,<msg>         Send a message from you to that server\n";
     message += "CONNECT,<ip>,<port>             Connect to the server with that IP and port\n";
+    message += "MSGS                            View all stored messages\n";
     message += "DROP,<groupId>                  Drop the connection to that group\n";
-    message += "BLACKLIST,<groupId>,<ip>,<port> Blacklist the server\n";
     message += "BLACKLIST                       View all blacklisted servers\n";
+    message += "BLACKLIST,<groupId>,<ip>,<port> Blacklist the server\n";
     message += "==============================================================================\n";
 
     int sock = serverManager.getOurClientSock();
@@ -197,6 +198,28 @@ void ClientCommands::handleViewBlacklist()
 
             message += std::to_string(count++) + ". Group ID: " + groupId + ", IP: " + ip + ", Port: " + port + "\n";
         }
+    }
+
+    int sock = serverManager.getOurClientSock();
+    connectionManager.sendTo(sock, message, true);
+}
+
+void ClientCommands::handleViewMsgs()
+{
+    std::string message;
+    std::unordered_map<std::string, int> totalStoredMessages = groupMsgManager.getAllMessagesCount();
+
+    if (totalStoredMessages.size() == 0)
+    {
+        message += "There are no stored messages.";
+    }
+    else
+    {
+        message += "";
+        for (const auto &pair : totalStoredMessages)
+        {
+            message += pair.first + ": " + std::to_string(pair.second) + "\n";
+        };
     }
 
     int sock = serverManager.getOurClientSock();

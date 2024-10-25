@@ -176,24 +176,6 @@ std::vector<int> ServerManager::getAllServerSocks() const
     return socks;
 }
 
-std::string ServerManager::getListOfUnknownServers() const
-{
-    std::lock_guard<std::mutex> guard(serverMutex);
-    std::string message;
-
-    if (unknownServers.size() == 0)
-    {
-        message = "Not connected to any unknown servers";
-        return message;
-    }
-
-    for (const auto &pair : unknownServers)
-    {
-        message += std::to_string(pair.first) + ":" + pair.second->ipAddress + ", ";
-    }
-    return message.substr(0, message.length() - 2);
-}
-
 bool ServerManager::isConnectedToGroupId(std::string groupId, int fromSock) const
 {
     if (groupId == MY_GROUP_ID)

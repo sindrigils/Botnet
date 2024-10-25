@@ -38,7 +38,7 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
         return;
     }
 
-    if (this->isBlacklisted(groupId, ip, strPort))
+    if (this->isBlacklisted(groupId, ip, strPort) || !validateGroupId(groupId, true))
     {
         return;
     }

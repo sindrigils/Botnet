@@ -22,7 +22,6 @@ public:
 
     std::shared_ptr<Server> getServer(int sock) const;
     void update(int sock, std::string port = "");
-    std::string getListOfUnknownServers() const;
     std::vector<int> getAllServerSocks() const;
     int getSockByName(std::string name) const;
     std::string getAllServersInfo() const;
@@ -44,7 +43,7 @@ private:
     // to keep track of them so we can drop them if we don't receive HELO from them
     std::unordered_map<int, std::chrono::time_point<std::chrono::steady_clock>> connectionTime;
     const std::chrono::seconds heloTimeout = std::chrono::seconds(5);
-    
+
     int ourClientSock = -1;
 
     mutable std::mutex serverMutex;

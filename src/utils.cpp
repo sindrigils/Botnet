@@ -141,3 +141,12 @@ int stringToInt(const std::string &str)
         return -1;
     }
 }
+
+bool validateGroupId(std::string groupId, bool allowEmpty)
+{
+    if (groupId.rfind("A5_", 0) == 0 || groupId.rfind("Instr_", 0) == 0)
+    {
+        return true;
+    }
+    return groupId == "" && allowEmpty ? true : false;
+}
