@@ -30,6 +30,14 @@ std::string ConnectionManager::getOwnIPFromSocket(int sock)
 // before attempting to connect to the server
 void ConnectionManager::_connectToServer(const std::string &ip, std::string strPort, std::string groupId)
 {
+    int port = stringToInt(strPort);
+    // some SERVERS are advertising the ephemeral port of other servers, we are trying to filter them out
+    if (port > 6000 || port == -1)
+    {
+        logger.write("[INFO] Not going to connect because of invalid port: ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
+        return;
+    }
+
     if (this->isBlacklisted(groupId, ip, strPort))
     {
         return;
@@ -54,8 +62,6 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
     }
 
     logger.write("[INFO] Attempting to connect to ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
-
-    int port = stringToInt(strPort);
     struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
