@@ -66,11 +66,25 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
+
+    // Add the server as "our" client if the second token is the client pw and there is no current client
+    if (serverManager.getOurClientSock() == -1 && groupId == std::string(CLIENT_PW))
+    {
+        serverManager.setOurClientSock(socket);
+        logger.write("[INFO] Our client connected:, sock: " + std::to_string(socket), true);
+        connectionManager.sendTo(socket, "Well hello there!");
+        // Remove our socket from the remote servers.
+        serverManager.close(socket);
+        return;
+    }
+
+
     if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !this->validateGroupId(groupId))
     {
         connectionManager.closeSock(socket);
         return;
     }
+
 
     int success = serverManager.moveFromUnknown(socket, tokens[1]);
     if (success == -1)
