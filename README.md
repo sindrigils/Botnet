@@ -63,3 +63,6 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     [6]  
         [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
         [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
+
+
+We also saw in the assignment description that it mentions if you can read the messages from the Number servers. Well we collected all the messages from him and crack it, here is what we found out:

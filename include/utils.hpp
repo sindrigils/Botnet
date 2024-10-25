@@ -44,5 +44,6 @@ std::string trim(const std::string &str);
 std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
 
 int stringToInt(const std::string &str);
+bool validateGroupId(std::string groupId, bool allowEmpty = false);
 
 #endif

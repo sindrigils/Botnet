@@ -26,9 +26,9 @@ private:
     void handleSendMsg(std::vector<std::string> tokens);
     void handleConnect(std::vector<std::string> tokens);
     void handleGetMsg(std::vector<std::string> tokens);
-    void handleListUnknownServers();
     void handleViewBlacklist();
     void handleListServers();
+    void handleViewMsgs();
     void handleHelp();
 };
 
