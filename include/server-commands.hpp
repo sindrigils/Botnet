@@ -38,6 +38,7 @@ private:
     void handleGetMsgs(int socket, std::vector<std::string> tokens);
     void handleHelo(int socket, std::vector<std::string> tokens);
     void handleServers(int socket, std::string buffer);
+    void handlePW(int socket, std::vector<std::string> tokens);
 };
 
 #endif

@@ -16,7 +16,7 @@
 #define MAX_EOT_TRIES 10
 #define Backlog 5
 #define MAX_MSG_LENGTH 3 * 5000
-#define MY_GROUP_ID "A5_99"
+#define MY_GROUP_ID "A5_5"
 #define CLIENT_PW "kaladin"
 
 // Converts a string to its hexadecimal representation

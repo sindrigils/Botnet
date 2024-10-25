@@ -21,6 +21,10 @@ void ServerCommands::findCommand(int socket, std::string message)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
+    if (tokens[0].compare("PW") == 0 && tokens.size() == 2){
+        return handlePW(socket, tokens);
+    }
+
     if (tokens[0].compare("HELO") == 0 && tokens.size() == 2)
     {
         return handleHelo(socket, tokens);
@@ -34,49 +38,41 @@ void ServerCommands::findCommand(int socket, std::string message)
 
     if (tokens[0].compare("SERVERS") == 0 && tokens.size() >= 2)
     {
-        handleServers(socket, message);
+        return handleServers(socket, message);
     }
 
-    else if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
+    if (tokens[0].compare("KEEPALIVE") == 0 && tokens.size() == 2)
     {
-        handleKeepAlive(socket, tokens);
+        return handleKeepAlive(socket, tokens);
     }
-    else if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
+
+    if (tokens[0].compare("GETMSGS") == 0 && tokens.size() == 2)
     {
-        handleGetMsgs(socket, tokens);
+        return handleGetMsgs(socket, tokens);
     }
-    else if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
+
+    if (tokens[0].compare("SENDMSG") == 0 && tokens.size() >= 4)
     {
-        handleSendMsg(socket, tokens, message);
+        return handleSendMsg(socket, tokens, message);
     }
-    else if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
+
+    if (tokens[0].compare("STATUSREQ") == 0 && tokens.size() == 1)
     {
-        handleStatusReq(socket, tokens);
+        return handleStatusReq(socket, tokens);
     }
-    else if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
+    
+    if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
     {
-        handleStatusResp(socket, tokens);
+        return handleStatusResp(socket, tokens);
     }
-    else
-    {
-        logger.write("[FAILURE] Unknown command from server:" + message, true);
-    }
+
+    logger.write("[FAILURE] Unknown command from server:" + message, true);
+    return;
 }
 
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
- 
-    // Add the server as "our" client if the second token is the client pw and there is no current client
-    if (serverManager.getOurClientSock() == -1 && groupId == std::string(CLIENT_PW))
-    {
-        serverManager.setOurClientSock(socket);
-        logger.write("[INFO] Our client connected:, sock: " + std::to_string(socket), true);
-        connectionManager.sendTo(socket, "Well hello there!");
-        // Remove our socket from the remote servers.
-        serverManager.close(socket);
-        return;
-    }
 
     if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !validateGroupId(groupId))
     {
@@ -216,6 +212,19 @@ void ServerCommands::handleStatusResp(int socket, std::vector<std::string> token
         {
             connectionManager.sendTo(socket, "GETMSGS," + groupId);
         }
+    }
+}
+
+void ServerCommands::handlePW(int socket, std::vector<std::string> tokens){
+    // Add the server as "our" client if the second token is the client pw and there is no current client
+    if (serverManager.getOurClientSock() == -1 && tokens[1] == std::string(CLIENT_PW))
+    {
+        serverManager.setOurClientSock(socket);
+        logger.write("[INFO] Our client connected:, sock: " + std::to_string(socket), true);
+        connectionManager.sendTo(socket, "Well hello there!");
+        // Remove our socket from the remote servers.
+        serverManager.close(socket);
+        return;
     }
 }
 
