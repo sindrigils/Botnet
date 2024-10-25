@@ -66,7 +66,7 @@ void ServerCommands::findCommand(int socket, std::string message)
 void ServerCommands::handleHelo(int socket, std::vector<std::string> tokens)
 {
     std::string groupId = tokens[1];
-    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !this->validateGroupId(groupId))
+    if (connectionManager.isBlacklisted(groupId) || serverManager.isConnectedToGroupId(groupId, socket) || !validateGroupId(groupId))
     {
         connectionManager.closeSock(socket);
         return;
@@ -220,13 +220,4 @@ std::unordered_map<int, std::string> ServerCommands::constructKeepAliveMessages(
     }
 
     return messages;
-}
-
-bool ServerCommands::validateGroupId(std::string groupId)
-{
-    if (groupId.rfind("A5_", 0) == 0 || groupId.rfind("Instr_", 0) == 0)
-    {
-        return true;
-    }
-    return false;
 }
