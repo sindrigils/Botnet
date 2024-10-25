@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     }
 
     // Ignore SIGPIPE signal
-    signal(SIGPIPE, SIG_IGN);
+   // signal(SIGPIPE, SIG_IGN);
 
     serverCommands.setPort(argv[1]);
 
