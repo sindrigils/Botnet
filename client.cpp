@@ -109,6 +109,12 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Constructs a 0x01HELO,password0x04 message
+    std::string pwMessage = constructServerMessage("HELO," + std::string(CLIENT_PW));
+
+
+    send(serverSocket, pwMessage.c_str(), pwMessage.size(), 0);
+
     // Listen and print replies from server
     std::thread serverThread(listenServer, serverSocket);
 

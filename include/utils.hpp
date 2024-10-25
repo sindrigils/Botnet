@@ -17,6 +17,7 @@
 #define Backlog 5
 #define MAX_MSG_LENGTH 3 * 5000
 #define MY_GROUP_ID "A5_99"
+#define CLIENT_PW "kaladin"
 
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);

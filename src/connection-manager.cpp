@@ -107,21 +107,10 @@ void ConnectionManager::handleNewConnection(int listenSock)
         return;
     }
 
-    char clientIpAddress[INET_ADDRSTRLEN]; // Buffer to store the IP address
+    char clientIpAddress[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(client.sin_addr), clientIpAddress, INET_ADDRSTRLEN);
 
     pollManager.add(clientSock);
-
-    // if this is the first client to connect, we will treat it as our client
-    if (serverManager.getOurClientSock() == -1)
-    {
-        serverManager.setOurClientSock(clientSock);
-
-        logger.write("[INFO] Our client connected: " + this->getOwnIPFromSocket(clientSock) + ", sock: " + std::to_string(clientSock), true);
-        this->sendTo(clientSock, "Well hello there!");
-        return;
-    }
-
     serverManager.addUnknown(clientSock, clientIpAddress);
 
     logger.write("[INFO] New server connected: " + std::string(clientIpAddress) + ", sock: " + std::to_string(clientSock), true);
@@ -257,6 +246,13 @@ int ConnectionManager::openSock(int portno)
 
 void ConnectionManager::closeSock(int sock)
 {
+
+    // Reset our client sock if our client disconnected
+    if(sock == serverManager.getOurClientSock()){
+        serverManager.setOurClientSock(-1);
+        logger.write("[INFO] Our client disconnected", true);
+    }
+
     auto server = serverManager.getServer(sock);
     logger.write("[INFO] Closing connection to " + server->name + ", sock: " + std::to_string(sock), true);
     close(sock);
