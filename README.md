@@ -67,7 +67,7 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
         [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
 3. # Server is not running on the TSAM server or any campus machine or the VPN.
-    We used or Windows machine running on WSL2 with port forwarding on the router. This was quite involved since WSL2 runs its own network so we had to
+    We used a Windows machine running on WSL2 with port forwarding on the router. This was quite involved since WSL2 runs its own network so we had to
     forward traffic from the local windows machine to the local WSL2 network. Steps taken:
     
     1. Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022
@@ -96,7 +96,7 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     Receving the message on the remote server:
     [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?
 
-    
+
 
     
 
