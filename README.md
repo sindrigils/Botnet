@@ -98,32 +98,32 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     Sindri connecting to the remote server:
     [2024-10-26 18:40:55] [INFO] New server connected: 31.209.158.0, sock: 8
     [2024-10-26 18:40:55] [SENDING] N/A(-1): HELO,A5_5
-    [2024-10-26 18:40:55] [RECEIVED] N/A (-1): HELO,A5_105
+    [2024-10-26 18:40:55] [RECEIVED] N/A (-1): HELO,A5_105
     Sending a msg:
     [2024-10-26 18:41:59] [SENDING] A5_105(4022): SENDMSG,A5_105,A5_5,Did this work?
 
     Receving the message on the remote server:
-    [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?
+    [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?
 
 # NUMBERS
 We saw in the assignment description that it mentions if you can read the messages from the Number servers. We collected all(?) the messages from him, here is what we found out:
 
-2091c76f726f21a61b6d2f8b885cc39d
-fef2576d54dbde017a3a8e4df699ef6d
-37c09709af3da468f7a1bc723e943ec7
-8fc42c6ddf9966db3b09e84365034357
-0639f5c0e2228ccdf3385f88f1579491
-21582c6c30be1217322cdb9aebaf4a59
-d98a07f84921b24ee30f86fd8cd85c3c
-abcc7832a1bfe0a79b84a31494c6379b
-dac9630aec642a428cd73f4be0a03569
-97a9d330e236c8d067f01da1894a5438
-e374307dc474b38fb89368677fbabfda
-3ca14c518d1bf901acc339e7c9cd6d7f
-5a6f972f80665bd21d1848ff6f768469
-036e3491ba499df64611c82b6bcdd37d
-c13d88cb4cb02003daedb8a84e5d272a
-d529e941509eb9e9b9cfaeae1fe7ca23
+2091c76f726f21a61b6d2f8b885cc39d  
+fef2576d54dbde017a3a8e4df699ef6d  
+37c09709af3da468f7a1bc723e943ec7  
+8fc42c6ddf9966db3b09e84365034357  
+0639f5c0e2228ccdf3385f88f1579491  
+21582c6c30be1217322cdb9aebaf4a59  
+d98a07f84921b24ee30f86fd8cd85c3c  
+abcc7832a1bfe0a79b84a31494c6379b  
+dac9630aec642a428cd73f4be0a03569  
+97a9d330e236c8d067f01da1894a5438  
+e374307dc474b38fb89368677fbabfda  
+3ca14c518d1bf901acc339e7c9cd6d7f  
+5a6f972f80665bd21d1848ff6f768469  
+036e3491ba499df64611c82b6bcdd37d  
+c13d88cb4cb02003daedb8a84e5d272a  
+d529e941509eb9e9b9cfaeae1fe7ca23  
 
 These are md5 hashes, which were cracked using a rainbow table online (crackstation.net), the hashes that we collected loosely translate to:
 
