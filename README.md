@@ -76,8 +76,7 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     [1]  Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022.
          This allows external traffic on that port to be redirected to our LAN, specifically our local windows machine.
 
-    [2]
-    Traffic from port on the local windows machine is forwarded to the host wsl2In powershell on Windows run:
+    [2] Traffic from port on the local windows machine is forwarded to the host wsl2In powershell on Windows run:
    
         netsh netsh interface portproxy add v4tov4 listenport=4022 listenaddress=0.0.0.0 connectport=4022 connectaddress=(wsl hostname -I)
    
