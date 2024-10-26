@@ -95,15 +95,15 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
         
     Unnar then connected to Instr1 from his home as A5_105, and Sindri connected to the Instr1 via the TSAM server as A5_5
 
-    Sindri connecting to the remote server:
-    [2024-10-26 18:40:55] [INFO] New server connected: 31.209.158.0, sock: 8
-    [2024-10-26 18:40:55] [SENDING] N/A(-1): HELO,A5_5
-    [2024-10-26 18:40:55] [RECEIVED] N/A (-1): HELO,A5_105
-    Sending a msg:
-    [2024-10-26 18:41:59] [SENDING] A5_105(4022): SENDMSG,A5_105,A5_5,Did this work?
+    Sindri connecting to the remote server:   
+    [2024-10-26 18:40:55] [INFO] New server connected: 31.209.158.0, sock: 8  
+    [2024-10-26 18:40:55] [SENDING] N/A(-1): HELO,A5_5  
+    [2024-10-26 18:40:55] [RECEIVED] N/A (-1): HELO,A5_105  
+    Sending a msg:  
+    [2024-10-26 18:41:59] [SENDING] A5_105(4022): SENDMSG,A5_105,A5_5,Did this work?  
 
-    Receving the message on the remote server:
-    [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?
+    Receving the message on the remote server:  
+    [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?  
 
 # NUMBERS
 We saw in the assignment description that it mentions if you can read the messages from the Number servers. We collected all(?) the messages from him, here is what we found out:
