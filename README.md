@@ -66,5 +66,39 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
         [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
         [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
+3. # Server is not running on the TSAM server or any campus machine or the VPN.
+    We used or Windows machine running on WSL2 with port forwarding on the router. This was quite involved since WSL2 runs its own network so we had to
+    forward traffic from the local windows machine to the local WSL2 network. Steps taken:
+    
+    1. Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022
+        This allows external traffic on that port to be redirected to our LAN, specifically our local windows machine.
+
+    2. Traffic from port on the local windows machine is forwarded to the host wsl2
+        In powershell on Windows run: netsh netsh interface portproxy add v4tov4 listenport=4022 listenaddress=0.0.0.0 connectport=4022 connectaddress=(wsl hostname -I)
+        Where (wsl hostname -I) translates to the host ip of wsl (in this case 172.22.227.95)
+        This will forward all traffic our local windows machine gets on that port to the wsl2 network
+
+    3. WSL2 has Hyper-V firewall enabled by default that blocks ALL incoming traffic, enable a rule for 4022:
+        In powershell on Windows run: New-NetFirewallHyperVRule -Name TSAM -DisplayName "TSAM" -Direction Inbound -VMCreatorId '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -Protocol TCP -LocalPorts 4022
+    
+    4. Windows blocks incoming traffic by default, create a new rule in the windows firewall to accept external TCP traffic
+         In powershell on Windows run: netsh advfirewall firewall add rule name="TSAM" dir=in action=allow protocol=TCP localport=4022
+        
+    Unnar then connected to Instr1 from his home as A5_105, and Sindri connected to the Instr1 via the TSAM server as A5_5
+
+    Sindri connecting to the remote server:
+    [2024-10-26 18:40:55] [INFO] New server connected: 31.209.158.0, sock: 8
+    [2024-10-26 18:40:55] [SENDING] N/A(-1): HELO,A5_5
+    [2024-10-26 18:40:55] [RECEIVED] N/A (-1): HELO,A5_105
+    Sending a msg:
+    [2024-10-26 18:41:59] [SENDING] A5_105(4022): SENDMSG,A5_105,A5_5,Did this work?
+
+    Receving the message on the remote server:
+    [2024-10-26 18:42:07] [RECEIVED] A5_5 (4005): SENDMSG,A5_105,A5_5,Did this work?
+
+    
+
+    
+
 
 We also saw in the assignment description that it mentions if you can read the messages from the Number servers. Well we collected all the messages from him and crack it, here is what we found out:
