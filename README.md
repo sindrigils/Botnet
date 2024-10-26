@@ -84,14 +84,12 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     Where (wsl hostname -I) translates to the host ip of wsl (in this case 172.22.227.95).
     This will forward all traffic our local windows machine gets on that port to the wsl2 network
 
-    [3]
-    WSL2 has Hyper-V firewall enabled by default that blocks ALL incoming traffic, enable a rule for 4022:
+    [3] WSL2 has Hyper-V firewall enabled by default that blocks ALL incoming traffic, enable a rule for 4022:
     In powershell on Windows run:
 
         New-NetFirewallHyperVRule -Name TSAM -DisplayName "TSAM" -Direction Inbound -VMCreatorId '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -Protocol TCP -LocalPorts 4022
     
-    [4]
-    Windows blocks incoming traffic by default, create a new rule in the windows firewall to accept external TCP traffic
+    [4] Windows blocks incoming traffic by default, create a new rule in the windows firewall to accept external TCP traffic
     In powershell on Windows run:
 
         netsh advfirewall firewall add rule name="TSAM" dir=in action=allow protocol=TCP localport=4022
