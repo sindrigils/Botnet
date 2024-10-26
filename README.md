@@ -26,7 +26,9 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
 
 # BONUS POINTS
 1. **We submitted our code early in Gradescope along with a Wireshark trace (1pts)**
-2. **Obtain bonus points for connectivity**
+   
+3. **Obtain bonus points for connectivity**
+   
     Here are two groups from AK, group number A5_52 and A5_53, we talked over discord and sent each other messages (0.5pts * 2 = 1pts)
 
     [2024-10-24 11:36:06] [RECEIVED] A5_52 (4052): SENDMSG,A5_5,A5_52,Hvað eru þið reykjaviku pakk að gera af ykkur núna?
@@ -66,7 +68,7 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
         [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
         [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
-3. **Server is not running on the TSAM server or any campus machine or the VPN.**
+4. **Server is not running on the TSAM server or any campus machine or the VPN.**
    
     We used a Windows machine running on WSL2 with port forwarding on the router. This was quite involved since WSL2 runs its own network so we had to
     forward traffic from the local windows machine to the local WSL2 network. Steps taken:
