@@ -20,6 +20,7 @@ public:
     void close(int sock);
     void add(int sock);
     int getPollCount();
+    bool isFull();
 
     PollManager();
 

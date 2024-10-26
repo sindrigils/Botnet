@@ -23,16 +23,13 @@
 #include "server-manager.hpp"
 #include "poll-manager.hpp"
 #include "utils.hpp"
+#include "constants.hpp"
 
 enum RecvStatus
 {
     ERROR = -1,
     SERVER_DISCONNECTED = 0,
     MSG_RECEIVED = 1,
-    MSG_DROPPED = 2,
-    MSG_TOO_LONG = 3,
-    MSG_INVALID_SOH = 4,
-    MSG_INVALID_EOT = 5,
 };
 
 // fix SOCK_NONBLOCK for OSX

@@ -60,24 +60,26 @@ void ClientCommands::findCommand(std::string message)
 
 void ClientCommands::handleGetMsg(std::vector<std::string> tokens)
 {
+    int sock = serverManager.getOurClientSock();
+
     std::string groupId = tokens[1];
-    std::vector<std::string> messages = groupMsgManager.getMessages(groupId);
+    std::vector<std::string> messages = (groupId == MY_GROUP_ID)
+                                            ? groupMsgManager.getAllClientMessages()
+                                            : groupMsgManager.getMessages(groupId);
 
-    for (auto message : messages)
+    if (messages.size() == 0)
     {
-        std::vector<std::string> msg = splitMessageOnDelimiter(message.c_str());
+        std::string emptyMessage = "There are no currently stored messages for you.";
+        connectionManager.sendTo(sock, emptyMessage, true);
+        return;
+    }
 
-        std::ostringstream contentStream;
-        for (auto it = msg.begin() + 3; it != msg.end(); it++)
-        {
-            contentStream << *it;
-            if (it + 1 != msg.end())
-            {
-                contentStream << ", ";
-            }
-        }
-        int sock = serverManager.getOurClientSock();
-        connectionManager.sendTo(sock, contentStream.str(), true);
+    for (const auto &message : messages)
+    {
+        std::string content = (groupId == MY_GROUP_ID)
+                                  ? message
+                                  : formatGroupMessage(message);
+        connectionManager.sendTo(sock, content, true);
     }
 }
 
@@ -89,6 +91,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
         std::string message = "Why are you talking to yourself?";
         int sock = serverManager.getOurClientSock();
         connectionManager.sendTo(sock, message, true);
+        return;
     }
 
     std::ostringstream contentStream;
@@ -207,7 +210,7 @@ void ClientCommands::handleViewBlacklist()
 void ClientCommands::handleViewMsgs()
 {
     std::string message;
-    std::unordered_map<std::string, int> totalStoredMessages = groupMsgManager.getAllMessagesCount();
+    std::unordered_map<std::string, int> totalStoredMessages = groupMsgManager.getAllMessagesCount(true);
 
     if (totalStoredMessages.size() == 0)
     {

@@ -67,3 +67,9 @@ int PollManager::hasData(int i) const
     }
     return pollfds[i].revents & POLLIN;
 }
+
+bool PollManager::isFull()
+{
+    std::lock_guard<std::mutex> lock(fdMutex);
+    return nfds == MAX_CONNECTIONS;
+}

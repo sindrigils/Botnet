@@ -44,10 +44,15 @@ int GroupMsgManager::getMessageCount(std::string groupId) const
     return 0;
 }
 
-std::unordered_map<std::string, int> GroupMsgManager::getAllMessagesCount() const
+std::unordered_map<std::string, int> GroupMsgManager::getAllMessagesCount(bool showClientMsgs) const
 {
     std::lock_guard<std::mutex> lock(groupMutex);
     std::unordered_map<std::string, int> groupTotalMessages;
+
+    if (showClientMsgs && !clientMessages.empty())
+    {
+        groupTotalMessages[MY_GROUP_ID] = clientMessages.size();
+    }
 
     for (const auto &pair : this->groupMessages)
     {
@@ -58,4 +63,24 @@ std::unordered_map<std::string, int> GroupMsgManager::getAllMessagesCount() cons
         }
     };
     return groupTotalMessages;
+}
+
+void GroupMsgManager::addClientMessage(std::string message)
+{
+    std::lock_guard<std::mutex> lock(clientMutex);
+    clientMessages.push_back(message);
+}
+
+std::vector<std::string> GroupMsgManager::getAllClientMessages()
+{
+    std::lock_guard<std::mutex> lock(clientMutex);
+    std::vector<std::string> messages = clientMessages;
+    clientMessages.clear();
+    return messages;
+}
+
+int GroupMsgManager::getAllClientMessagesCount() const
+{
+    std::lock_guard<std::mutex> lock(clientMutex);
+    return clientMessages.size();
 }

@@ -7,7 +7,7 @@
 #include "logger.hpp"
 #include "group-message-manager.hpp"
 #include "connection-manager.hpp"
-
+#include "constants.hpp"
 class ClientCommands
 {
 public:
