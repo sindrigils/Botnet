@@ -71,7 +71,8 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     forward traffic from the local windows machine to the local WSL2 network. Steps taken:
     
     [1]  
-        Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022 \n
+        Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022
+   
         This allows external traffic on that port to be redirected to our LAN, specifically our local windows machine.
 
     [2]
