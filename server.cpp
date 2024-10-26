@@ -92,6 +92,28 @@ void checkHELOTimeout()
     }
 }
 
+void notifyClient()
+{
+    int sock;
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::minutes(3));
+        sock = serverManager.getOurClientSock();
+        if (sock == -1)
+        {
+            continue;
+        }
+
+        int totalMsgs = groupMsgManager.getAllClientMessagesCount();
+        std::cout << "here are totla msgs " << totalMsgs << std::endl;
+        if (totalMsgs > 0)
+        {
+            std::string message = "You currently have " + std::to_string(totalMsgs) + " messages waiting to be read.";
+            connectionManager.sendTo(sock, message, true);
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -124,6 +146,7 @@ int main(int argc, char *argv[])
     std::thread statusReqThread(sendStatusReqMessages);
     std::thread keepAliveThread(sendKeepAliveMessages);
     std::thread heloThread(sendHeloMessages);
+    std::thread notifyClientThread(notifyClient);
 
     // Main server loop
     while (true)

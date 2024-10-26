@@ -150,3 +150,20 @@ bool validateGroupId(std::string groupId, bool allowEmpty)
     }
     return groupId == "" && allowEmpty ? true : false;
 }
+
+std::string formatGroupMessage(std::string message)
+{
+    std::vector<std::string> msg = splitMessageOnDelimiter(message.c_str());
+
+    std::ostringstream contentStream;
+    contentStream << "Message from " << msg[2] << ": ";
+    for (auto it = msg.begin() + 3; it != msg.end(); it++)
+    {
+        contentStream << *it;
+        if (it + 1 != msg.end())
+        {
+            contentStream << ", ";
+        }
+    }
+    return contentStream.str();
+}

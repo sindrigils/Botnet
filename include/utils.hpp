@@ -9,15 +9,7 @@
 #include <sys/socket.h> // For getsockname
 #include <arpa/inet.h>  // For inet_ntop
 
-#define SOH 0x01
-#define EOT 0x04
-#define ESC 0x1B
-
-#define MAX_EOT_TRIES 10
-#define Backlog 5
-#define MAX_MSG_LENGTH 3 * 5000
-#define MY_GROUP_ID "A5_5"
-#define CLIENT_PW "kaladin"
+#include "constants.hpp"
 
 // Converts a string to its hexadecimal representation
 std::string stringToHex(const std::string &input);
@@ -45,5 +37,6 @@ std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimi
 
 int stringToInt(const std::string &str);
 bool validateGroupId(std::string groupId, bool allowEmpty = false);
+std::string formatGroupMessage(std::string message);
 
 #endif

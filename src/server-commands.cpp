@@ -21,7 +21,8 @@ void ServerCommands::findCommand(int socket, std::string message)
 {
     std::vector<std::string> tokens = splitMessageOnDelimiter(message.c_str());
 
-    if (tokens[0].compare("PW") == 0 && tokens.size() == 2){
+    if (tokens[0].compare("PW") == 0 && tokens.size() == 2)
+    {
         return handlePW(socket, tokens);
     }
 
@@ -60,7 +61,7 @@ void ServerCommands::findCommand(int socket, std::string message)
     {
         return handleStatusReq(socket, tokens);
     }
-    
+
     if (tokens[0].compare("STATUSRESP") == 0 && tokens.size() >= 1)
     {
         return handleStatusResp(socket, tokens);
@@ -140,6 +141,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
     std::string toGroupId = tokens[1];
     std::string fromGroupId = tokens[2];
 
+    // start by checking if its a message for our client
     if (toGroupId == MY_GROUP_ID)
     {
         std::ostringstream contentStream;
@@ -154,18 +156,12 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
             }
         }
         std::string message = "Message from " + fromGroupId + ": " + contentStream.str();
-
-        // Seperately log numbers to collect them... gotta collect them all.
-        if (fromGroupId == "NUMBER")
-        {
-            logger.write(contentStream.str(), false, "numbers.txt");
-        }
-
-        int ourClient = serverManager.getOurClientSock();
-        connectionManager.sendTo(ourClient, message, true);
+        logger.write("[INFO] Storing message for our client", true);
+        groupMsgManager.addClientMessage(message);
         return;
     }
 
+    // check if we are connected to the server that should receive this message, and if so then forward it to him
     bool isConnected = serverManager.isConnectedToGroupId(toGroupId, socket);
     if (isConnected)
     {
@@ -174,6 +170,7 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
         return;
     }
 
+    // else store it
     groupMsgManager.addMessage(toGroupId, buffer);
     logger.write("[INFO] Storing message for " + toGroupId, true);
 }
@@ -215,7 +212,8 @@ void ServerCommands::handleStatusResp(int socket, std::vector<std::string> token
     }
 }
 
-void ServerCommands::handlePW(int socket, std::vector<std::string> tokens){
+void ServerCommands::handlePW(int socket, std::vector<std::string> tokens)
+{
     // Add the server as "our" client if the second token is the client pw and there is no current client
     if (serverManager.getOurClientSock() == -1 && tokens[1] == std::string(CLIENT_PW))
     {

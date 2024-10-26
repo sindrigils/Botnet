@@ -40,6 +40,13 @@ void ConnectionManager::_connectToServer(const std::string &ip, std::string strP
 
     if (this->isBlacklisted(groupId, ip, strPort) || !validateGroupId(groupId, true))
     {
+        logger.write("[INFO] Not going to connect because of blacklist of invalid group id: ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
+        return;
+    }
+
+    if (pollManager.isFull())
+    {
+        logger.write("[INFO] Not going to connect because of maximum connections: ip: " + ip + ", port: " + strPort + ", groupId: " + groupId);
         return;
     }
 
@@ -95,6 +102,7 @@ void ConnectionManager::connectToServer(const std::string &ip, std::string strPo
 
 void ConnectionManager::handleNewConnection(int listenSock)
 {
+
     int clientSock;
     struct sockaddr_in client;
     socklen_t clientLen = sizeof(client);
@@ -105,6 +113,12 @@ void ConnectionManager::handleNewConnection(int listenSock)
     {
         logger.write("[ERROR] Failed to accept connection: " + std::string(strerror(errno)), true);
         return;
+    }
+
+    if (pollManager.isFull())
+    {
+        logger.write("[INFO] Maximum connections reached. Dropping connection.", true);
+        close(clientSock);
     }
 
     char clientIpAddress[INET_ADDRSTRLEN];
@@ -163,7 +177,7 @@ RecvStatus ConnectionManager::recvFrame(int sock, char *buffer, int bufferLength
         if (offset + bytesRead >= MAX_MSG_LENGTH)
         {
             logger.write("[FAILURE] Message from " + serverNamePort + ": message exceeds " + std::to_string(MAX_MSG_LENGTH) + " bytes.");
-            return MSG_TOO_LONG;
+            return ERROR;
         }
 
         if (buffer[0] != SOH && offset == 0)
@@ -248,7 +262,8 @@ void ConnectionManager::closeSock(int sock)
 {
 
     // Reset our client sock if our client disconnected
-    if(sock == serverManager.getOurClientSock()){
+    if (sock == serverManager.getOurClientSock())
+    {
         serverManager.setOurClientSock(-1);
         logger.write("[INFO] Our client disconnected", true);
     }
