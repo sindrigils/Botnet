@@ -8,9 +8,9 @@ make
 ./client <ip> <port>
 ```
 
-Our client will connect to the server and send a HELO,kaladin command, which 
+Our client will connect to the server and automatically send a PW,kaladin command, which will identify the client to the server.
 
-Now start by writing HELP in the clinet terminal, there you can see all the available commands you can use, and you can just start by connecting to some instructor server with the CONNECT command.
+Now start by writing HELP in the client terminal, there you can see all the available commands you can use, and you can just start by connecting to some instructor server with the CONNECT command.
 The server reguarly sends out HELO/KEEPALIVE/STATUSREQ, and each time it gets a STATUSRESP it checks if the other server has any messages for a server that we are connected if so, take 
 it and forward it to the server that should get it. This allows us to send messages to servers 2-hops away. We also drop all connections that don't send a HELO within 5seconds.
 
