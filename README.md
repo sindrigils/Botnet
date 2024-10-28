@@ -34,13 +34,17 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     [2024-10-28 17:02:57] [SENDING] Instr_3(5003): SERVERS,A5_5,130.208.246.249,4005;Instr_3,130.208.246.249,5003;A5_22,130.208.246.249,4022;Instr_1,130.208.246.249,5001;Instr_2,130.208.246.249,5002;
 
 (d) Here we got a message from A5_2  
-    [2024-10-28 17:04:41] [RECEIVED] A5_2 (4002): SENDMSG,A5_5,A5_2,Hello A5_5, I received your message: pleasee give me more cat facts  
-    and here we got a message from A5_100  
+
+    [2024-10-28 17:04:41] [RECEIVED] A5_2 (4002): SENDMSG,A5_5,A5_2,Hello A5_5, I received your message: pleasee give me more cat facts
+and here we got a message from A5_100
+
     [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
 
-(e) Here we send a message to A5_2
-    [2024-10-28 17:04:36] [SENDING] A5_2(4002): SENDMSG,A5_2,A5_5,pleasee give me more cat facts
-    and here we send a message to A5_100  
+(e) Here we send a message to A5_2  
+
+    [2024-10-28 17:04:36] [SENDING] A5_2(4002): SENDMSG,A5_2,A5_5,pleasee give me more cat facts    
+and here we send a message to A5_100  
+
     [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
 # BONUS POINTS
@@ -49,29 +53,33 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
 3. **Obtain bonus points for connectivity**
    
     Here are two groups from AK, group number A5_52 and A5_53, we talked over discord and sent each other messages (0.5pts * 2 = 1pts)
-
-    [2024-10-24 11:36:06] [RECEIVED] A5_52 (4052): SENDMSG,A5_5,A5_52,Hvað eru þið reykjaviku pakk að gera af ykkur núna?
-    [2024-10-24 11:36:36] [SENDING] A5_52 (4052): SENDMSG,A5_52,A5_5,Allavana ekki að vinna i cyber
+   
+        [2024-10-24 11:36:06] [RECEIVED] A5_52 (4052): SENDMSG,A5_5,A5_52,Hvað eru þið reykjaviku pakk að gera af ykkur núna?
+        [2024-10-24 11:36:36] [SENDING] A5_52 (4052): SENDMSG,A5_52,A5_5,Allavana ekki að vinna i cyber
     
-    [2024-10-24 15:40:58] [SENDING] A5_53 (4153): SENDMSG,A5_53,A5_5,Hello my friends, can you send a message back to me?
-    [2024-10-24 15:43:59] [RECEIVED] A5_53 (4153): SENDMSG,A5_5,A5_53,yessir. This is our response
+        [2024-10-24 15:40:58] [SENDING] A5_53 (4153): SENDMSG,A5_53,A5_5,Hello my friends, can you send a message back to me?
+        [2024-10-24 15:43:59] [RECEIVED] A5_53 (4153): SENDMSG,A5_5,A5_53,yessir. This is our response
 
     **1 point per 5 different groups you can show messages received from** (10 groups = 2pts)  
     For each bracket ([]) are we receiving a message from a group and sending them a message.
    
-    [1]  
-    [2024-10-24 20:56:53] [RECEIVED] A5_69 (4069): SENDMSG,A5_5,A5_69,Hello A5_5 . You've successfully connected to group A5_69! Meaning that you've       sent both a valid HELO message and a SERVERS message. How are you?  
-    [2024-10-24 20:57:13] [SENDING] A5_69(4069): SENDMSG,A5_69,A5_5,Once again, im doing just fine thanks  
+    [1]
+   
+        [2024-10-24 20:56:53] [RECEIVED] A5_69 (4069): SENDMSG,A5_5,A5_69,Hello A5_5 . You've successfully connected to group A5_69! Meaning that you've       sent both a valid HELO message and a SERVERS message. How are you?
+        [2024-10-24 20:57:13] [SENDING] A5_69(4069): SENDMSG,A5_69,A5_5,Once again, im doing just fine thanks  
 
-    [2]  
+    [2]
+   
         [2024-10-24 20:56:51] [RECEIVED] N/A (4003): SENDMSG,A5_5,A5_3,Hello from A5_3!!!  
         [2024-10-24 20:59:42] [SENDING] A5_3(4003): SENDMSG,A5_3,A5_5,Hello there!  
 
-    [3]  
+    [3]
+   
         [2024-10-24 21:03:44] [RECEIVED] A5_74 (4074): SENDMSG,A5_5,A5_74,blessaður gilsari  
         [2024-10-24 21:04:04] [SENDING] A5_74(4074): SENDMSG,A5_74,A5_5,hahah thank you meistari
 
-    [4]  
+    [4]
+   
         [2024-10-23 12:53:25] Received RAW from A5_7 (89.160.201.68:5001): SENDMSG,A5_5,A5_7,prufa ertu afatta NUMBER?  
         [2024-10-23 11:51:11] Sending to A5_7(89.160.201.68:5001): SENDMSG,A5_7,ORACLE,
         “If the automobile had followed the same development cycle as the computer, a Rolls-Royce 
@@ -79,11 +87,12 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
          everyone inside.”
         - Robert X. Cringely  
 
-    [5]  
+    [5]
+   
         [2024-10-23 15:54:16] Sending to A5_20(130.208.246.249:4020): SENDMSG,A5_20,A5_5,Cats or dogs?  
         [2024-10-24 09:44:57] Received RAW from A5_20 (130.208.246.249:4020): SENDMSG,A5_5,A5_20,Hello from A5_2  
 
-4. **Server is not running on the TSAM server or any campus machine or the VPN.**
+5. **Server is not running on the TSAM server or any campus machine or the VPN.**
    
     We used a Windows machine running on WSL2 with port forwarding on the router. This was quite involved since WSL2 runs its own network so we had to
     forward traffic from the local windows machine to the local WSL2 network. Steps taken:
@@ -142,6 +151,11 @@ c13d88cb4cb02003daedb8a84e5d272a
 d529e941509eb9e9b9cfaeae1fe7ca23  
 
 These are md5 hashes, which were cracked using a rainbow table online (crackstation.net), the hashes that we collected loosely translate to:
+
+# Info
+If for some reason we don't qualify for the whole 5 bonus points, we have can still get 1 more bonus points since we have send to a lot of different groups and you can find 5 different groups in the logs for an extra 1 bonus points.
+
+
 
 "Not receiving the generator ...that stuff comes from hardware room.", which seems to be an unintended radio transmission of the UVB-76
 russian spy radio station, which is now under the callsign ANVF, and the names (Boris, Mikhail, Anna, Nikolai and Ivan) seem to be identifers.
