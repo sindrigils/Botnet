@@ -25,6 +25,23 @@ ServerCommands - handles all the commands from other servers.
 ClientCommands - handles all the commands from our client.  
 Then we have like Logger, Server and an utils file, which are all pretty self explanatory.  
 
+# Assignment
+(a) Done - can be found in the client-commands.cpp file
+(b) The wireshark trace can be found in the root, where the filename is wireshark-trace.txt
+(c) According to the Rubric this has been changed to "Successfully connected to an Instructor server" and here are the logs for that. However we have also been connected to by the Instructor server, but it's somewhere in the logs. (our server does act both as a server and a client, so we can connect to others and be connected by others.)
+
+    [2024-10-28 17:02:57] [RECEIVED] N/A (5003): HELO,Instr_3SERVERS,Instr_3,130.208.246.249,5003;A5_300,130.208.246.249,4300;Instr_2,130.208.246.249,5002;A5_5,130.208.246.249,-1;ORACLE,130.208.246.249,5004;A5_69,130.208.246.249,4069;A5_9,130.208.246.249,4009;A5_3,130.208.246.249,4003;A5_22,130.208.246.249,4022;
+    [2024-10-28 17:02:57] [SENDING] Instr_3(5003): SERVERS,A5_5,130.208.246.249,4005;Instr_3,130.208.246.249,5003;A5_22,130.208.246.249,4022;Instr_1,130.208.246.249,5001;Instr_2,130.208.246.249,5002;
+
+(d) Here we got a message from A5_2  
+    [2024-10-28 17:04:41] [RECEIVED] A5_2 (4002): SENDMSG,A5_5,A5_2,Hello A5_5, I received your message: pleasee give me more cat facts  
+    and here we got a message from A5_100  
+    [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
+
+(e) Here we send a message to A5_2
+    [2024-10-28 17:04:36] [SENDING] A5_2(4002): SENDMSG,A5_2,A5_5,pleasee give me more cat facts
+    and here we send a message to A5_100  
+    [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
 # BONUS POINTS
 1. **We submitted our code early in Gradescope along with a Wireshark trace (1pts)**
@@ -65,10 +82,6 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     [5]  
         [2024-10-23 15:54:16] Sending to A5_20(130.208.246.249:4020): SENDMSG,A5_20,A5_5,Cats or dogs?  
         [2024-10-24 09:44:57] Received RAW from A5_20 (130.208.246.249:4020): SENDMSG,A5_5,A5_20,Hello from A5_2  
-
-    [6]  
-        [2024-10-24 21:35:08] [RECEIVED] A5_100 (4100): SENDMSG,A5_5,A5_100,Jess erum tengdir núna!  
-        [2024-10-24 21:36:00] [SENDING] A5_100(4100): SENDMSG,A5_100,A5_5,þ, þarna!! noice  
 
 4. **Server is not running on the TSAM server or any campus machine or the VPN.**
    
@@ -132,5 +145,4 @@ These are md5 hashes, which were cracked using a rainbow table online (crackstat
 
 "Not receiving the generator ...that stuff comes from hardware room.", which seems to be an unintended radio transmission of the UVB-76
 russian spy radio station, which is now under the callsign ANVF, and the names (Boris, Mikhail, Anna, Nikolai and Ivan) seem to be identifers.
-
 

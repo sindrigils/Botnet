@@ -36,7 +36,7 @@ public:
 private:
     // map of all the valid connected servers
     std::unordered_map<int, std::shared_ptr<Server>> servers;
-    // map to keep all the sockets that have not sent an HELO (trying to give them an chance), and if they
+    // map to keep all the sockets that have not sent an HELO (trying to give them a chance), and if they
     // dont send it soon we will drop them
     std::unordered_map<int, std::shared_ptr<Server>> unknownServers;
 
