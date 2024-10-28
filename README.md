@@ -1,6 +1,5 @@
 # Botnet - Group A5_5
-Hello TA, this README includes all the bonus points we did, and how to start the assignment and some documentation on how it works. For starters we are on a MacOS and Windows (WSL2), and the it works
-best to compile it on MacOS. Now here are instructions on how to start the project.
+Hello TA, this README includes all the bonus points we did, and how to start the assignment and some documentation on how it works. For starters we are on a MacOS and Windows (WSL2), and it works best to compile it on MacOS. Now here are the instructions on how to start the project. (btw feel free to read this README file in preview mode)
 
 All client and server commands have been implemented along with extra functionality listed below.
 
@@ -27,7 +26,7 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
 
 # Assignment
 (a) Done - can be found in the client-commands.cpp file
-(b) The wireshark trace can be found in the root, where the filename is wireshark-trace.txt
+(b) The wireshark trace can be found in the root, where the filename is wireshark-trace-final.txt
 (c) According to the Rubric this has been changed to "Successfully connected to an Instructor server" and here are the logs for that. However we have also been connected to by the Instructor server, but it's somewhere in the logs. (our server does act both as a server and a client, so we can connect to others and be connected by others.)
 
     [2024-10-28 17:02:57] [RECEIVED] N/A (5003): HELO,Instr_3SERVERS,Instr_3,130.208.246.249,5003;A5_300,130.208.246.249,4300;Instr_2,130.208.246.249,5002;A5_5,130.208.246.249,-1;ORACLE,130.208.246.249,5004;A5_69,130.208.246.249,4069;A5_9,130.208.246.249,4009;A5_3,130.208.246.249,4003;A5_22,130.208.246.249,4022;
