@@ -105,7 +105,6 @@ void notifyClient()
         }
 
         int totalMsgs = groupMsgManager.getAllClientMessagesCount();
-        std::cout << "here are totla msgs " << totalMsgs << std::endl;
         if (totalMsgs > 0)
         {
             std::string message = "You currently have " + std::to_string(totalMsgs) + " messages waiting to be read.";
