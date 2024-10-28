@@ -154,8 +154,8 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 
 void ClientCommands::handleDropConnection(std::vector<std::string> tokens)
 {
-    int dropSock = stringToInt(tokens[1]);
-    connectionManager.closeSock(dropSock);
+    int sock = serverManager.getSockByName(tokens[1]);
+    connectionManager.closeSock(sock);
 }
 
 void ClientCommands::handleAddToBlacklist(std::vector<std::string> tokens)
