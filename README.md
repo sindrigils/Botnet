@@ -151,11 +151,11 @@ d529e941509eb9e9b9cfaeae1fe7ca23
 
 These are md5 hashes, which were cracked using a rainbow table online (crackstation.net), the hashes that we collected loosely translate to:
 
+"Not receiving the generator ...that stuff comes from hardware room.", which seems to be an unintended radio transmission of the UVB-76
+russian spy radio station, which is now under the callsign ANVF, and the names (Boris, Mikhail, Anna, Nikolai and Ivan) seem to be identifers.
+
 # Info
 If for some reason we don't qualify for the whole 5 bonus points, we have can still get 1 more bonus points since we have send to a lot of different groups and you can find 5 different groups in the logs for an extra 1 bonus points.
 
 
-
-"Not receiving the generator ...that stuff comes from hardware room.", which seems to be an unintended radio transmission of the UVB-76
-russian spy radio station, which is now under the callsign ANVF, and the names (Boris, Mikhail, Anna, Nikolai and Ivan) seem to be identifers.
 
