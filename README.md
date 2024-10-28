@@ -2,6 +2,8 @@
 Hello TA, this README includes all the bonus points we did, and how to start the assignment and some documentation on how it works. For starters we are on a MacOS and Windows (WSL2), and the it works
 best to compile it on MacOS. Now here are instructions on how to start the project.
 
+All client and server commands have been implemented along with extra functionality listed below.
+
 ```
 make
 ./tsamgroup5 <port>
@@ -76,14 +78,15 @@ Then we have like Logger, Server and an utils file, which are all pretty self ex
     [1]  Port forward on router to local windows machine (in this case, 192.168.1.74), port chosen: 4022.  
          This allows external traffic on that port to be redirected to our LAN, specifically our local windows machine.
 
-    [2] Traffic from port on the local windows machine is forwarded to the host wsl2In powershell on Windows run:
+    [2] Traffic from port on the local windows machine is forwarded to the host wsl2
+    In powershell on Windows run:
    
         netsh netsh interface portproxy add v4tov4 listenport=4022 listenaddress=0.0.0.0 connectport=4022 connectaddress=(wsl hostname -I)
    
     Where (wsl hostname -I) translates to the host ip of wsl (in this case 172.22.227.95).  
     This will forward all traffic our local windows machine gets on that port to the wsl2 network
 
-    [3] WSL2 has Hyper-V firewall enabled by default that blocks ALL incoming traffic, enable a rule for 4022:  
+    [3] WSL2 has Hyper-V firewall enabled by default that blocks ALL incoming traffic, enable a rule for 4022:   
     In powershell on Windows run:
 
         New-NetFirewallHyperVRule -Name TSAM -DisplayName "TSAM" -Direction Inbound -VMCreatorId '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -Protocol TCP -LocalPorts 4022
