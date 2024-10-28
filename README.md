@@ -155,7 +155,4 @@ These are md5 hashes, which were cracked using a rainbow table online (crackstat
 russian spy radio station, which is now under the callsign ANVF, and the names (Boris, Mikhail, Anna, Nikolai and Ivan) seem to be identifers.
 
 # Info
-If for some reason we don't qualify for the whole 5 bonus points, we have can still get 1 more bonus points since we have send to a lot of different groups and you can find 5 different groups in the logs for an extra 1 bonus points.
-
-
-
+If for some reason we don't qualify for the whole 5 bonus points, we have can still get 1 more bonus points since we have send to a lot of different groups and you can find 5 different groups in the logs for an extra 1 bonus points. Also the logs files are under the logs folder, there are 2 log files, one from October 20 to 24 and another one from 24-28.

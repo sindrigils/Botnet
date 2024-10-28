@@ -34,6 +34,7 @@ void handleCommands(int sock, std::vector<std::string> commands)
     }
 }
 
+// function that a thread will run, send out a STATUSREQ message each 5 minutes
 void sendStatusReqMessages()
 {
     while (true)
@@ -49,6 +50,7 @@ void sendStatusReqMessages()
     }
 }
 
+// function that a thread will run, send out a KEEPALIVE message each 2 minutes
 void sendKeepAliveMessages()
 {
     while (true)
@@ -63,6 +65,7 @@ void sendKeepAliveMessages()
     }
 }
 
+// function that a thread will run, send out a HELO message each 2 minutes
 void sendHeloMessages()
 {
     while (true)
@@ -77,6 +80,8 @@ void sendHeloMessages()
     }
 }
 
+// function that a thread will run, checks each 5 seconds, if any servers have not send a
+// HELO message within 5 seconds and if so then drop them
 void checkHELOTimeout()
 {
     while (true)
@@ -92,6 +97,8 @@ void checkHELOTimeout()
     }
 }
 
+// function that a thread will run, this function sends a reminder to the client that he has new messages
+// hat he was not read, this notification is send each 3 minutes, only if there is a message for him
 void notifyClient()
 {
     int sock;
@@ -122,7 +129,7 @@ int main(int argc, char *argv[])
     }
 
     // Ignore SIGPIPE signal
-   // signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     serverCommands.setPort(argv[1]);
 
