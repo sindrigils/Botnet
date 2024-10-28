@@ -1,0 +1,342 @@
+No.     Time           Source                Destination           Protocol Length Info
+    318 9.921814       10.100.53.54          130.208.246.249       TCP      74     54344 → 4005 [SYN] Seq=0 Win=64240 Len=0 MSS=1460 SACK_PERM TSval=1214011364 TSecr=0 WS=128
+
+Frame 318: 74 bytes on wire (592 bits), 74 bytes captured (592 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 0, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    319 9.924391       130.208.246.249       10.100.53.54          TCP      74     4005 → 54344 [SYN, ACK] Seq=0 Ack=1 Win=65160 Len=0 MSS=1250 SACK_PERM TSval=1696375533 TSecr=1214011364 WS=128
+
+Frame 319: 74 bytes on wire (592 bits), 74 bytes captured (592 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 0, Ack: 1, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    320 9.924741       10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=1 Ack=1 Win=64256 Len=0 TSval=1214011367 TSecr=1696375533
+
+Frame 320: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 1, Ack: 1, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    321 9.924833       10.100.53.54          130.208.246.249       TCP      78     54344 → 4005 [PSH, ACK] Seq=1 Ack=1 Win=64256 Len=12 TSval=1214011367 TSecr=1696375533
+
+Frame 321: 78 bytes on wire (624 bits), 78 bytes captured (624 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 1, Ack: 1, Len: 12
+Data (12 bytes)
+
+0000  01 50 57 2c 6b 61 6c 61 64 69 6e 04               .PW,kaladin.
+
+No.     Time           Source                Destination           Protocol Length Info
+    322 9.926763       130.208.246.249       10.100.53.54          TCP      66     4005 → 54344 [ACK] Seq=1 Ack=13 Win=65152 Len=0 TSval=1696375535 TSecr=1214011367
+
+Frame 322: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 1, Ack: 13, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    323 9.926763       130.208.246.249       10.100.53.54          TCP      77     4005 → 54344 [PSH, ACK] Seq=1 Ack=13 Win=65152 Len=11 TSval=1696375535 TSecr=1214011367
+
+Frame 323: 77 bytes on wire (616 bits), 77 bytes captured (616 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 1, Ack: 13, Len: 11
+Data (11 bytes)
+
+0000  01 48 45 4c 4f 2c 41 35 5f 35 04                  .HELO,A5_5.
+
+No.     Time           Source                Destination           Protocol Length Info
+    324 9.926965       10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=13 Ack=12 Win=64256 Len=0 TSval=1214011369 TSecr=1696375535
+
+Frame 324: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 13, Ack: 12, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    325 9.928786       130.208.246.249       10.100.53.54          TCP      85     4005 → 54344 [PSH, ACK] Seq=12 Ack=13 Win=65152 Len=19 TSval=1696375537 TSecr=1214011369
+
+Frame 325: 85 bytes on wire (680 bits), 85 bytes captured (680 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 12, Ack: 13, Len: 19
+Data (19 bytes)
+
+0000  01 57 65 6c 6c 20 68 65 6c 6c 6f 20 74 68 65 72   .Well hello ther
+0010  65 21 04                                          e!.
+
+No.     Time           Source                Destination           Protocol Length Info
+    326 9.928986       10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=13 Ack=31 Win=64256 Len=0 TSval=1214011371 TSecr=1696375537
+
+Frame 326: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 13, Ack: 31, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    619 17.942878      10.100.53.54          130.208.246.249       TCP      96     54344 → 4005 [PSH, ACK] Seq=13 Ack=31 Win=64256 Len=30 TSval=1214019385 TSecr=1696375537
+
+Frame 619: 96 bytes on wire (768 bits), 96 bytes captured (768 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 13, Ack: 31, Len: 30
+Data (30 bytes)
+
+0000  01 43 4f 4e 4e 45 43 54 2c 31 33 30 2e 32 30 38   .CONNECT,130.208
+0010  2e 32 34 36 2e 32 34 39 2c 35 30 30 31 04         .246.249,5001.
+
+No.     Time           Source                Destination           Protocol Length Info
+    622 17.985434      130.208.246.249       10.100.53.54          TCP      66     4005 → 54344 [ACK] Seq=31 Ack=43 Win=65152 Len=0 TSval=1696383594 TSecr=1214019385
+
+Frame 622: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 31, Ack: 43, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    973 20.230632      10.100.53.54          130.208.246.249       TCP      79     54344 → 4005 [PSH, ACK] Seq=43 Ack=31 Win=64256 Len=13 TSval=1214021673 TSecr=1696383594
+
+Frame 973: 79 bytes on wire (632 bits), 79 bytes captured (632 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 43, Ack: 31, Len: 13
+Data (13 bytes)
+
+0000  01 4c 49 53 54 53 45 52 56 45 52 53 04            .LISTSERVERS.
+
+No.     Time           Source                Destination           Protocol Length Info
+    974 20.233531      130.208.246.249       10.100.53.54          TCP      66     4005 → 54344 [ACK] Seq=31 Ack=56 Win=65152 Len=0 TSval=1696385841 TSecr=1214021673
+
+Frame 974: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 31, Ack: 56, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+    975 20.233531      130.208.246.249       10.100.53.54          TCP      142    4005 → 54344 [PSH, ACK] Seq=31 Ack=56 Win=65152 Len=76 TSval=1696385841 TSecr=1214021673
+
+Frame 975: 142 bytes on wire (1136 bits), 142 bytes captured (1136 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 31, Ack: 56, Len: 76
+Data (76 bytes)
+
+0000  31 31 3a 41 35 5f 31 30 30 2c 20 31 32 3a 41 35   11:A5_100, 12:A5
+0010  5f 36 39 2c 20 31 30 3a 41 35 5f 32 32 2c 20 39   _69, 10:A5_22, 9
+0020  3a 41 35 5f 32 2c 20 38 3a 41 35 5f 33 35 2c 20   :A5_2, 8:A5_35, 
+0030  37 3a 41 35 5f 33 2c 20 36 3a 49 6e 73 74 72 5f   7:A5_3, 6:Instr_
+0040  32 2c 20 35 3a 49 6e 73 74 72 5f 31               2, 5:Instr_1
+
+No.     Time           Source                Destination           Protocol Length Info
+    976 20.233748      10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=56 Ack=107 Win=64256 Len=0 TSval=1214021676 TSecr=1696385841
+
+Frame 976: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 56, Ack: 107, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   1352 28.729753      10.100.53.54          130.208.246.249       TCP      72     54344 → 4005 [PSH, ACK] Seq=56 Ack=107 Win=64256 Len=6 TSval=1214030172 TSecr=1696385841
+
+Frame 1352: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 56, Ack: 107, Len: 6
+Data (6 bytes)
+
+0000  01 48 45 4c 50 04                                 .HELP.
+
+No.     Time           Source                Destination           Protocol Length Info
+   1353 28.737382      130.208.246.249       10.100.53.54          TCP      842    4005 → 54344 [PSH, ACK] Seq=107 Ack=62 Win=65152 Len=776 TSval=1696394340 TSecr=1214030172
+
+Frame 1353: 842 bytes on wire (6736 bits), 842 bytes captured (6736 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 107, Ack: 62, Len: 776
+Data (776 bytes)
+
+0000  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+0010  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+0020  3d 3d 20 48 45 4c 50 20 3d 3d 3d 3d 3d 3d 3d 3d   == HELP ========
+0030  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+0040  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 0a 43 6f   =============.Co
+0050  6d 6d 61 6e 64 20 20 20 20 20 20 20 20 20 20 20   mmand           
+0060  20 20 20 20 20 20 20 20 20 20 20 20 20 20 44 65                 De
+0070  73 63 72 69 70 74 69 6f 6e 0a 2d 2d 2d 2d 2d 2d   scription.------
+0080  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+0090  2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d 2d   ----------------
+00a0  2d 2d 2d 2d 2d 2d 2d 2d 0a 4c 49 53 54 53 45 52   --------.LISTSER
+00b0  56 45 52 53 20 20 20 20 20 20 20 20 20 20 20 20   VERS            
+00c0  20 20 20 20 20 20 20 20 20 56 69 65 77 20 61 6c            View al
+00d0  6c 20 63 6f 6e 6e 65 63 74 65 64 20 73 65 72 76   l connected serv
+00e0  65 72 73 20 62 79 20 6e 61 6d 65 0a 47 45 54 4d   ers by name.GETM
+00f0  53 47 2c 3c 67 72 6f 75 70 49 64 3e 20 20 20 20   SG,<groupId>    
+0100  20 20 20 20 20 20 20 20 20 20 20 20 47 65 74 20               Get 
+0110  61 20 6d 65 73 73 61 67 65 20 66 72 6f 6d 20 74   a message from t
+0120  68 65 20 73 65 72 76 65 72 20 66 6f 72 20 74 68   he server for th
+0130  61 74 20 67 72 6f 75 70 0a 53 45 4e 44 4d 53 47   at group.SENDMSG
+0140  2c 3c 67 72 6f 75 70 49 64 3e 2c 3c 6d 73 67 3e   ,<groupId>,<msg>
+0150  20 20 20 20 20 20 20 20 20 53 65 6e 64 20 61 20            Send a 
+0160  6d 65 73 73 61 67 65 20 66 72 6f 6d 20 79 6f 75   message from you
+0170  20 74 6f 20 74 68 61 74 20 73 65 72 76 65 72 0a    to that server.
+0180  43 4f 4e 4e 45 43 54 2c 3c 69 70 3e 2c 3c 70 6f   CONNECT,<ip>,<po
+0190  72 74 3e 20 20 20 20 20 20 20 20 20 20 20 20 20   rt>             
+01a0  43 6f 6e 6e 65 63 74 20 74 6f 20 74 68 65 20 73   Connect to the s
+01b0  65 72 76 65 72 20 77 69 74 68 20 74 68 61 74 20   erver with that 
+01c0  49 50 20 61 6e 64 20 70 6f 72 74 0a 4d 53 47 53   IP and port.MSGS
+01d0  20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20                   
+01e0  20 20 20 20 20 20 20 20 20 20 20 20 56 69 65 77               View
+01f0  20 61 6c 6c 20 73 74 6f 72 65 64 20 6d 65 73 73    all stored mess
+0200  61 67 65 73 0a 44 52 4f 50 2c 3c 67 72 6f 75 70   ages.DROP,<group
+0210  49 64 3e 20 20 20 20 20 20 20 20 20 20 20 20 20   Id>             
+0220  20 20 20 20 20 44 72 6f 70 20 74 68 65 20 63 6f        Drop the co
+0230  6e 6e 65 63 74 69 6f 6e 20 74 6f 20 74 68 61 74   nnection to that
+0240  20 67 72 6f 75 70 0a 42 4c 41 43 4b 4c 49 53 54    group.BLACKLIST
+0250  20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20                   
+0260  20 20 20 20 20 20 20 56 69 65 77 20 61 6c 6c 20          View all 
+0270  62 6c 61 63 6b 6c 69 73 74 65 64 20 73 65 72 76   blacklisted serv
+0280  65 72 73 0a 42 4c 41 43 4b 4c 49 53 54 2c 3c 67   ers.BLACKLIST,<g
+0290  72 6f 75 70 49 64 3e 2c 3c 69 70 3e 2c 3c 70 6f   roupId>,<ip>,<po
+02a0  72 74 3e 20 42 6c 61 63 6b 6c 69 73 74 20 74 68   rt> Blacklist th
+02b0  65 20 73 65 72 76 65 72 0a 3d 3d 3d 3d 3d 3d 3d   e server.=======
+02c0  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+02d0  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+02e0  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+02f0  3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d 3d   ================
+0300  3d 3d 3d 3d 3d 3d 3d 0a                           =======.
+
+No.     Time           Source                Destination           Protocol Length Info
+   1354 28.737650      10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=62 Ack=883 Win=64128 Len=0 TSval=1214030180 TSecr=1696394340
+
+Frame 1354: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 62, Ack: 883, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   1825 36.950530      10.100.53.54          130.208.246.249       TCP      72     54344 → 4005 [PSH, ACK] Seq=62 Ack=883 Win=64128 Len=6 TSval=1214038393 TSecr=1696394340
+
+Frame 1825: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 62, Ack: 883, Len: 6
+Data (6 bytes)
+
+0000  01 4d 53 47 53 04                                 .MSGS.
+
+No.     Time           Source                Destination           Protocol Length Info
+   1826 36.955523      130.208.246.249       10.100.53.54          TCP      74     4005 → 54344 [PSH, ACK] Seq=883 Ack=68 Win=65152 Len=8 TSval=1696402563 TSecr=1214038393
+
+Frame 1826: 74 bytes on wire (592 bits), 74 bytes captured (592 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 883, Ack: 68, Len: 8
+Data (8 bytes)
+
+0000  41 35 5f 35 3a 20 33 0a                           A5_5: 3.
+
+No.     Time           Source                Destination           Protocol Length Info
+   1827 36.955760      10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=68 Ack=891 Win=64128 Len=0 TSval=1214038398 TSecr=1696402563
+
+Frame 1827: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 68, Ack: 891, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   2043 42.852246      10.100.53.54          130.208.246.249       TCP      79     54344 → 4005 [PSH, ACK] Seq=68 Ack=891 Win=64128 Len=13 TSval=1214044295 TSecr=1696402563
+
+Frame 2043: 79 bytes on wire (632 bits), 79 bytes captured (632 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 68, Ack: 891, Len: 13
+Data (13 bytes)
+
+0000  01 47 45 54 4d 53 47 2c 41 35 5f 35 04            .GETMSG,A5_5.
+
+No.     Time           Source                Destination           Protocol Length Info
+   2044 42.855403      130.208.246.249       10.100.53.54          TCP      103    4005 → 54344 [PSH, ACK] Seq=891 Ack=81 Win=65152 Len=37 TSval=1696408463 TSecr=1214044295
+
+Frame 2044: 103 bytes on wire (824 bits), 103 bytes captured (824 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 891, Ack: 81, Len: 37
+Data (37 bytes)
+
+0000  4d 65 73 73 61 67 65 20 66 72 6f 6d 20 41 35 5f   Message from A5_
+0010  33 3a 20 48 65 6c 6c 6f 20 66 72 6f 6d 20 41 35   3: Hello from A5
+0020  5f 33 21 21 21                                    _3!!!
+
+No.     Time           Source                Destination           Protocol Length Info
+   2045 42.855604      10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=81 Ack=928 Win=64128 Len=0 TSval=1214044298 TSecr=1696408463
+
+Frame 2045: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 81, Ack: 928, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   2046 42.857344      130.208.246.249       10.100.53.54          TCP      382    4005 → 54344 [PSH, ACK] Seq=928 Ack=81 Win=65152 Len=316 TSval=1696408465 TSecr=1214044298
+
+Frame 2046: 382 bytes on wire (3056 bits), 382 bytes captured (3056 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 928, Ack: 81, Len: 316
+Data (316 bytes)
+
+0000  4d 65 73 73 61 67 65 20 66 72 6f 6d 20 41 35 5f   Message from A5_
+0010  32 3a 20 43 4f 4e 47 52 41 54 55 4c 41 54 49 4f   2: CONGRATULATIO
+0020  4e 53 20 41 35 5f 35 2e 20 59 6f 75 20 61 72 65   NS A5_5. You are
+0030  20 6e 6f 77 20 73 75 62 73 63 72 69 62 65 64 20    now subscribed 
+0040  74 6f 20 41 35 5f 32 27 73 20 63 61 74 20 66 61   to A5_2's cat fa
+0050  63 74 73 2e 0a 20 54 6f 20 75 6e 73 75 62 73 63   cts.. To unsubsc
+0060  72 69 62 65 20 73 65 6e 64 20 55 4e 53 55 42 53   ribe send UNSUBS
+0070  43 52 49 42 45 20 75 73 69 6e 67 20 53 45 4e 44   CRIBE using SEND
+0080  4d 53 47 20 74 6f 3a 20 41 35 5f 32 20 50 6f 72   MSG to: A5_2 Por
+0090  74 3a 20 34 30 30 32 4d 65 73 73 61 67 65 20 66   t: 4002Message f
+00a0  72 6f 6d 20 41 35 5f 36 39 3a 20 48 65 6c 6c 6f   rom A5_69: Hello
+00b0  20 41 35 5f 35 20 2e 20 59 6f 75 27 76 65 20 73    A5_5 . You've s
+00c0  75 63 63 65 73 73 66 75 6c 6c 79 20 63 6f 6e 6e   uccessfully conn
+00d0  65 63 74 65 64 20 74 6f 20 67 72 6f 75 70 20 41   ected to group A
+00e0  35 5f 36 39 21 20 4d 65 61 6e 69 6e 67 20 74 68   5_69! Meaning th
+00f0  61 74 20 79 6f 75 27 76 65 20 73 65 6e 74 20 62   at you've sent b
+0100  6f 74 68 20 61 20 76 61 6c 69 64 20 48 45 4c 4f   oth a valid HELO
+0110  20 6d 65 73 73 61 67 65 20 61 6e 64 20 61 20 53    message and a S
+0120  45 52 56 45 52 53 20 6d 65 73 73 61 67 65 2e 20   ERVERS message. 
+0130  48 6f 77 20 61 72 65 20 79 6f 75 3f               How are you?
+
+No.     Time           Source                Destination           Protocol Length Info
+   2047 42.857498      10.100.53.54          130.208.246.249       TCP      66     54344 → 4005 [ACK] Seq=81 Ack=1244 Win=64128 Len=0 TSval=1214044300 TSecr=1696408465
+
+Frame 2047: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 81, Ack: 1244, Len: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   2693 68.587622      10.100.53.54          130.208.246.249       TCP      99     54344 → 4005 [PSH, ACK] Seq=81 Ack=1244 Win=64128 Len=33 TSval=1214070030 TSecr=1696408465
+
+Frame 2693: 99 bytes on wire (792 bits), 99 bytes captured (792 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Intel_12:6a:ba (10:51:07:12:6a:ba), Dst: Cisco_9f:f7:29 (00:00:0c:9f:f7:29)
+Internet Protocol Version 4, Src: 10.100.53.54, Dst: 130.208.246.249
+Transmission Control Protocol, Src Port: 54344, Dst Port: 4005, Seq: 81, Ack: 1244, Len: 33
+Data (33 bytes)
+
+0000  01 53 45 4e 44 4d 53 47 2c 41 35 5f 31 30 30 2c   .SENDMSG,A5_100,
+0010  42 61 72 61 20 73 c3 a6 6b 6a 61 20 73 74 69 67   Bara s..kja stig
+0020  04                                                .
+
+No.     Time           Source                Destination           Protocol Length Info
+   2694 68.631885      130.208.246.249       10.100.53.54          TCP      66     4005 → 54344 [ACK] Seq=1244 Ack=114 Win=65152 Len=0 TSval=1696434239 TSecr=1214070030
+
+Frame 2694: 66 bytes on wire (528 bits), 66 bytes captured (528 bits) on interface \Device\NPF_{A73D6540-372C-49B5-89ED-A79FD8BDFBBE}, id 0
+Ethernet II, Src: Cisco_9f:f7:29 (00:00:0c:9f:f7:29), Dst: Intel_12:6a:ba (10:51:07:12:6a:ba)
+Internet Protocol Version 4, Src: 130.208.246.249, Dst: 10.100.53.54
+Transmission Control Protocol, Src Port: 4005, Dst Port: 54344, Seq: 1244, Ack: 114, Len: 0
