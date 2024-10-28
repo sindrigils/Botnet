@@ -148,10 +148,8 @@ void ServerCommands::handleSendMsg(int socket, std::vector<std::string> tokens, 
         for (auto it = tokens.begin() + 3; it != tokens.end(); it++)
         {
             contentStream << *it;
-            // since if it got split then that means that there was a comma there
             if (it + 1 != tokens.end())
             {
-                // but we dont know if he had a space in front of the comma or not
                 contentStream << ", ";
             }
         }

@@ -35,7 +35,12 @@ std::string trim(const std::string &str);
 // Split a message on a delimiter
 std::vector<std::string> splitMessageOnDelimiter(const char *buffer, char delimiter = ',');
 
+// A safe function to convert a string to an integer
 int stringToInt(const std::string &str);
+
+// A function to check if the groupId is valid, meaning it starts with either A5_ or Instr_.
+// So we dont connect to the Orcale and Number since we can receive their messages from others, when
+// other people forward it to us
 bool validateGroupId(std::string groupId, bool allowEmpty = false);
 std::string formatGroupMessage(std::string message);
 

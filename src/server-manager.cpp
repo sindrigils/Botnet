@@ -168,6 +168,7 @@ std::string ServerManager::getAllServersInfo() const
 std::vector<int> ServerManager::getAllServerSocks() const
 {
     std::vector<int> socks;
+    // since we know how big the vector wil be, we reserve some space in it
     socks.reserve(servers.size());
     for (const auto &pair : servers)
     {
@@ -202,6 +203,7 @@ std::vector<int> ServerManager::getListOfServersToRemove()
 
     for (const auto &pair : unknownServers)
     {
+        // if the time is more then 5 seconds, we add him to the toRemove vector
         if (now - connectionTime[pair.first] > heloTimeout)
         {
             toRemove.push_back(pair.first);

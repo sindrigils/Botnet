@@ -47,7 +47,8 @@ void ClientCommands::findCommand(std::string message)
     {
         handleViewMsgs();
     }
-    // custom macros
+    // custom functon for us, to connect faster to other servers, however the prefered way
+    // is to use the CONNECT command
     else if (tokens[0].compare("c") == 0 && tokens.size() == 2)
     {
         handleShortConnect(tokens);
@@ -103,6 +104,7 @@ void ClientCommands::handleSendMsg(std::vector<std::string> tokens)
         if (it + 1 != tokens.end())
         {
             // but we dont know if he had a space in front of the comma or not
+            // but it looks better with an extra space :D
             contentStream << ", ";
         }
     }
@@ -141,6 +143,7 @@ void ClientCommands::handleShortConnect(std::vector<std::string> tokens)
 
     int port = stringToInt(tokens[1]);
 
+    // if the port is between 1 and 3 then we are trying to connect to an instructor server
     if (port >= 1 && port <= 3)
     {
         port += 5000;

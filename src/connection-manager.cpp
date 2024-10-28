@@ -288,7 +288,7 @@ bool ConnectionManager::isBlacklisted(std::string groupId, std::string ip, std::
 
     for (const auto &server : blacklist)
     {
-
+        // if either the groupId is in the blacklist or a combiniation of the ip and port
         if (std::get<0>(server) == groupId || (std::get<1>(server) == ip && std::get<2>(server) == port))
         {
             return true;

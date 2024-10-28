@@ -34,7 +34,6 @@ int GroupMsgManager::getMessageCount(std::string groupId) const
 {
     std::lock_guard<std::mutex> lock(groupMutex);
 
-    // Find the group ID in the map
     auto it = groupMessages.find(groupId);
     if (it != groupMessages.end())
     {

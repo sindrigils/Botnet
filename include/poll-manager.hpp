@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 #include <mutex>
-#define MAX_CONNECTIONS 10 // i think
+#define MAX_CONNECTIONS 10 // +1 for listning sock, +1 for client sock, and then +8 for other servers
 #define POLL_TIMEOUT 100   // 100ms
 
 class PollManager

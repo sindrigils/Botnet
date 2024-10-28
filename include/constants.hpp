@@ -9,6 +9,7 @@
 #define Backlog 5
 #define MAX_MSG_LENGTH 3 * 5000
 #define MY_GROUP_ID "A5_5"
+// the password that the client needs to send, to authenticate himself
 #define CLIENT_PW "kaladin"
 
 #endif
